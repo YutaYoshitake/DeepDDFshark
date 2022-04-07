@@ -1,0 +1,96 @@
+ls
+python
+ls
+cd project/
+ls
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+ls
+cd project/
+ls
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+ls
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+cd project/
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+cd DeepSDF/project/
+ls
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_rnn.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=6,7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=6,7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=6,7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=6,7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+CUDA_VISIBLE_DEVICES=6,7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
+python
+vim run_sif.sh 
+vim run_sif.sh 
+pip install 
+ls
+cd project/
+ksa
+python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+ls
+cd /disks/
+ls
+cd local/
+ls
+cd ~/works/DeepSDF/project/dataset
+;s
+ls
+cd local/
+ls
+cd multi_35_normal
+ls
+cd 
+cd works/DeepSDF/project/
+ls
+CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+CUDA_VISIBLE_DEVICES=0,1,2,3,4 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+CUDA_VISIBLE_DEVICES=0,1,2,3,4 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+CUDA_VISIBLE_DEVICES=0,1,2 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+CUDA_VISIBLE_DEVICES=0,1,2,3,4 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+CUDA_VISIBLE_DEVICES=0,1,2,3,4 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
+ls
+ls
+cd /
+ls
+cd
+cd works/DeepSDF/project/
+ls

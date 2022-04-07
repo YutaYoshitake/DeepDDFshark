@@ -1,0 +1,281 @@
+Ray上の情報の統合に、Volume Renderingを用いた際の実験コード
+→精度は出ていなそうであった。バグの可能性もある
+→定量的には、ボクセルによる離散化のあらが目立っているよう。
+        # Integrate sampled features
+        if self.integrate_sampling_mode == 'Volume_Rendering':
+            if blur_mask == 'without_mask':
+                batch, H, W, _, _ = sampled_lat_vec.shape
+                sampled_lat_vec = sampled_lat_vec.reshape(-1, self.voxel_sample_num, self.voxel_ch_num).permute(0, 2, 1).reshape(-1, self.voxel_sample_num)
+                
+                raw2alpha = lambda raw, dists, act_fn=F.relu: 1.-torch.exp(-act_fn(raw)*dists)
+                z_vals = (self.voxel_scale * self.sample_ind).permute(0, 1, 2, 4, 3).reshape(-1, args.voxel_sample_num)
+                dists = z_vals[..., 1:] - z_vals[..., :-1]
+                dists = torch.cat([dists, torch.Tensor([1e10]).expand(dists[..., :1].shape)], -1)
+                alpha = raw2alpha(sampled_lat_vec, dists.to(sampled_lat_vec.device)) # N_rays, N_voxel_ch, N_samples
+
+                weights = alpha * torch.cumprod(torch.cat([torch.ones((alpha.shape[0], 1), device=alpha.device), 1.-alpha + 1e-10], -1), -1)[:, :-1]
+                depth_feature_map = torch.sum(weights * z_vals.to(sampled_lat_vec.device), -1)
+                return depth_feature_map.reshape(-1, H, W, self.voxel_ch_num)
+
+            else:
+                sampled_lat_vec = sampled_lat_vec[blur_mask].permute(0, 2, 1).reshape(-1, self.voxel_sample_num) # N_rays*N_voxel_ch, N_samples
+                
+                raw2alpha = lambda raw, dists, act_fn=F.relu: 1.-torch.exp(-act_fn(raw)*dists)
+                z_vals = (self.voxel_scale * self.sample_ind).permute(0, 1, 2, 4, 3).reshape(-1, args.voxel_sample_num)
+                dists = z_vals[..., 1:] - z_vals[..., :-1]
+                dists = torch.cat([dists, torch.Tensor([1e10]).expand(dists[..., :1].shape)], -1)
+                alpha = raw2alpha(sampled_lat_vec, dists.to(sampled_lat_vec.device)) # N_rays, N_voxel_ch, N_samples
+
+                weights = alpha * torch.cumprod(torch.cat([torch.ones((alpha.shape[0], 1), device=alpha.device), 1.-alpha + 1e-10], -1), -1)[:, :-1]
+                depth_feature_map = torch.sum(weights * z_vals.to(sampled_lat_vec.device), -1).reshape(-1, self.voxel_ch_num)
+                return depth_feature_map
+
+
+
+
+
+
+
+
+
+
+
+    # diff_rad = args.pixel_diff_ratio * torch.pi 
+    # rays_o_cam = torch.tensor([0., 0., -1])
+    # rot_r = Exp(torch.tensor([0., diff_rad, 0.]))
+    # rot_u = Exp(torch.tensor([diff_rad ,0., 0.]))
+
+    # with torch.no_grad():
+    #     rays_d_cam_r = torch.sum(rays_d_cam[:, :, :, None, :] * rot_r[None, None, None, :, :], -1)
+    #     rays_d_cam_r = rays_d_cam_r.to(c2w.device).to(c2w.dtype)
+    #     rays_d_wrd_r = torch.sum(rays_d_cam_r[:, :, :, None, :] * c2w[:, None, None, :, :], -1).detach()
+    #     rays_d_cam_u = torch.sum(rays_d_cam[:, :, :, None, :] * rot_u[None, None, None, :, :], -1)
+    #     rays_d_cam_u = rays_d_cam_u.to(c2w.device).to(c2w.dtype)
+    #     rays_d_wrd_u = torch.sum(rays_d_cam_u[:, :, :, None, :] * c2w[:, None, None, :, :], -1).detach()
+
+    # est_inverced_depth_r = model(rays_o, rays_d_wrd_r, input_lat_vec, blur_mask=hit_obj_mask)
+    # est_inverced_depth_u = model(rays_o, rays_d_wrd_u, input_lat_vec, blur_mask=hit_obj_mask)
+
+    # est_depth = 1 / est_inverced_depth[hit_obj_mask[blur_mask]]
+    # est_depth_r = 1 / est_inverced_depth_r
+    # est_depth_u = 1 / est_inverced_depth_u
+
+    # est_point = est_depth[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+    # est_point_r = est_depth_r[..., None] * rays_d_wrd_r[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+    # est_point_u = est_depth_u[..., None] * rays_d_wrd_u[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+
+    # diff_from_right = est_point - est_point_r
+    # diff_from_under = est_point - est_point_u
+    # est_normal = F.normalize(torch.cross(diff_from_right, diff_from_under, dim=-1), dim=-1)
+
+    # # rot_r = rot_r[None, ...].to(c2w.device).to(c2w.dtype)
+    # # rot_wrd_r = torch.bmm(torch.bmm(c2w, rot_r), c2w.permute(0, 2, 1))
+    # # rays_d_wrd_r = torch.sum(rays_d_wrd[:, :, :, None, :] * rot_wrd_r[:, None, None, :, :], -1)
+    # # masked_rays_d_wrd_r = rays_d_wrd_r[hit_obj_mask]
+
+    # # rot_u = rot_u[None, ...].to(c2w.device).to(c2w.dtype)
+    # # rot_wrd_u = torch.bmm(torch.bmm(c2w, rot_u), c2w.permute(0, 2, 1))
+    # # rays_d_wrd_u = torch.sum(rays_d_wrd[:, :, :, None, :] * rot_wrd_u[:, None, None, :, :], -1)
+    # # masked_rays_d_wrd_u = rays_d_wrd_u[hit_obj_mask]
+
+    # est_inverced_depth_r = model(rays_o, rays_d_wrd_r, input_lat_vec, blur_mask=hit_obj_mask)
+    # est_inverced_depth_u = model(rays_o, rays_d_wrd_u, input_lat_vec, blur_mask=hit_obj_mask)
+
+    # est_depth = 1 / est_inverced_depth[hit_obj_mask[blur_mask]]
+    # est_depth_r = 1 / est_inverced_depth_r
+    # est_depth_u = 1 / est_inverced_depth_u
+
+    # est_point = est_depth[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+    # est_point_r = est_depth_r[..., None] * rays_d_wrd_r[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+    # est_point_u = est_depth_u[..., None] * rays_d_wrd_u[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+
+    # diff_from_right = est_point - est_point_r
+    # diff_from_under = est_point - est_point_u
+    # est_normal = F.normalize(torch.cross(diff_from_right, diff_from_under, dim=-1), dim=-1)
+
+    # # if not eval_mode:
+    #     # est_normal_image = False
+    # # else:
+    # est_normal_image = torch.zeros_like(rays_o)
+    # est_normal_image[hit_obj_mask] = (est_normal + 1) / 2
+    # check_map(est_normal_image[0])
+
+
+
+
+
+    # rays_d_wrd = get_ray_direction(args.H, args.fov, c2w)
+    # rot_r = rot_r[None, ...].to(c2w.device).to(c2w.dtype)
+    # rot_wrd_r = torch.bmm(torch.bmm(c2w, rot_r), c2w.permute(0, 2, 1))
+    # rays_d_wrd_r_ = torch.sum(rays_d_wrd[:, :, :, None, :] * rot_wrd_r[:, None, None, :, :], -1)
+
+
+
+
+
+将来的には、Rayが一本与えられてもノーマルを出せるようにしたい
+今は必要なさそう
+現在は、画像一枚全体をマスクが決して計算している。
+# def perturb_normal(args, decoder, model, lat_vecs, pos, c2w, instance_id, rays_d_cam, rays_d_wrd, rays_o, masked_rays_d, masked_rays_o, blur_mask, est_inverced_depth, sampler=False, eval_mode=True, gt_normal_map=False):
+    
+#     batch_size = c2w.shape[0]
+#     diff_rad = args.pixel_diff_ratio * torch.pi
+#     rays_o_cam = torch.tensor([0., 0., -1])
+
+#     rot_r = Exp(torch.tensor([0., diff_rad, 0.]))
+#     rot_u = Exp(torch.tensor([diff_rad ,0., 0.]))
+#     if args.pixel_diff_type == 'pos':
+#         rays_o_cam_r = torch.sum(rays_o_cam[None, :] * rot_r[:, :], -1)[None, :].expand(batch_size, -1)
+#         rays_o_r = torch.sum(rays_o_cam_r[:, None, :] * c2w[:, :, :], -1).detach()
+#         masked_rays_o_r = rays_o_r[:, None, None, :].expand(-1, args.H, args.W, -1)[blur_mask]
+#         rays_o_cam_u = torch.sum(rays_o_cam[None, :] * rot_u[:, :], -1)[None, :].expand(batch_size, -1)
+#         rays_o_u = torch.sum(rays_o_cam_u[:, None, :] * c2w[:, :, :], -1).detach()
+#         masked_rays_o_u = rays_o_u[:, None, None, :].expand(-1, args.H, args.W, -1)[blur_mask]
+#     elif args.pixel_diff_type == 'dir':
+#         rays_d_cam_r = torch.sum(rays_d_cam[:, :, :, None, :] * rot_r[None, None, None, :, :], -1)
+#         rays_d_wrd_r = torch.sum(rays_d_cam_r[:, :, :, None, :] * c2w[:, None, None, :, :], -1).detach()
+#         masked_rays_d_r = rays_d_wrd_r[blur_mask]
+#         rays_d_cam_u = torch.sum(rays_d_cam[:, :, :, None, :] * rot_u[None, None, None, :, :], -1)
+#         rays_d_wrd_u = torch.sum(rays_d_cam_u[:, :, :, None, :] * c2w[:, None, None, :, :], -1).detach()
+#         masked_rays_d_u = rays_d_wrd_u[blur_mask]
+    
+#     if args.pixel_diff_type == 'pos':
+#         inp_r, _ = get_inp(args, decoder, lat_vecs, instance_id, rays_d_wrd, rays_o_r, masked_rays_d, masked_rays_o_r, blur_mask, sampler)
+#         inp_u, _ = get_inp(args, decoder, lat_vecs, instance_id, rays_d_wrd, rays_o_u, masked_rays_d, masked_rays_o_u, blur_mask, sampler)
+#     elif args.pixel_diff_type == 'dir':
+#         inp_r, _ = get_inp(args, decoder, lat_vecs, instance_id, rays_d_wrd_r, rays_o, masked_rays_d_r, masked_rays_o, blur_mask, sampler)
+#         inp_u, _ = get_inp(args, decoder, lat_vecs, instance_id, rays_d_wrd_u, rays_o, masked_rays_d_u, masked_rays_o, blur_mask, sampler)
+#     est_inverced_depth_r = model(inp_r).reshape(-1)
+#     est_inverced_depth_u = model(inp_u).reshape(-1)
+
+#     hit_obj_mask = torch.full_like(instance_id, False, dtype=bool)
+#     hit_obj_mask[blur_mask] = (est_inverced_depth > .5) * (est_inverced_depth_r > .5) * (est_inverced_depth_u > .5)
+#     if not eval_mode:
+#         hit_obj_mask[blur_mask] = (torch.norm(gt_normal_map[blur_mask], dim=-1) > .5) * hit_obj_mask[blur_mask]
+
+#     est_depth = 1 / est_inverced_depth[hit_obj_mask[blur_mask]]
+#     est_depth_r = 1 / est_inverced_depth_r[hit_obj_mask[blur_mask]]
+#     est_depth_u = 1 / est_inverced_depth_u[hit_obj_mask[blur_mask]]
+
+#     est_point = est_depth[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+#     if args.pixel_diff_type == 'pos':
+#         est_point_r = est_depth_r[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + masked_rays_o_r[hit_obj_mask[blur_mask]].reshape(-1, 3)
+#         est_point_u = est_depth_u[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + masked_rays_o_u[hit_obj_mask[blur_mask]].reshape(-1, 3)
+#     elif args.pixel_diff_type == 'dir':
+#         est_point_r = est_depth_r[..., None] * rays_d_wrd_r[hit_obj_mask].reshape(-1, 3) + masked_rays_o[hit_obj_mask[blur_mask]].reshape(-1, 3)
+#         est_point_u = est_depth_u[..., None] * rays_d_wrd_u[hit_obj_mask].reshape(-1, 3) + masked_rays_o[hit_obj_mask[blur_mask]].reshape(-1, 3)
+
+#     diff_from_right = est_point - est_point_r
+#     diff_from_under = est_point - est_point_u
+#     est_normal = F.normalize(torch.cross(diff_from_right, diff_from_under, dim=-1), dim=-1)
+
+#     if not eval_mode:
+#         est_normal_image = False
+#     else:
+#         est_normal_image = torch.zeros(batch_size, args.H, args.W, 3)
+#         est_normal_image[hit_obj_mask] = (est_normal - 1) / 2
+
+#     return hit_obj_mask, est_normal, est_normal_image
+
+
+
+
+
+トランスフォーマー用
+class PositionalEncoding(nn.Module):
+
+    def __init__(self, d_model, dropout=0.1, max_len=5000):
+        super(PositionalEncoding, self).__init__()
+        self.dropout = nn.Dropout(p=dropout)
+
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(0).transpose(0, 1)
+        self.register_buffer('pe', pe)
+
+    def forward(self, x):
+        x = x + self.pe[:x.size(0), :]
+        return self.dropout(x)
+
+            # Integrate sampled features
+            if self.integrate_sampling_mode=='TransFormer':
+                if blur_mask == 'without_mask':
+                    batch, H, W, _, _ = sampled_lat_vec.shape
+                    sampled_lat_vec = sampled_lat_vec.reshape(-1, self.voxel_sample_num, self.voxel_ch_num).permute(1, 0, 2)
+                    # sampled_lat_vec = self.positional_encoding(sampled_lat_vec)
+                    Q = K = V = sampled_lat_vec
+                    attn_output, attn_weights = self.time_series_model(Q, K, V)
+                    if  self.integrate_TransFormer_mode == 'tf_sum':
+                        integrated_lat_vec = attn_output.permute(1, 2, 0).sum(-1)
+                    elif self.integrate_TransFormer_mode == 'tf_cat':
+                        integrated_lat_vec = attn_output.permute(1, 2, 0).reshape(-1, self.latent_3d_size)
+                    return integrated_lat_vec.reshape(-1, H, W, self.latent_3d_size)
+                else:
+                    sampled_lat_vec = sampled_lat_vec[blur_mask].permute(1, 0, 2)
+                    # sampled_lat_vec = self.positional_encoding(sampled_lat_vec)
+                    Q = K = V = sampled_lat_vec
+                    attn_output, attn_weights = self.time_series_model(Q, K, V)
+                    if  self.integrate_TransFormer_mode == 'tf_sum':
+                        integrated_lat_vec = attn_output.permute(1, 2, 0).sum(-1)
+                    elif self.integrate_TransFormer_mode == 'tf_cat':
+                        integrated_lat_vec = attn_output.permute(1, 2, 0).reshape(-1, self.latent_3d_size)
+                    return integrated_lat_vec
+
+
+
+
+
+Train Stepの画像チェックコード
+        
+            # check normal
+            est_sample_image = torch.zeros_like(gt_normal_map[0])
+            est_sample_image[normal_mask[0]] = (est_normal[:torch.sum(normal_mask[0])].to(est_sample_image.dtype) + 1) / 2
+            gt_sample_image = torch.zeros_like(gt_normal_map[0])
+            gt_sample_image[normal_mask[0]] = (gt_normal_map[0][normal_mask[0]] + 1) / 2
+            check_map(torch.cat([est_sample_image, gt_sample_image], 1), 'tes_normal.png')
+
+            # check normal
+            est_sample_image = torch.zeros_like(inverced_depth_map[0])
+            est_sample_image[normal_mask[0]] = torch.clamp(est_depth_r[:torch.sum(normal_mask[0])].to(est_sample_image.dtype), min=0., max=1.5)
+            gt_sample_image = torch.zeros_like(inverced_depth_map[0])
+            gt_sample_image[normal_mask[0]] = 1 / inverced_depth_map[0][normal_mask[0]].to(est_sample_image.dtype)
+            check_map(torch.cat([est_sample_image, gt_sample_image], 1), 'tes_depth.png')
+
+            # check normal
+            est_sample_image = torch.zeros_like(inverced_depth_map[1])
+            est_sample_image[normal_mask[1]] = est_inverced_depth_r[torch.sum(normal_mask[0]):].to(est_sample_image.dtype)
+            # est_sample_image[blur_mask[1]] = est_inverced_depth[torch.sum(blur_mask[0]):].to(est_sample_image.dtype)
+            check_map(torch.cat([est_sample_image, inverced_depth_map[1].to(est_sample_image.dtype)], 1), 'tes_inverse.png')
+
+
+
+
+training end epochでの画像ログコード
+        # log image
+        if self.current_epoch % self.log_image_interval == 0:
+            with torch.no_grad():
+                # Load path info
+                instance_id = torch.zeros(1, dtype=torch.long).to(self.device)
+                test_H = test_W = 256
+                pos, c2w = path2posc2w(self.test_path, self) # returen as torchtensor
+
+                # Get ray direction
+                rays_o = pos[:, None, None, :].expand(-1, test_H, test_W, -1).detach()
+                rays_d_wrd = get_ray_direction(test_H, self.fov, c2w)
+                
+                # Get latent code
+                input_lat_vec = self.lat_vecs(instance_id)
+
+                # Estimate inverced depth
+                sample_img = self(rays_o, rays_d_wrd, input_lat_vec)[0].unsqueeze(0)
+
+                # Load depth info
+                inverced_depth, blur_mask = path2depthinfo(self.test_path, self, H=256)
+                sample_img = torch.cat([sample_img, inverced_depth], dim=-1)
+
+                # log image
+                sample_img = sample_img / sample_img.max()
+                self.logger.experiment.add_image('train/estimated_depth', sample_img, 0)

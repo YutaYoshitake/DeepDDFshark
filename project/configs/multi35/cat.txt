@@ -1,0 +1,28 @@
+expname = multi35/cat
+train_data_dir = ./dataset/dugon/train_set_multi35/
+N_views = 300
+val_data_dir = ./dataset/dugon/validation_set_multi35/
+N_val_views = 100
+
+N_instances = 35
+instance_list_txt = ./test_set_multi35_instance_list.txt
+
+save_interval = 200
+N_epoch = 30000
+N_batch = 3
+
+sample_ratio = .5
+model_lrate = 0.001
+vec_lrate = 0.005
+
+latent_size = 256
+use_world_dir = True
+
+use_3d_code = True
+voxel_ch_num = 32
+voxel_sample_num = 32
+only_latent = True
+integrate_sampling_mode = 'CAT'
+
+use_normal_data = True
+use_normal_loss = True
