@@ -8,7 +8,7 @@ N_instances = 35
 instance_list_txt = ./test_set_multi35_instance_list.txt
 
 save_interval = 100
-N_epoch = 10000
+N_epoch = 30000
 N_batch = 6
 
 sample_ratio = .5

@@ -392,7 +392,8 @@ class DDF(pl.LightningModule):
             est_inverced_depth = est_inverced_depth_cru
             
         # Cal depth loss.
-        depth_loss = F.mse_loss(est_inverced_depth, inverced_depth_map[blur_mask].to(est_inverced_depth.dtype))
+        depth_loss = self.mae(est_inverced_depth, inverced_depth_map[blur_mask].to(est_inverced_depth.dtype))
+        # depth_loss = F.mse_loss(est_inverced_depth, inverced_depth_map[blur_mask].to(est_inverced_depth.dtype))
 
         # Cal latent reg.
         latent_vec_reg = torch.sum(torch.norm(input_lat_vec, dim=-1)) / input_lat_vec.shape[0]
@@ -417,10 +418,10 @@ class DDF(pl.LightningModule):
         latent_vec_reg = torch.sum(torch.norm(input_lat_vec, dim=-1)) / input_lat_vec.shape[0]
 
         # Total los function.
-        # if self.use_normal_loss:
-        #     # loss = depth_loss + 0.1 * normal_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
-        # else:
-        loss = depth_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
+        if self.use_normal_loss:
+            loss = depth_loss + 0.1 * normal_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
+        else:
+            loss = depth_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
         
         # # log image
         # if batch_idx == 0:

@@ -79,7 +79,6 @@ if __name__=='__main__':
     instance_id = torch.zeros(1, dtype=torch.long).to(model.device)
     # instance_id = torch.full_like(instance_id, 5)
 
-
     # get inputs
     rays_d_cam = get_ray_direction(args.H, args.fov, False) # batch, H, W, 3:xyz
     rays_d_wrd = get_ray_direction(args.H, args.fov, c2w).to(c2w.dtype).to(c2w.device) # batch, H, W, 3:xyz
@@ -88,7 +87,6 @@ if __name__=='__main__':
 
     # # Check map.
     # check_map((normal_map[0] + 1.) * .5, 'tes_gt.png')
-
 
     # # Check pixel normal.
     # est_depth = model.render_depth_map(pos, c2w, instance_id, H=512, inverced_depth_map=False)

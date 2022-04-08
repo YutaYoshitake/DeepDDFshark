@@ -52,7 +52,7 @@ if __name__=='__main__':
     model.to(device)
 
     # Get pos and c2w list for rot views.
-    freq = 20
+    freq = 200
     lat_deg = 30
     pos_list, w2c_list = get_rot_views(lat_deg, freq, model)
 
