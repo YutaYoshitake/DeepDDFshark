@@ -28,6 +28,23 @@ from scipy.spatial.transform import Rotation as R
 from parser import *
 from often_use import *
 
+torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+np.random.seed(0)
+DEBUG = False
+
+seed = 42
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+os.environ['PYTHONHASHSEED'] = str(seed)
+if device=='cuda':
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 
 
 
@@ -46,7 +63,7 @@ class DDF_dataset(data.Dataset):
         self.fov = args.fov
         self.N_views = N_views
         self.use_normal = args.use_normal_data
-        self.rays_d_cam = get_ray_direction(self.H, self.fov)[0]
+        self.rays_d_cam = get_ray_direction(self.H, self.fov)[0].to(torch.float32)
 
         self.random_sample_rays = args.random_sample_rays
         self.coords = np.arange(0, self.H**2)
@@ -62,16 +79,16 @@ class DDF_dataset(data.Dataset):
             print(path)
             sys.exit()
         camera_info = pickle_load(path+'_pose.pickle')
-        pos = camera_info['pos']
-        c2w = camera_info['rot'].T
+        pos = camera_info['pos'].astype(np.float32)
+        c2w = camera_info['rot'].astype(np.float32).T
 
         depth_info = pickle_load(path+'_mask.pickle')
-        inverced_depth = depth_info['inverced_depth']
+        inverced_depth = depth_info['inverced_depth'].astype(np.float32)
         blur_mask = depth_info['blur_mask']
         if self.use_normal:
             if 'normal_map' not in depth_info.keys():
                 print(path)
-            normal_map = depth_info['normal_map']
+            normal_map = depth_info['normal_map'].astype(np.float32)
             # normal_mask = depth_info['normal_mask']
             normal_mask = inverced_depth > 0
         else:

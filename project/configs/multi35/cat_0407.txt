@@ -8,7 +8,7 @@ N_instances = 35
 instance_list_txt = ./test_set_multi35_instance_list.txt
 
 save_interval = 100
-N_epoch = 30000
+N_epoch = 20000
 N_batch = 6
 
 sample_ratio = .5
@@ -25,4 +25,4 @@ only_latent = False
 integrate_sampling_mode = 'CAT'
 
 use_normal_data = True
-use_normal_loss = False
+use_normal_loss = True

@@ -31,6 +31,20 @@ from dataset import *
 
 torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEBUG = False
+
+seed = 0
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+os.environ['PYTHONHASHSEED'] = str(seed)
+if device=='cuda':
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 
 
 
@@ -289,6 +303,8 @@ class DDF(pl.LightningModule):
 
         # normal
         self.use_normal_loss = args.use_normal_loss
+        self.start_normal_loss = 1e4
+        self.current_normal_loss = True
         self.rays_d_cam = get_ray_direction(args.H, args.fov, False)
         self.diff_rad = args.pixel_diff_ratio * torch.pi 
         self.rays_o_cam = torch.tensor([0., 0., -1])
@@ -392,34 +408,41 @@ class DDF(pl.LightningModule):
             est_inverced_depth = est_inverced_depth_cru
             
         # Cal depth loss.
-        depth_loss = self.mae(est_inverced_depth, inverced_depth_map[blur_mask].to(est_inverced_depth.dtype))
-        # depth_loss = F.mse_loss(est_inverced_depth, inverced_depth_map[blur_mask].to(est_inverced_depth.dtype))
+        depth_loss = self.mae(est_inverced_depth, inverced_depth_map[blur_mask])
+        # depth_loss = F.mse_loss(est_inverced_depth, inverced_depth_map[blur_mask])
 
         # Cal latent reg.
         latent_vec_reg = torch.sum(torch.norm(input_lat_vec, dim=-1)) / input_lat_vec.shape[0]
 
         # Cal normal loss.
-        if self.use_normal_loss:
+        if self.current_normal_loss:
+            # Get masks.
+            hit_obj_mask = torch.full_like(normal_mask, False, dtype=bool)
+            hit_obj_mask[normal_mask] = (est_inverced_depth[normal_mask[blur_mask]] > .5) * (est_inverced_depth_r > .5) * (est_inverced_depth_u > .5)
+            hit_obj_mask = hit_obj_mask.detach()
             # Get depth.
-            est_depth = 1 / est_inverced_depth[normal_mask[blur_mask]]
-            est_depth_r = 1 / est_inverced_depth_r
-            est_depth_u = 1 / est_inverced_depth_u
-            # Get points.
-            est_point = est_depth[..., None] * rays_d_wrd[normal_mask].reshape(-1, 3) + rays_o[normal_mask].reshape(-1, 3)
-            est_point_r = est_depth_r[..., None] * rays_d_wrd_r[normal_mask].reshape(-1, 3) + rays_o[normal_mask].reshape(-1, 3)
-            est_point_u = est_depth_u[..., None] * rays_d_wrd_u[normal_mask].reshape(-1, 3) + rays_o[normal_mask].reshape(-1, 3)
+            est_depth = 1 / est_inverced_depth[hit_obj_mask[blur_mask]]
+            est_depth_r = 1 / est_inverced_depth_r[hit_obj_mask[normal_mask]]
+            est_depth_u = 1 / est_inverced_depth_u[hit_obj_mask[normal_mask]]
+            # Get surface points.
+            est_point = est_depth[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+            est_point_r = est_depth_r[..., None] * rays_d_wrd_r[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+            est_point_u = est_depth_u[..., None] * rays_d_wrd_u[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
             # Calculate normals from exterior products.
             diff_from_right = est_point - est_point_r
             diff_from_under = est_point - est_point_u
             est_normal = F.normalize(torch.cross(diff_from_right, diff_from_under, dim=-1), dim=-1)
-            normal_loss = self.mae(est_normal, gt_normal_map[normal_mask])
+            # Calculate normal loss.
+            normal_loss = self.mae(est_normal, gt_normal_map[hit_obj_mask])
+            # normal_loss = F.mse_loss(est_normal, gt_normal_map[hit_obj_mask])
 
         # Cal latent reg.
         latent_vec_reg = torch.sum(torch.norm(input_lat_vec, dim=-1)) / input_lat_vec.shape[0]
 
         # Total los function.
-        if self.use_normal_loss:
+        if self.current_normal_loss:
             loss = depth_loss + 0.1 * normal_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
+            # loss = depth_loss + 0.0001 * normal_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
         else:
             loss = depth_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
         
@@ -447,6 +470,11 @@ class DDF(pl.LightningModule):
             ckpt_path = os.path.join(self.trainer.log_dir, 'checkpoints', ckpt_name)
             trainer.save_checkpoint(ckpt_path)
 
+        # # Switch loss.
+        # if self.use_normal_loss and self.current_epoch > self.start_normal_loss and not(self.current_normal_loss):
+        #     self.current_normal_loss = True
+        #     self.configure_optimizers() # Reset optimizer stats?
+
 
 
     def validation_step(self, batch, batch_idx):
@@ -472,7 +500,7 @@ class DDF(pl.LightningModule):
         est_inverced_depth = self(rays_o, rays_d_wrd, input_lat_vec, blur_mask).reshape(-1)
 
         # Cal depth err.
-        depth_err = F.mse_loss(est_inverced_depth, inverced_depth[blur_mask].to(est_inverced_depth.dtype))
+        depth_err = F.mse_loss(est_inverced_depth, inverced_depth[blur_mask])
         
         
         # # log image
@@ -617,6 +645,12 @@ class DDF(pl.LightningModule):
                 {"params": self.latent_sampler.parameters()},
                 {"params": self.mlp.parameters()},
             ], lr=self.model_lrate, betas=(0.9, 0.999),)
+            # optimizer = torch.optim.SGD([
+            #     {"params": self.lat_vecs.parameters(), "lr": self.vec_lrate},
+            #     {"params": self.decoder.parameters()},
+            #     {"params": self.latent_sampler.parameters()},
+            #     {"params": self.mlp.parameters()},
+            # ], lr=self.model_lrate)
         else:
             optimizer = torch.optim.Adam([
                 {"params": self.lat_vecs.parameters(), "lr": self.vec_lrate},
@@ -635,7 +669,7 @@ if __name__=='__main__':
     # Set trainer.
     logger = pl.loggers.TensorBoardLogger(
             save_dir=os.getcwd(),
-            version=f'{args.expname}_v{args.exp_version}',
+            version=f'{args.expname}_{args.exp_version}',
             name='lightning_logs'
         )
     trainer = pl.Trainer(
@@ -649,14 +683,14 @@ if __name__=='__main__':
     
 
     # Save config files.
-    os.makedirs(os.path.join('lightning_logs', f'{args.expname}_v{args.exp_version}'), exist_ok=True)
-    f = os.path.join('lightning_logs', f'{args.expname}_v{args.exp_version}', 'args.txt')
+    os.makedirs(os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}'), exist_ok=True)
+    f = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'args.txt')
     with open(f, 'w') as file:
         for arg in sorted(vars(args)):
             attr = getattr(args, arg)
             file.write('{} = {}\n'.format(arg, attr))
     if args.config is not None:
-        f = os.path.join('lightning_logs', f'{args.expname}_v{args.exp_version}', 'config.txt')
+        f = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'config.txt')
         with open(f, 'w') as file:
             file.write(open(args.config, 'r').read())
 
@@ -673,7 +707,7 @@ if __name__=='__main__':
     #     args.same_instances = True
 
     # Get ckpts path.
-    ckpt_dir = os.path.join('lightning_logs', f'{args.expname}_v{args.exp_version}', 'checkpoints/*')
+    ckpt_dir = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'checkpoints/*')
     ckpt_path_list = sorted(glob.glob(ckpt_dir))
 
     # Load ckpt and start training.
@@ -698,3 +732,11 @@ if __name__=='__main__':
             datamodule=None, 
             ckpt_path=latest_ckpt_path
             )
+        # model = model.load_from_checkpoint(checkpoint_path=latest_ckpt_path, args=args)
+        # trainer.fit(
+        #     model=model, 
+        #     train_dataloaders=train_dataloader, 
+        #     val_dataloaders=val_dataloader, 
+        #     datamodule=None, 
+        #     ckpt_path=None
+        #     )

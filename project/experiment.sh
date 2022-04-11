@@ -1,2 +1,1 @@
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python train_pl.py --config=configs/single/cat_view64.txt --exp_version=77777
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python train_pl.py --config=configs/single/cat_view64.txt --exp_version=88888
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python train_pl.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_sdg

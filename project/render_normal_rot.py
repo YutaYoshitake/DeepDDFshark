@@ -28,6 +28,23 @@ from parser import *
 from often_use import *
 from train_pl import *
 
+torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+np.random.seed(0)
+DEBUG = False
+
+seed = 42
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+os.environ['PYTHONHASHSEED'] = str(seed)
+if device=='cuda':
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 
 
 
@@ -39,7 +56,7 @@ if __name__=='__main__':
     args.same_instances = False
 
     # Get ckpts path.
-    ckpt_dir = os.path.join('lightning_logs', f'{args.expname}_v{args.exp_version}', 'checkpoints/*')
+    ckpt_dir = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'checkpoints/*')
     ckpt_path_list = sorted(glob.glob(ckpt_dir))
     latest_ckpt_path = ckpt_path_list[-1]
 
@@ -109,3 +126,6 @@ if __name__=='__main__':
         # np_path = os.path.join(dir_path, 'depth_np', str(i).zfill(5)+'.pickle')
         # pickle_dump(est_depth_map, np_path)
     
+    # Print command for rot video.
+    print('Command to make a video')
+    print(f'$ ffmpeg -r 30 -i {dir_path}/image/%05d.png -vcodec libx264 -pix_fmt yuv420p -r 60 {dir_path}/normal.mp4')

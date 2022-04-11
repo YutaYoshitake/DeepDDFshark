@@ -13,6 +13,23 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+np.random.seed(0)
+DEBUG = False
+
+seed = 42
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+os.environ['PYTHONHASHSEED'] = str(seed)
+if device=='cuda':
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 
 
 
