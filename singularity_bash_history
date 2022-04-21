@@ -94,3 +94,26 @@ ls
 cd
 cd works/DeepSDF/project/
 ls
+python
+cd project/
+python
+python make_sh.py 
+python make_sh.py 
+python make_sh.py 
+rm -r test_view_multi3281/
+tmux a
+tensorboard --logdir /home/yyoshitake/shark/works/DeepSDF/project/lightning_logs --port 6007
+nvidia-smi
+ls
+cd works/DeepSDF/project/
+CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=cat_0407_depth_mae_normal_mae_seed0
+CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=configs/multi35/cat_0407_depth_mae_normal_mae_seed0
+CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=configs/multi35/cat_0407.txt --exp_version=cat_0407_depth_mse_normal_mse_seed0
+CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=configs/multi35/cat_0407.txt --exp_version=cat_0407_depth_mae_normal_mae_seed0
+CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=configs/multi35/cat_0407.txt --exp_version=cat_0407_depth_mae_normal_mae_seed0
+CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
+CUDA_VISIBLE_DEVICES=4 python render_depth_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
+CUDA_VISIBLE_DEVICES=4 python render_depth_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
+CUDA_VISIBLE_DEVICES=4 python render_depth_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
+CUDA_VISIBLE_DEVICES=4 python render_depth_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
+nvidia-smi

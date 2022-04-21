@@ -13,7 +13,4 @@
 project/__pycache__/
 project/dataset/
 project/lightning_logs/
-project/old_lightning_logs/
-project/old_sh_files/
-project/rendered_results/
-project/until_0324/
+project/old_files/

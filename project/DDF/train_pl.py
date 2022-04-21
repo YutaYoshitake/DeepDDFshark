@@ -441,8 +441,28 @@ class DDF(pl.LightningModule):
 
         # Total los function.
         if self.current_normal_loss:
-            loss = depth_loss + 0.1 * normal_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
+            loss = depth_loss + 0.01 * normal_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
             # loss = depth_loss + 0.0001 * normal_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
+            if torch.isnan(loss):
+                print('##################################################')
+                print('####################depth#########################')
+                print('##################################################')
+                print(depth_loss)
+                print(normal_loss)
+                print('##################################################')
+                print('####################depth#########################')
+                print('##################################################')
+                print(est_depth.min(), est_depth.max())
+                print(est_depth_r.min(), est_depth_r.max())
+                print(est_depth_u.min(), est_depth_u.max())
+                print('#####################################################')
+                print('####################invdepth#########################')
+                print('#####################################################')
+                print(est_inverced_depth.min(), est_inverced_depth.max())
+                print(est_inverced_depth_r.min(), est_inverced_depth_r.max())
+                print(est_inverced_depth_u.min(), est_inverced_depth_u.max())
+                sys.exit()
+
         else:
             loss = depth_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
         
@@ -477,49 +497,49 @@ class DDF(pl.LightningModule):
 
 
 
-    def validation_step(self, batch, batch_idx):
+    # def validation_step(self, batch, batch_idx):
 
-        # Get input
-        instance_id, pos, c2w, rays_d_cam, inverced_depth, blur_mask, gt_normal_map, normal_mask = batch
-        rays_o = pos[:, None, None, :].expand(-1, self.H, self.W, -1).detach()
+    #     # Get input
+    #     instance_id, pos, c2w, rays_d_cam, inverced_depth, blur_mask, gt_normal_map, normal_mask = batch
+    #     rays_o = pos[:, None, None, :].expand(-1, self.H, self.W, -1).detach()
 
-        # Train with only one instance
-        if self.same_instances:
-            instance_id = torch.zeros_like(instance_id)
+    #     # Train with only one instance
+    #     if self.same_instances:
+    #         instance_id = torch.zeros_like(instance_id)
 
-        # Get ray direction
-        if not self.use_world_dir:
-            print('Support for world coordinate system only.')
-            sys.exit()
-        rays_d_wrd = torch.sum(rays_d_cam[:, :, :, None, :] * c2w[:, None, None, :, :], -1)
+    #     # Get ray direction
+    #     if not self.use_world_dir:
+    #         print('Support for world coordinate system only.')
+    #         sys.exit()
+    #     rays_d_wrd = torch.sum(rays_d_cam[:, :, :, None, :] * c2w[:, None, None, :, :], -1)
 
-        # Get latent code
-        input_lat_vec = self.lat_vecs(instance_id)
+    #     # Get latent code
+    #     input_lat_vec = self.lat_vecs(instance_id)
 
-        # Estimate inverced depth
-        est_inverced_depth = self(rays_o, rays_d_wrd, input_lat_vec, blur_mask).reshape(-1)
+    #     # Estimate inverced depth
+    #     est_inverced_depth = self(rays_o, rays_d_wrd, input_lat_vec, blur_mask).reshape(-1)
 
-        # Cal depth err.
-        depth_err = F.mse_loss(est_inverced_depth, inverced_depth[blur_mask])
+    #     # Cal depth err.
+    #     depth_err = F.mse_loss(est_inverced_depth, inverced_depth[blur_mask])
         
         
-        # # log image
-        # if batch_idx == 0:
-        #     sample_img = torch.zeros_like(blur_mask[0], dtype=est_inverced_depth.dtype, device=est_inverced_depth.device)
-        #     sample_img[blur_mask[0]] = est_inverced_depth[:torch.sum(blur_mask[0])]
-        #     sample_img = sample_img.unsqueeze(0)
-        #     sample_img = sample_img / sample_img.max()
-        #     self.logger.experiment.add_image('train/batch_sample_depth', sample_img, 0)
+    #     # # log image
+    #     # if batch_idx == 0:
+    #     #     sample_img = torch.zeros_like(blur_mask[0], dtype=est_inverced_depth.dtype, device=est_inverced_depth.device)
+    #     #     sample_img[blur_mask[0]] = est_inverced_depth[:torch.sum(blur_mask[0])]
+    #     #     sample_img = sample_img.unsqueeze(0)
+    #     #     sample_img = sample_img / sample_img.max()
+    #     #     self.logger.experiment.add_image('train/batch_sample_depth', sample_img, 0)
 
-        return {'depth_err': depth_err}
+    #     return {'depth_err': depth_err}
 
 
 
-    def validation_epoch_end(self, outputs):
-        # Log loss.
-        avg_depth_err = torch.stack([x['depth_err'] for x in outputs]).mean()
-        current_epoch = torch.tensor(self.current_epoch + 1., dtype=avg_depth_err.dtype)
-        self.log_dict({'validation/total_depth_err': avg_depth_err, "step": current_epoch})
+    # def validation_epoch_end(self, outputs):
+    #     # Log loss.
+    #     avg_depth_err = torch.stack([x['depth_err'] for x in outputs]).mean()
+    #     current_epoch = torch.tensor(self.current_epoch + 1., dtype=avg_depth_err.dtype)
+    #     self.log_dict({'validation/total_depth_err': avg_depth_err, "step": current_epoch})
 
 
 
@@ -697,9 +717,9 @@ if __name__=='__main__':
 
     # Create dataloader
     train_dataset = DDF_dataset(args, args.train_data_dir, args.N_views)
-    train_dataloader = data_utils.DataLoader(train_dataset, batch_size=args.N_batch, num_workers=args.num_workers)
+    train_dataloader = data_utils.DataLoader(train_dataset, batch_size=args.N_batch, num_workers=args.num_workers, drop_last=False, shuffle=True)
     val_dataset = DDF_dataset(args, args.val_data_dir, args.N_val_views)
-    val_dataloader = data_utils.DataLoader(train_dataset, batch_size=args.N_batch, num_workers=args.num_workers)
+    val_dataloader = data_utils.DataLoader(train_dataset, batch_size=args.N_batch, num_workers=args.num_workers, drop_last=False, shuffle=True)
 
     # For single instance.
     args.same_instances = False

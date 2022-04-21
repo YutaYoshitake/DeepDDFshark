@@ -23,6 +23,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from chamferdist import ChamferDistance
 from scipy.spatial.transform import Rotation as R
+from PIL import Image
 
 from parser import *
 from often_use import *
@@ -48,7 +49,8 @@ if device=='cuda':
 
 
 
-with open('test_set_multi35_instance_list.txt', mode ='rt', encoding='utf-8') as f:
+# with open('test_set_multi35_instance_list.txt', mode ='rt', encoding='utf-8') as f:
+with open('instance_list.txt', mode ='rt', encoding='utf-8') as f:
     read_data = f.readlines()
 read_data = [read_data_i.split('\n')[0] for read_data_i in read_data]
 
@@ -57,17 +59,23 @@ index = 0
 for instance_name in read_data:
     # path = 'cp' + str(index).zfill(3) + '.sh'
     path = 'cp.sh'
-    with open(path, 'a') as f:
-        # f.write('mkdir /disks/local/yyoshitake/DeepSDF/train_data/' + instance_name +'/\n')
-        # f.write('cp -v ~/works/make_depth_image/project/tmp/03001627/' + instance_name + '/000*_pose.pickle /disks/local/yyoshitake/DeepSDF/train_data/' + instance_name +'/\n')
-        # f.write('cp -v ~/works/make_depth_image/project/tmp/03001627/' + instance_name + '/000*_mask.pickle /disks/local/yyoshitake/DeepSDF/train_data/' + instance_name +'/\n')
-        # f.write('cp -v ~/works/make_depth_image/project/tmp/03001627/' + instance_name + '/001*_pose.pickle /disks/local/yyoshitake/DeepSDF/train_data/' + instance_name +'/\n')
-        # f.write('cp -v ~/works/make_depth_image/project/tmp/03001627/' + instance_name + '/001*_mask.pickle /disks/local/yyoshitake/DeepSDF/train_data/' + instance_name +'/\n')
-        # if len(glob.glob(f'/home/yyoshitake/works/DeepSDF/project/dataset/dugon/train_set_multi35/{instance_name}/*')) < 500:
-        #     f.write(f'scp /media/yyoshitake/HDD/ShapeNetCore_RenderedImages/test_set_multi35/{instance_name}/000* yyoshitake@barracuda:/d/home/yyoshitake/works/DeepSDF/project/dataset/dugon/train_set_multi35/{instance_name}/' + '\n')
-        #     f.write(f'scp /media/yyoshitake/HDD/ShapeNetCore_RenderedImages/test_set_multi35/{instance_name}/001* yyoshitake@barracuda:/d/home/yyoshitake/works/DeepSDF/project/dataset/dugon/train_set_multi35/{instance_name}/' + '/\n')
-        #     f.write(f'scp /media/yyoshitake/HDD/ShapeNetCore_RenderedImages/test_set_multi35/{instance_name}/002* yyoshitake@barracuda:/d/home/yyoshitake/works/DeepSDF/project/dataset/dugon/train_set_multi35/{instance_name}/' + '/\n')
-        print(len(glob.glob(f'/home/yyoshitake/works/DeepSDF/project/dataset/dugon/validation_set_multi35/{instance_name}/*')))
+    # with open(path, 'a') as f:
+    #     # f.write('mkdir /disks/local/yyoshitake/DeepSDF/train_data/' + instance_name +'/\n')
+    #     # f.write('cp -v ~/works/make_depth_image/project/tmp/03001627/' + instance_name + '/000*_pose.pickle /disks/local/yyoshitake/DeepSDF/train_data/' + instance_name +'/\n')
+    #     # f.write('cp -v ~/works/make_depth_image/project/tmp/03001627/' + instance_name + '/000*_mask.pickle /disks/local/yyoshitake/DeepSDF/train_data/' + instance_name +'/\n')
+    #     # f.write('cp -v ~/works/make_depth_image/project/tmp/03001627/' + instance_name + '/001*_pose.pickle /disks/local/yyoshitake/DeepSDF/train_data/' + instance_name +'/\n')
+    #     # f.write('cp -v ~/works/make_depth_image/project/tmp/03001627/' + instance_name + '/001*_mask.pickle /disks/local/yyoshitake/DeepSDF/train_data/' + instance_name +'/\n')
+    #     # if len(glob.glob(f'/home/yyoshitake/works/DeepSDF/project/dataset/dugon/train_set_multi35/{instance_name}/*')) < 500:
+    #     #     f.write(f'scp /media/yyoshitake/HDD/ShapeNetCore_RenderedImages/test_set_multi35/{instance_name}/000* yyoshitake@barracuda:/d/home/yyoshitake/works/DeepSDF/project/dataset/dugon/train_set_multi35/{instance_name}/' + '\n')
+    #     #     f.write(f'scp /media/yyoshitake/HDD/ShapeNetCore_RenderedImages/test_set_multi35/{instance_name}/001* yyoshitake@barracuda:/d/home/yyoshitake/works/DeepSDF/project/dataset/dugon/train_set_multi35/{instance_name}/' + '/\n')
+    #     #     f.write(f'scp /media/yyoshitake/HDD/ShapeNetCore_RenderedImages/test_set_multi35/{instance_name}/002* yyoshitake@barracuda:/d/home/yyoshitake/works/DeepSDF/project/dataset/dugon/train_set_multi35/{instance_name}/' + '/\n')
+    #     print(len(glob.glob(f'/home/yyoshitake/works/DeepSDF/project/dataset/dugon/validation_set_multi35/{instance_name}/*')))
+    print(f'get {instance_name}')
+    normal_map = pickle_load(f'/disks/local/yyoshitake/DeepSDF/train_data/{instance_name}/00000_mask.pickle')['normal_map']
+    normal_map = 256 * 0.5 * (normal_map + 1)
+    normal_map = normal_map.astype('uint8')
+    im = Image.fromarray(normal_map)
+    im.save(f'test_view_multi3281/{instance_name}.png')
     #     cnt += 1
     # if cnt > 1101:
     #     cnt = 0

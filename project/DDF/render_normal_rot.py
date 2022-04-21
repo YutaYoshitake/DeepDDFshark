@@ -69,18 +69,19 @@ if __name__=='__main__':
     model.to(device)
 
     # Get pos and c2w list for rot views.
-    freq = 10
+    freq = 20
     lat_deg = 30
     pos_list, w2c_list = get_rot_views(lat_deg, freq, model)
 
     # Get instance id.
     instance_id = torch.zeros(1, dtype=torch.long).to(model.device)
-    instance_id = torch.full_like(instance_id, 5)
+    instance_id = torch.full_like(instance_id, 1000)
+    # instance_id = torch.full_like(instance_id, 5)
 
 
 
     # Create dir
-    basedir = 'rendered_results/'
+    basedir = 'rendered_normal_results/'
     expname = os.path.join(re.split('[./]', latest_ckpt_path)[2], re.split('[./]', latest_ckpt_path)[-2])
     instancename = (f'instance{instance_id.item()}')
     dir_path = os.path.join(basedir, expname, instancename)
@@ -95,24 +96,37 @@ if __name__=='__main__':
         pos = pos_list[i].unsqueeze(0) # with dummy_batch
         c2w = w2c_list[i].T.unsqueeze(0) # with dummy_batch
 
+
+        # get inputs
+        rays_d_cam = get_ray_direction(args.H, args.fov, False) # batch, H, W, 3:xyz
+        rays_d_wrd = get_ray_direction(args.H, args.fov, c2w).to(c2w.dtype).to(c2w.device) # batch, H, W, 3:xyz
+        rays_o = pos[:, None, None, :].expand(-1, args.H, args.W, -1)
+        input_lat_vec = model.lat_vecs(instance_id)
+
         # Get inverced depth map
-        est_depth_map = model.render_depth_map(pos, c2w, instance_id, H=256, inverced_depth_map=True)
+        blur_mask = torch.full_like(rays_o[..., 0], True, dtype=torch.bool)
+        est_inverced_depth = model(rays_o, rays_d_wrd, input_lat_vec, blur_mask=blur_mask)
+
+        # Start
+        hit_obj_mask = torch.full_like(blur_mask, False)
+        hit_obj_mask[blur_mask] = est_inverced_depth > .5
+
+        # get normal
+        est_normal = model.get_normals(rays_o, rays_d_wrd, input_lat_vec, c2w, hit_obj_mask, est_inverced_depth[hit_obj_mask[blur_mask]])
         
+        # get normal map
+        est_normal_image = torch.zeros_like(rays_o)
+        est_normal_image[hit_obj_mask] = (est_normal + 1) / 2
+
         # Make fig
-        fig = pylab.figure(figsize=(5, 5))
-
-        ax1 = fig.add_subplot(1, 1, 1)
-        ax1.set_title('result')
-        ax1.imshow(est_depth_map.to('cpu').detach().numpy().copy())
-
-        ax1.xaxis.set_ticklabels([])
-        ax1.yaxis.set_ticklabels([])
         png_path = os.path.join(os.path.join(dir_path, 'image', str(i).zfill(5)+'.png'))
-        fig.savefig(png_path, dpi=200)
-        pylab.close()
+        check_map(est_normal_image[0], png_path)
 
-        # Save as np.
-        est_depth_map = est_depth_map.to('cpu').detach().numpy().copy()
-        np_path = os.path.join(dir_path, 'depth_np', str(i).zfill(5)+'.pickle')
-        pickle_dump(est_depth_map, np_path)
+        # # Save as np.
+        # est_depth_map = est_depth_map.to('cpu').detach().numpy().copy()
+        # np_path = os.path.join(dir_path, 'depth_np', str(i).zfill(5)+'.pickle')
+        # pickle_dump(est_depth_map, np_path)
     
+    # Print command for rot video.
+    print('Command to make a video')
+    print(f'$ ffmpeg -r 30 -i {dir_path}/image/%05d.png -vcodec libx264 -pix_fmt yuv420p -r 60 {dir_path}/normal.mp4')
