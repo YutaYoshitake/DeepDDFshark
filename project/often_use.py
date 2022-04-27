@@ -225,4 +225,48 @@ def get_rot_views(lat_deg, freq, model):
     w2c_list = torch.from_numpy(w2c_list).clone().to(model.model_params_dtype).to(model.device)
 
     return pos_list, w2c_list
+
+
+
+def batch_vec2skew(v, batch_size):
+    """
+    :param v:  (3, ) torch tensor
+    :return:   (3, 3)
+    """
+    zero = torch.zeros([batch_size, 1], dtype=torch.float32, device=v.device)
+    skew_v0 = torch.cat([ zero,    -v[:, 2:3],   v[:, 1:2]], dim=1)  # (batch, 3, 1)
+    skew_v1 = torch.cat([ v[:, 2:3],   zero,    -v[:, 0:1]], dim=1)
+    skew_v2 = torch.cat([-v[:, 1:2],   v[:, 0:1],   zero], dim=1)
+    skew_v = torch.stack([skew_v0, skew_v1, skew_v2], dim=1)  # (batch, 3, 3)
+    return skew_v  # (batch, 3, 3)
+
+
+
+def batch_Exp(r):
+    """so(3) vector to SO(3) matrix
+    :param r: (3, ) axis-angle, torch tensor
+    :return:  (3, 3)
+    """
+    batch_size = r.shape[0]
+    skew_r = batch_vec2skew(r, batch_size)  # (batch, 3, 3)
+    norm_r = r.norm(dim=1)[:, None, None] + 1e-15
+    eye = torch.eye(3, dtype=torch.float32, device=r.device).expand(batch_size, -1, -1)
+    R = eye + (torch.sin(norm_r) / norm_r) * skew_r + ((1 - torch.cos(norm_r)) / norm_r**2) * torch.bmm(skew_r, skew_r)
+    return R
+
+
+
+def batch_pi2rot_y(pi):
+    # Rotate randomly.
+    if all(pi[:, 0] == 0) and all(pi[:, 2] == 0):
+        zeros = torch.zeros_like(pi[:, 0])
+        ones = torch.ones_like(pi[:, 0])
+        R_0 = torch.stack([torch.cos(pi[:, 1]), zeros, -torch.sin(pi[:, 1])], dim=-1)
+        R_1 = torch.stack([              zeros,  ones,                zeros], dim=-1)
+        R_2 = torch.stack([torch.sin(pi[:, 1]), zeros,  torch.cos(pi[:, 1])], dim=-1)
+        return torch.stack([R_0, R_1, R_2], dim=-1)
+    else:
+        print('only y-axis rotation.')
+        sys.exit()
+
             

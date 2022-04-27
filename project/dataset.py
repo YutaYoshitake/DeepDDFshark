@@ -64,7 +64,6 @@ class TaR_dataset(data.Dataset):
             for line in lines:
                 self.instance_path_list.append(os.path.join(data_dir, line.rstrip('\n')))
         self.H = args.H
-        self.W = args.W
         self.fov = args.fov
         self.N_views = N_views
         self.rgb_transform = T.Compose([
@@ -92,7 +91,7 @@ class TaR_dataset(data.Dataset):
         frame_rgb_map = torch.from_numpy(frame_rgb_map.astype(np.float32)).clone()
         frame_rgb_map = self.rgb_transform(frame_rgb_map)
 
-        return frame_rgb_map, frame_mask, frame_depth_map, frame_camera_pos,frame_camera_rot, frame_obj_rot
+        return frame_rgb_map, frame_mask, frame_depth_map, frame_camera_pos, frame_camera_rot, frame_obj_rot
 
     def __len__(self):
         return len(self.instance_path_list)

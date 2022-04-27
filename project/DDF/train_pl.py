@@ -101,13 +101,16 @@ class DDF_latent_sampler(pl.LightningModule):
         
         # Integrate config
         self.integrate_sampling_mode = args.integrate_sampling_mode
-        self.integrate_TransFormer_mode = args.integrate_TransFormer_mode
-        if self.integrate_sampling_mode=='TransFormer':
-            # self.positional_encoding = PositionalEncoding(self.voxel_ch_num, 0.0, max_len=self.voxel_sample_num)
-            self.time_series_model = nn.MultiheadAttention(embed_dim=self.voxel_ch_num, num_heads=args.num_heads, bias=True)
-        elif self.integrate_sampling_mode=='CAT':
+        # self.integrate_TransFormer_mode = args.integrate_TransFormer_mode
+        # if self.integrate_sampling_mode=='TransFormer':
+        #     # self.positional_encoding = PositionalEncoding(self.voxel_ch_num, 0.0, max_len=self.voxel_sample_num)
+        #     self.time_series_model = nn.MultiheadAttention(embed_dim=self.voxel_ch_num, num_heads=args.num_heads, bias=True)
+        if self.integrate_sampling_mode=='CAT':
             self.fc_inp_size = self.voxel_ch_num * self.voxel_sample_num
             self.fc = nn.Sequential(nn.Linear(self.fc_inp_size, self.latent_3d_size), nn.LeakyReLU(0.2))
+        else:
+            print('unknown integrate mode')
+            sys.exit()
             
     
     def forward(self, lat_voxel, rays_d_wrd, rays_o, blur_mask=False, normal_mask=False, train=False):
@@ -272,7 +275,6 @@ class DDF(pl.LightningModule):
                         'skips' : [4],
                         'mapping_size' : args.mapping_size,
                         'mapping_scale' : args.mapping_scale,
-                        'multires_views' : args.multires_views
             }
 
         if self.use_3d_code:
@@ -295,7 +297,7 @@ class DDF(pl.LightningModule):
         # log config
         self.save_interval = args.save_interval
         self.log_image_interval = 10
-        self.test_path = args.test_path
+        # self.test_path = args.test_path
 
         # loss func.
         self.mae = nn.L1Loss()

@@ -25,9 +25,11 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from chamferdist import ChamferDistance
 from scipy.spatial.transform import Rotation as R
 
+from ResNet import *
 from parser import *
-from often_use import *
 from dataset import *
+from often_use import *
+from DDF.train_pl import DDF
 
 torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 
@@ -54,12 +56,11 @@ class test_model(pl.LightningModule):
     def __init__(self, args):
         super().__init__()
 
-        self.fc = nn.Sequential(
-                nn.Linear(5, 5), nn.LeakyReLU(0.2)
-                )
+        # self.fc = nn.Sequential(nn.Linear(5, 5), nn.LeakyReLU(0.2))
+        self.ResNet50 = ResNet50(args, in_channel=2)
     
     def forward(self, inp):
-        x = self.fc(inp)
+        x = self.ResNet50(inp)
         return x
 
 
@@ -68,15 +69,17 @@ class test_model(pl.LightningModule):
 
 class TaR(pl.LightningModule):
 
-    def __init__(self, args):
+    def __init__(self, args, ddf):
         super().__init__()
 
         # Base configs
         self.H = args.H
         self.fov = args.fov
         self.lr = args.lr
+        self.rays_d_cam = get_ray_direction(self.H, self.fov)
 
         # Make model
+        self.ddf = ddf
         self.model = test_model(args)
 
         # log config
@@ -97,9 +100,36 @@ class TaR(pl.LightningModule):
 
 
     def training_step(self, batch, batch_idx):
-        loss = 0
+        # with torch.no_grad():
+        # Get input
+        frame_rgb_map, frame_mask, frame_depth_map, frame_camera_pos, frame_camera_rot, frame_obj_rot = batch
+
+        loss = []
+        frame_num = frame_rgb_map.shape[1]
+        for frame_idx in range(frame_num):
+
+            depth_map = frame_depth_map[:, frame_idx]
+            mask = frame_mask[:, frame_idx]
+
+            inp = torch.stack([depth_map, mask], 1)
+            loss_i = torch.norm(self.model(inp))
+            loss.append(loss_i)
+
+        # Get depth map.
+        test_pos = frame_camera_pos[0, 0].unsqueeze(0)
+        test_c2w = frame_camera_rot[0, 0].unsqueeze(0).permute(0, 2, 1)
+        test_idx = torch.full((1, 1), 103).to(self.ddf.device) # 1a6f615e8b1b5ae4dbbc9440457e303e
+
+        input_lat_vec = self.ddf.lat_vecs(test_idx)
+        rays_o = test_pos[:, None, None, :].expand(-1, self.H, self.H, -1)
+        rays_d_wrd = torch.sum(self.rays_d_cam[:, :, :, None, :].to(self.ddf.device) * test_c2w[:, None, None, :, :], -1)
+
+        est_invdepth_map = self.ddf.forward(rays_o, rays_d_wrd, input_lat_vec)
+        check_map(est_invdepth_map[0])
         import pdb; pdb.set_trace()
-        return loss
+        
+
+        return sum(loss)
 
 
 
@@ -197,13 +227,18 @@ if __name__=='__main__':
     # val_dataset = dataset(args, args.val_data_dir, args.N_val_views)
     # val_dataloader = data_utils.DataLoader(train_dataset, batch_size=args.N_batch, num_workers=args.num_workers, drop_last=False, shuffle=True)
 
+    # Get ddf.
+    ddf = DDF(args)
+    ddf = ddf.load_from_checkpoint(checkpoint_path=args.ddf_model_path, args=args)
+    ddf.eval()
+    
     # Get ckpts path.
     ckpt_dir = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'checkpoints/*')
     ckpt_path_list = sorted(glob.glob(ckpt_dir))
 
     # Load ckpt and start training.
     if len(ckpt_path_list) == 0:
-        model = TaR(args)
+        model = TaR(args, ddf)
         trainer.fit(
             model=model, 
             train_dataloaders=train_dataloader, 
@@ -215,7 +250,7 @@ if __name__=='__main__':
     elif len(ckpt_path_list) > 0:
         latest_ckpt_path = ckpt_path_list[-1]
         print('\n', f'+++ Reloading from {latest_ckpt_path} +++ \n')
-        model = TaR(args)
+        model = TaR(args, ddf)
         trainer.fit(
             model=model, 
             train_dataloaders=train_dataloader, 

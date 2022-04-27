@@ -117,3 +117,8 @@ CUDA_VISIBLE_DEVICES=4 python render_depth_rot.py --config=configs/multi35/cat_0
 CUDA_VISIBLE_DEVICES=4 python render_depth_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
 CUDA_VISIBLE_DEVICES=4 python render_depth_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
 nvidia-smi
+tensorboard --logdir /home/yyoshitake/shark/works/DeepSDF/project/lightning_logs --port 6007
+tensorboard --logdir /home/yyoshitake/shark/works/DeepSDF/project/lightning_logs --port 7788
+tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs --port 7788
+tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs --port 7788
+tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/ --port 7788
