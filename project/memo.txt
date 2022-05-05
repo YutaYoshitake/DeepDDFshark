@@ -110,4 +110,37 @@
 
 
 
-        
+
+
+        # Get depth map.
+        # w2o = batch_pi2rot_y(-frame_obj_rot[:, 0])[0].T
+        # test_pos = (w2o@frame_camera_pos[0, 0]).unsqueeze(0)
+        # c2w = frame_camera_rot[0, 0].T
+        # test_c2w = (w2o@c2w).unsqueeze(0) # camera -> world
+        test_pos = pos_obj[0].unsqueeze(0)
+        test_c2w = pos_c2w[0].unsqueeze(0) # camera -> world
+        test_instance_idx = self.ddf_instance_list.index(instance_id[0])
+        test_idx = torch.full((1, 1), test_instance_idx).to(self.ddf.device)
+        # input for self.ddf.forward()
+        input_lat_vec = self.ddf.lat_vecs(test_idx)
+        rays_o = test_pos[:, None, None, :].expand(-1, self.H, self.H, -1)
+        rays_d_wrd = torch.sum(self.rays_d_cam[:, :, :, None, :].to(self.ddf.device) * test_c2w[:, None, None, :, :], -1)
+        # rendering
+        est_invdepth_map = self.ddf.forward(rays_o, rays_d_wrd, input_lat_vec)
+        check_map(est_invdepth_map[0])
+        check_map(frame_depth_map[0, 0], 'tes_ori.png')
+
+
+
+
+
+        loss = []
+        frame_num = frame_rgb_map.shape[1]
+        for frame_idx in range(frame_num):
+
+            depth_map = frame_depth_map[:, frame_idx]
+            mask = frame_mask[:, frame_idx]
+
+            inp = torch.stack([depth_map, mask], 1)
+            loss_i = torch.norm(self.model(inp))
+            loss.append(loss_i)

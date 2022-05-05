@@ -5,12 +5,13 @@ train_instance_list_txt = ./instance_lists/test_moving_canmera_instance_train_li
 val_data_dir = /home/yyoshitake/works/DeepSDF/project/dataset/dugon/test_moving_camera/test_moving_camera_val_data
 val_N_views = 25
 val_instance_list_txt = ./instance_lists/test_moving_canmera_instance_val_list.txt
+frame_num = 5
 
 
 
 save_interval = 10
 N_epoch = 100
-N_batch = 2
+N_batch = 5
 check_val_every_n_epoch = 10
 lr = 0.001
 
@@ -18,6 +19,7 @@ lr = 0.001
 
 
 ddf_model_path = /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/chair/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000004800.ckpt
+ddf_instance_list_txt = ./instance_lists/instance_list.txt
 
 latent_size = 256
 use_world_dir = True

@@ -12,8 +12,11 @@
 *.ckpt
 project/__pycache__/
 project/dataset/
-project/FS_Net
 project/DDF/__pycache__/
 project/DDF/lightning_logs/
+project/FS_Net
+project/initnet_results
+project/lightning_logs
 project/old_files/
 project/sync_batchnorm/__pycache__/
+project/test_dfnet_png

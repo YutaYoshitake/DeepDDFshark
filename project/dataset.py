@@ -90,8 +90,9 @@ class TaR_dataset(data.Dataset):
         # Preprocessing.
         frame_rgb_map = torch.from_numpy(frame_rgb_map.astype(np.float32)).clone()
         frame_rgb_map = self.rgb_transform(frame_rgb_map)
+        instance_id = self.instance_path_list[index].split('/')[-1]
 
-        return frame_rgb_map, frame_mask, frame_depth_map, frame_camera_pos, frame_camera_rot, frame_obj_rot
+        return frame_rgb_map, frame_mask, frame_depth_map, frame_camera_pos, frame_camera_rot, frame_obj_rot, instance_id
 
     def __len__(self):
         return len(self.instance_path_list)

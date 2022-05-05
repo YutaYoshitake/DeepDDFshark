@@ -71,8 +71,8 @@ def xyz2polar(x, y, z):
 
 
 
-def check_map(image, path = 'tes.png'):
-    fig = pylab.figure(figsize=(5, 5))
+def check_map(image, path = 'tes.png', figsize=[10,10]):
+    fig = pylab.figure(figsize=figsize)
 
     ax1 = fig.add_subplot(1, 1, 1)
     ax1.set_title('result')

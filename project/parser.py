@@ -46,6 +46,8 @@ def config_parser():
                         help='')
     parser.add_argument("--val_instance_list_txt", type=str, 
                         help='')
+    parser.add_argument("--frame_num", type=int, 
+                        help='')
 
     # training options
     parser.add_argument("--H", type=int, default=256, 
@@ -70,6 +72,8 @@ def config_parser():
     # ddf config.
     parser.add_argument("--ddf_model_path", type=str, 
                         help='')
+    parser.add_argument('--ddf_instance_list_txt', type=str,
+                        help='pos or dir')
     parser.add_argument("--N_instances", type=int, default=3196,
                         help='')
     parser.add_argument("--netdepth", type=int, default=8, 
