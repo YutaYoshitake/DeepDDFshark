@@ -1,5 +1,5 @@
 H = 256
-N_batch = 5
+N_batch = 2
 N_epoch = 100
 N_instances = 3196
 W = 256
