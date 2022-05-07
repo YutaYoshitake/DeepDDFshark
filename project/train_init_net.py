@@ -85,6 +85,7 @@ class resnet_encoder(pl.LightningModule):
         axis_red = F.normalize(x_red, dim=-1)
 
         shape_code = self.fc_shape_code(x)
+        # return axis_green, axis_red, shape_code, x
         return axis_green, axis_red, shape_code
 
 
@@ -98,32 +99,86 @@ class df_resnet_encoder(pl.LightningModule):
 
         self.encoder = ResNet50(args, in_channel=in_channel)
         self.fc_axis_green = nn.Sequential(
-                nn.Linear(2048, 256), nn.LeakyReLU(0.2),
+                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
                 nn.Linear(256, 256), nn.LeakyReLU(0.2),
                 nn.Linear(256, 3), 
                 )
         self.fc_axis_red = nn.Sequential(
-                nn.Linear(2048, 256), nn.LeakyReLU(0.2),
+                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
                 nn.Linear(256, 256), nn.LeakyReLU(0.2),
                 nn.Linear(256, 3), 
                 )
         self.fc_shape_code = nn.Sequential(
-                nn.Linear(2048, 512), nn.LeakyReLU(0.2),
+                nn.Linear(2048 + args.latent_size, 512), nn.LeakyReLU(0.2),
                 nn.Linear(512, 512), nn.LeakyReLU(0.2),
                 nn.Linear(512, args.latent_size), 
                 )
 
     
-    def forward(self, inp):
+    def forward(self, inp, pre_axis_green, pre_axis_red, pre_shape_code):
         batch_size = inp.shape[0]
         x = self.encoder(inp)
         x = x.reshape(batch_size, -1)
 
-        diff_axis_green = self.fc_axis_green(x)
-        diff_axis_red = self.fc_axis_red(x)
-        diff_shape_code = self.fc_shape_code(x)
+        axis_green_x = torch.cat([x, pre_axis_green], dim=-1)
+        diff_axis_green = self.fc_axis_green(axis_green_x)
+        axis_red_x = torch.cat([x, pre_axis_red], dim=-1)
+        diff_axis_red = self.fc_axis_red(axis_red_x)
+        shape_code_x = torch.cat([x, pre_shape_code], dim=-1)
+        diff_shape_code = self.fc_shape_code(shape_code_x)
 
         return diff_axis_green, diff_axis_red, diff_shape_code
+
+
+
+
+
+class df_resnet_encoder_with_gru(pl.LightningModule):
+
+    def __init__(self, args, in_channel=2):
+        super().__init__()
+
+        self.encoder = ResNet50(args, in_channel=in_channel)
+        self.fc_axis_green = nn.Sequential(
+                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 3), 
+                )
+        self.fc_axis_red = nn.Sequential(
+                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 3), 
+                )
+        self.fc_shape_code = nn.Sequential(
+                nn.Linear(2048 + args.latent_size, 512), nn.LeakyReLU(0.2),
+                nn.Linear(512, 512), nn.LeakyReLU(0.2),
+                nn.Linear(512, args.latent_size), 
+                )
+        self.gru = nn.GRU(input_size=2048, hidden_size=2048) # 試し
+
+    
+    def forward(self, inp, pre_axis_green, pre_axis_red, pre_shape_code, h_0):
+        batch_size = inp.shape[0]
+        
+        x = self.encoder(inp)
+        x = x.reshape(batch_size, -1)
+        #########################
+        #########################
+        #########################
+        x, post_h = self.gru(x.unsqueeze(0), h_0.unsqueeze(0))
+        x = x.reshape(batch_size, -1)
+        h_1 = post_h.reshape(batch_size, -1)
+        #########################
+        #########################
+        #########################
+
+        axis_green_x = torch.cat([x, pre_axis_green], dim=-1)
+        diff_axis_green = self.fc_axis_green(axis_green_x)
+        axis_red_x = torch.cat([x, pre_axis_red], dim=-1)
+        diff_axis_red = self.fc_axis_red(axis_red_x)
+        shape_code_x = torch.cat([x, pre_shape_code], dim=-1)
+        diff_shape_code = self.fc_shape_code(shape_code_x)
+        return diff_axis_green, diff_axis_red, diff_shape_code, x, h_1
 
 
 

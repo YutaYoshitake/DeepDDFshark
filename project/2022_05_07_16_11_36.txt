@@ -1,0 +1,2 @@
+time_log : 2022_05_07_16_11_36
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt

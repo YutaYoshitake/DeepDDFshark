@@ -1,0 +1,17 @@
+time_log : 2022_05_06_18_18_20
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.00022256757603568328
+avg_err_axis_red : 0.0008120808833565815
+avg_err_depth : 0.03315882757306099
+
+time_log : 2022_05_07_10_53_26
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.0001703566720666072
+avg_err_axis_red : 0.0006809776384461777
+avg_err_depth : 0.03194957226514816
+
+time_log : 2022_05_06_12_18_33
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_initnet_0/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.0004823522070848557
+avg_err_axis_red : 0.0016345478773763886
+avg_err_depth : 0.04313591122627258

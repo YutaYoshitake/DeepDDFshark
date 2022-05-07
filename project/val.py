@@ -88,7 +88,7 @@ if __name__=='__main__':
     # Get init net.
     init_net = TaR_init_only(args, ddf)
     init_net = init_net.load_from_checkpoint(
-        checkpoint_path='./lightning_logs/DeepTaR/chair/test_initnet_0/checkpoints/0000005000.ckpt', 
+        checkpoint_path='./lightning_logs/DeepTaR/chair/test_initnet_0/checkpoints/0000003200.ckpt', 
         args=args, 
         ddf=ddf
         )
@@ -96,14 +96,15 @@ if __name__=='__main__':
     # Get dfnet.
     df_net = TaR(args, ddf)
     df_net = df_net.load_from_checkpoint(
-        checkpoint_path= './lightning_logs/DeepTaR/chair/test_dfnet_0/checkpoints/0000001700.ckpt', 
+        checkpoint_path= './lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt', 
         args=args, 
         ddf=ddf
         )
 
     # Val.
+    model = init_net.eval()
     model = df_net.eval()
-    ckpt_path = './lightning_logs/DeepTaR/chair/test_dfnet_0/checkpoints/0000001700.ckpt'
+    ckpt_path = './lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt'
     import datetime
     dt_now = datetime.datetime.now()
     time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')

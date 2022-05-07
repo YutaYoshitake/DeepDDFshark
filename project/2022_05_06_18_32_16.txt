@@ -1,0 +1,5 @@
+time_log : 2022_05_06_18_32_16
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.0002168432301188777
+avg_err_axis_red : 0.0008337124910528515
+avg_err_depth : 0.033404264599084854
