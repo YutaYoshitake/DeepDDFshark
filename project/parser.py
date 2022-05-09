@@ -113,4 +113,8 @@ def config_parser():
     parser.add_argument("--pixel_diff_ratio", type=float, default=1e-3,
                         help='')
 
+    
+    parser.add_argument('--test_model', type=str, default='nomal',
+                        help='pos or dir')
+
     return parser

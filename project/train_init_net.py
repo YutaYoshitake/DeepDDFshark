@@ -36,16 +36,16 @@ torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEBUG = False
 
-seed = 0
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-os.environ['PYTHONHASHSEED'] = str(seed)
-if device=='cuda':
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+# seed = 0
+# random.seed(seed)
+# np.random.seed(seed)
+# torch.manual_seed(seed)
+# torch.cuda.manual_seed(seed)
+# os.environ['PYTHONHASHSEED'] = str(seed)
+# if device=='cuda':
+#     torch.cuda.manual_seed_all(seed)
+#     torch.backends.cudnn.deterministic = True
+#     torch.backends.cudnn.benchmark = False
 
 
 
@@ -74,7 +74,7 @@ class resnet_encoder(pl.LightningModule):
                 )
 
     
-    def forward(self, inp):
+    def forward(self, inp, use_gru=False):
         batch_size = inp.shape[0]
         x = self.encoder(inp)
         x = x.reshape(batch_size, -1)
@@ -85,8 +85,10 @@ class resnet_encoder(pl.LightningModule):
         axis_red = F.normalize(x_red, dim=-1)
 
         shape_code = self.fc_shape_code(x)
-        # return axis_green, axis_red, shape_code, x
-        return axis_green, axis_red, shape_code
+        if use_gru:
+            return axis_green, axis_red, shape_code, x
+        else:
+            return axis_green, axis_red, shape_code
 
 
 
@@ -604,13 +606,20 @@ class TaR_init_only(pl.LightningModule):
             est_shape_code.append(est_shape_code_i)
         
         # Get average.
-        est_axis_green_wrd = torch.stack(est_axis_green_wrd, dim=1).mean(dim=1)
-        est_axis_red_wrd = torch.stack(est_axis_red_wrd, dim=1).mean(dim=1)
+        s = 0 # np.random.randint(0, self.frame_num-3+1)
+        e = 3 # self.frame_num # s+3
+        est_axis_green_wrd = torch.stack(est_axis_green_wrd, dim=1)[:, s:e].mean(dim=1)
+        est_axis_red_wrd = torch.stack(est_axis_red_wrd, dim=1)[:, s:e].mean(dim=1)
         est_axis_green_wrd = F.normalize(est_axis_green_wrd, dim=1)
         est_axis_red_wrd = F.normalize(est_axis_red_wrd, dim=1)
-        est_shape_code = torch.stack(est_shape_code, dim=1).mean(dim=1)
+        est_shape_code = torch.stack(est_shape_code, dim=1)[:, s:e].mean(dim=1)
 
         with torch.no_grad():
+            # Set random frames.
+            frame_idx = -1 # random.randint(0, frame_rgb_map.shape[1]-1)
+            mask = frame_mask[:, frame_idx]
+            depth_map = frame_depth_map[:, frame_idx]
+
             # Get rotation matrix.
             w2c = frame_camera_rot[:, frame_idx]
             est_axis_green = torch.sum(est_axis_green_wrd[..., None, :]*w2c, -1)
@@ -646,12 +655,14 @@ class TaR_init_only(pl.LightningModule):
                     
             # Check depth map.
             check_map_1 = []
-            for batch_idx in range(batch_size):
-                check_map_i = torch.cat([depth_map[batch_idx], est_depth_map[batch_idx]], dim=0)
+            for batch_i in range(batch_size):
+                check_map_i = torch.cat([
+                    depth_map[batch_i], 
+                    est_depth_map[batch_i], 
+                    torch.abs(depth_map[batch_i]-est_depth_map[batch_i])], dim=0)
                 check_map_1.append(check_map_i)
             check_map_1 = torch.cat(check_map_1, dim=1)
-            check_map(check_map_1, 'check_map_1.png', figsize=[10,2])
-            check_map_1 = []
+            check_map(check_map_1, f'check_map_{batch_idx}.png', figsize=[10,2])
 
         # Cal err.
         err_axis_green = torch.mean(-self.cossim(est_axis_green_wrd, gt_axis_green_wrd) + 1.)

@@ -29,8 +29,9 @@ from ResNet import *
 from parser import *
 from dataset import *
 from often_use import *
-from train_dfnet import *
 from train_init_net import *
+from train_dfnet import *
+from train_frame_dfnet import *
 from DDF.train_pl import DDF
 
 torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
@@ -38,16 +39,16 @@ torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEBUG = False
 
-seed = 0
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-os.environ['PYTHONHASHSEED'] = str(seed)
-if device=='cuda':
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+# seed = 0
+# random.seed(seed)
+# np.random.seed(seed)
+# torch.manual_seed(seed)
+# torch.cuda.manual_seed(seed)
+# os.environ['PYTHONHASHSEED'] = str(seed)
+# if device=='cuda':
+#     torch.cuda.manual_seed_all(seed)
+#     torch.backends.cudnn.deterministic = True
+#     torch.backends.cudnn.benchmark = False
 
 
 
@@ -65,8 +66,8 @@ if __name__=='__main__':
         enable_checkpointing = False,
         )    
     
-    # Create dataloader
-    val_dataset = TaR_dataset(
+    # Create dataloader.
+    val_dataset = TaR_testset(
         args, 
         args.val_instance_list_txt, 
         args.val_data_dir, 
@@ -80,31 +81,55 @@ if __name__=='__main__':
         shuffle=False
         )
 
-    # Get ddf.
+    # Create ddf.
     ddf = DDF(args)
     ddf = ddf.load_from_checkpoint(checkpoint_path=args.ddf_model_path, args=args)
     ddf.eval()
 
-    # Get init net.
-    init_net = TaR_init_only(args, ddf)
-    init_net = init_net.load_from_checkpoint(
-        checkpoint_path='./lightning_logs/DeepTaR/chair/test_initnet_0/checkpoints/0000003200.ckpt', 
-        args=args, 
-        ddf=ddf
-        )
+    # # Create init net.
+    # init_net = TaR_init_only(args, ddf)
+    # checkpoint_path = './lightning_logs/DeepTaR/chair/test_initnet_0/checkpoints/0000003200.ckpt'
+    # init_net = init_net.load_from_checkpoint(
+    #     checkpoint_path=checkpoint_path, 
+    #     args=args, 
+    #     ddf=ddf
+    #     )
+    # model = init_net.eval()
     
-    # Get dfnet.
-    df_net = TaR(args, ddf)
-    df_net = df_net.load_from_checkpoint(
-        checkpoint_path= './lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt', 
+    # # Create dfnet.
+    # # if args.test_model=='nomal':
+    # #     print('aaa')
+    # args.use_gru = False
+    # df_net = TaR(args, ddf)
+    # checkpoint_path = './lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt'
+    # df_net = df_net.load_from_checkpoint(
+    #     checkpoint_path=checkpoint_path, 
+    #     args=args, 
+    #     ddf=ddf
+    #     )
+    # df_net.eval()
+    # model = df_net
+    # model.test_mode = 'average'
+    # checkpoint_path = checkpoint_path + '---' + model.test_mode + '---single'
+    
+    # Create dfnet.
+    # elif args.test_model=='frame':
+    print('bbb')
+    args.use_gru = True
+    frame_df_net = TaR_frame(args, ddf)
+    checkpoint_path = './lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200.ckpt'
+    frame_df_net = frame_df_net.load_from_checkpoint(
+        checkpoint_path=checkpoint_path, 
         args=args, 
         ddf=ddf
         )
+    frame_df_net.eval()
+    model = frame_df_net
+    # checkpoint_path = './lightning_logs/DeepTaR/chair/test_dfnet_framegru/checkpoints/0000003300.ckpt : opt=4 : [4, 2, 2]'
+    model.test_mode = 'sequence'
 
     # Val.
-    model = init_net.eval()
-    model = df_net.eval()
-    ckpt_path = './lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt'
+    ckpt_path = checkpoint_path
     import datetime
     dt_now = datetime.datetime.now()
     time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
@@ -117,6 +142,8 @@ if __name__=='__main__':
     model.test_log_path = file_name
     trainer.test(model, val_dataloader)
     
-    # Delite lightning log.
-    import shutil
-    shutil.rmtree('./lightning_logs/version_0')
+    # # Delite lightning log.
+    # import shutil
+    # trash_log_list = glob.glob('./lightning_logs/version_*')
+    # for trash_log_path in trash_log_list:
+    #     shutil.rmtree(trash_log_path)

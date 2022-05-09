@@ -96,3 +96,56 @@ class TaR_dataset(data.Dataset):
 
     def __len__(self):
         return len(self.instance_path_list)
+
+
+
+
+
+class TaR_testset(data.Dataset):
+    def __init__(
+        self, 
+        args, 
+        instance_list_txt, 
+        data_dir, 
+        N_views
+        ):
+    
+        self.instance_path_list = []
+        with open(instance_list_txt, 'r') as f:
+            lines = f.read().splitlines()
+            for line in lines:
+                for view_ind in range(N_views):
+                    self.instance_path_list.append(
+                        os.path.join(
+                            data_dir, 
+                            line.rstrip('\n'), 
+                            f'{str(view_ind+1).zfill(5)}.pickle'))
+        self.H = args.H
+        self.fov = args.fov
+        self.rgb_transform = T.Compose([
+            T.Resize(self.H),
+            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+
+    def __getitem__(self, index):
+
+        # Load data
+        path = self.instance_path_list[index]
+        data_dict = pickle_load(path)
+
+        frame_rgb_map = data_dict['rgb_map'].transpose(0, 3, 1, 2)
+        frame_mask = data_dict['mask']
+        frame_depth_map = data_dict['depth_map']
+        frame_camera_pos = data_dict['camera_pos']
+        frame_camera_rot = data_dict['camera_rot']
+        frame_obj_rot = data_dict['obj_rot']
+
+        # Preprocessing.
+        frame_rgb_map = torch.from_numpy(frame_rgb_map.astype(np.float32)).clone()
+        frame_rgb_map = self.rgb_transform(frame_rgb_map)
+        instance_id = self.instance_path_list[index].split('/')[-1]
+
+        return frame_rgb_map, frame_mask, frame_depth_map, frame_camera_pos, frame_camera_rot, frame_obj_rot, instance_id
+
+    def __len__(self):
+        return len(self.instance_path_list)

@@ -18,5 +18,6 @@ project/FS_Net
 project/initnet_results
 project/lightning_logs
 project/old_files/
+project/sample_images/
 project/sync_batchnorm/__pycache__/
 project/test_dfnet_png
