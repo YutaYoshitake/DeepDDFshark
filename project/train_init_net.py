@@ -115,12 +115,32 @@ class df_resnet_encoder(pl.LightningModule):
                 nn.Linear(512, 512), nn.LeakyReLU(0.2),
                 nn.Linear(512, args.latent_size), 
                 )
+        # ###############
+        # ###############
+        # ###############
+        # self.fc_deep = nn.Sequential(
+        #         nn.Linear(2048, 2048), nn.LeakyReLU(0.2),
+        #         nn.Linear(2048, 2048), nn.LeakyReLU(0.2),
+        #         nn.Linear(2048, 2048), nn.LeakyReLU(0.2),
+        #         nn.Linear(2048, 2048), nn.LeakyReLU(0.2),
+        #         nn.Linear(2048, 2048), 
+        #         )
+        # ###############
+        # ###############
+        # ###############
 
     
     def forward(self, inp, pre_axis_green, pre_axis_red, pre_shape_code):
         batch_size = inp.shape[0]
         x = self.encoder(inp)
         x = x.reshape(batch_size, -1)
+        # ###############
+        # ###############
+        # ###############
+        # x = self.fc_deep(x)
+        # ###############
+        # ###############
+        # ###############
 
         axis_green_x = torch.cat([x, pre_axis_green], dim=-1)
         diff_axis_green = self.fc_axis_green(axis_green_x)
@@ -156,7 +176,11 @@ class df_resnet_encoder_with_gru(pl.LightningModule):
                 nn.Linear(512, 512), nn.LeakyReLU(0.2),
                 nn.Linear(512, args.latent_size), 
                 )
-        self.gru = nn.GRU(input_size=2048, hidden_size=2048) # 試し
+        self.fc_deep = nn.Sequential(
+                nn.Linear(4096, 2048), nn.LeakyReLU(0.2),
+                nn.Linear(2048, 2048),
+                )
+        # self.gru = nn.GRU(input_size=2048, hidden_size=2048) # 試し
 
     
     def forward(self, inp, pre_axis_green, pre_axis_red, pre_shape_code, h_0):
@@ -167,9 +191,12 @@ class df_resnet_encoder_with_gru(pl.LightningModule):
         #########################
         #########################
         #########################
-        x, post_h = self.gru(x.unsqueeze(0), h_0.unsqueeze(0))
-        x = x.reshape(batch_size, -1)
-        h_1 = post_h.reshape(batch_size, -1)
+        x = torch.cat([x, h_0], dim=-1)
+        x = self.fc_deep(x)
+        h_1 = x
+        # x, post_h = self.gru(x.unsqueeze(0), h_0.unsqueeze(0))
+        # x = x.reshape(batch_size, -1)
+        # h_1 = post_h.reshape(batch_size, -1)
         #########################
         #########################
         #########################
@@ -202,7 +229,7 @@ class TaR_init_only(pl.LightningModule):
             for line in lines:
                 self.ddf_instance_list.append(line.rstrip('\n'))
         self.save_interval = args.save_interval
-        self.optim_step_num = 5
+        self.optim_step_num = 3 # 5
         self.frame_num = args.frame_num
         self.model_params_dtype = False
         self.model_device = False

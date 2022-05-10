@@ -270,3 +270,7 @@ def batch_pi2rot_y(pi):
         sys.exit()
 
             
+                                    
+def get_weighted_average(target, ratio): # [Batch, Sample, Values]
+    ratio = ratio / torch.sum(ratio, dim=1)[..., None] # [Batch, Sample]
+    return torch.sum(ratio[..., None] * target, dim=1) # [Batch, Sample, Values]

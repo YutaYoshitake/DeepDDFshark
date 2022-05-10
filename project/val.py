@@ -115,9 +115,9 @@ if __name__=='__main__':
     # Create dfnet.
     # elif args.test_model=='frame':
     print('bbb')
-    args.use_gru = True
+    args.use_gru = False
     frame_df_net = TaR_frame(args, ddf)
-    checkpoint_path = './lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200.ckpt'
+    checkpoint_path = './lightning_logs/DeepTaR/chair/test_dfnet_frame/checkpoints/0000003200.ckpt'
     frame_df_net = frame_df_net.load_from_checkpoint(
         checkpoint_path=checkpoint_path, 
         args=args, 
@@ -129,12 +129,21 @@ if __name__=='__main__':
     model.test_mode = 'sequence'
 
     # Val.
-    ckpt_path = checkpoint_path
+    model.average_each_results = True
+    model.start_frame_idx = 0
+    model.frame_sequence_num = 3
+    model.half_lambda_max = 8
+    if model.test_mode == 'average':
+        model.test_optim_num = 5
+    if model.test_mode == 'sequence':
+        model.test_optim_num = [5, 3, 2]
+
     import datetime
     dt_now = datetime.datetime.now()
     time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
 
     file_name = time_log + '.txt'
+    ckpt_path = checkpoint_path
     with open(file_name, 'a') as file:
         file.write('time_log : ' + time_log + '\n')
         file.write('ckpt_path : ' + ckpt_path + '\n')
