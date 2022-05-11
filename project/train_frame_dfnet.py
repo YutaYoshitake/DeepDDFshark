@@ -40,7 +40,7 @@ torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEBUG = False
 
-seed = 0
+seed = 7
 random.seed(seed)
 np.random.seed(seed)
 torch.manual_seed(seed)
@@ -87,6 +87,7 @@ class TaR_frame(pl.LightningModule):
             self.df_net = df_resnet_encoder(args, in_channel=5)
 
         # loss func.
+        self.l1 = torch.nn.L1Loss()
         self.cossim = nn.CosineSimilarity(dim=-1)
 
 
@@ -386,7 +387,6 @@ class TaR_frame(pl.LightningModule):
             for frame_sequence_idx in range(self.frame_sequence_num):
                 frame_idx = self.start_frame_idx + frame_sequence_idx
 
-                early_stop = False
                 for optim_idx in range(self.test_optim_num[frame_sequence_idx]):
 
                     # Get ground truth.
@@ -429,7 +429,6 @@ class TaR_frame(pl.LightningModule):
                         # check_map(check_map_inp[0], f'input_frame_{frame_sequence_idx}_opt_{optim_idx}.png', figsize=[10,2])
 
                     # Estimating depth map.
-                    # self.half_lambda_max = 3 # 8
                     for half_lambda_idx in range(self.half_lambda_max):
                         # Get simulation results.
                         rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
@@ -611,45 +610,34 @@ class TaR_frame(pl.LightningModule):
         ###########################################################################
         #########################      check result       #########################
         ###########################################################################
-        # Set random frames.
-        frame_idx = -1 # 2
-        # frame_idx = random.randint(0, frame_rgb_map.shape[1]-1)
-        mask = frame_mask[:, frame_idx]
-        depth_map = frame_depth_map[:, frame_idx]
+        with torch.no_grad():
+            # Set random frames.
+            frame_idx = -1 # random.randint(0, frame_rgb_map.shape[1]-1)
+            mask = frame_mask[:, frame_idx]
+            depth_map = frame_depth_map[:, frame_idx]
 
-        # Get simulation results.
-        w2c = frame_camera_rot[:, frame_idx]
-        est_axis_green = torch.sum(est_axis_green_wrd[..., None, :]*w2c, -1)
-        est_axis_red = torch.sum(est_axis_red_wrd[..., None, :]*w2c, -1)
-        rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
-        obj_pos_wrd = torch.zeros(batch_size, 3, device=frame_camera_rot.device)
-        est_mask, est_depth_map = get_depth_map_from_axis(
-                                        H = self.H, 
-                                        axis_green = est_axis_green, 
-                                        axis_red = est_axis_red,
-                                        cam_pos_wrd = frame_camera_pos[:, frame_idx], 
-                                        obj_pos_wrd = obj_pos_wrd, 
-                                        rays_d_cam = rays_d_cam, 
-                                        w2c = w2c, 
-                                        input_lat_vec = est_shape_code_i, 
-                                        ddf = self.ddf, 
-                                        )
-                
-        # # Check depth map.
-        # check_map_1 = []
-        # for batch_i in range(batch_size):
-        #     check_map_i = torch.cat([
-        #         depth_map[batch_i], 
-        #         est_depth_map[batch_i], 
-        #         torch.abs(depth_map[batch_i]-est_depth_map[batch_i])], dim=0)
-        #     check_map_1.append(check_map_i)
-        # check_map_1 = torch.cat(check_map_1, dim=1)
-        # check_map(check_map_1, f'check_batch_{str(batch_idx).zfill(5)}.png', figsize=[10,2])
+            # Get simulation results.
+            w2c = frame_camera_rot[:, frame_idx]
+            est_axis_green = torch.sum(est_axis_green_wrd[..., None, :]*w2c, -1)
+            est_axis_red = torch.sum(est_axis_red_wrd[..., None, :]*w2c, -1)
+            rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
+            obj_pos_wrd = torch.zeros(batch_size, 3, device=frame_camera_rot.device)
+            est_mask, est_depth_map = get_depth_map_from_axis(
+                                            H = self.H, 
+                                            axis_green = est_axis_green, 
+                                            axis_red = est_axis_red,
+                                            cam_pos_wrd = frame_camera_pos[:, frame_idx], 
+                                            obj_pos_wrd = obj_pos_wrd, 
+                                            rays_d_cam = rays_d_cam, 
+                                            w2c = w2c, 
+                                            input_lat_vec = est_shape_code_i, 
+                                            ddf = self.ddf, 
+                                            )
 
         # Cal err.
         err_axis_green = torch.mean(-self.cossim(est_axis_green_wrd, gt_axis_green_wrd) + 1.)
         err_axis_red = torch.mean(-self.cossim(est_axis_red_wrd, gt_axis_red_wrd) + 1.)
-        err_depth = self.l1(est_depth_map, depth_map)
+        err_depth = F.mse_loss(est_depth_map, depth_map)
 
         return {'err_axis_green': err_axis_green.detach(), 'err_axis_red': err_axis_red.detach(), 'err_depth': err_depth.detach()}
 
@@ -772,23 +760,23 @@ if __name__=='__main__':
 
     # # Load ckpt and start training.
     # # if len(ckpt_path_list) == 0:
-    # trainer.fit(
-    #     model=model, 
-    #     train_dataloaders=train_dataloader, 
-    #     val_dataloaders=val_dataloader, 
-    #     datamodule=None, 
-    #     ckpt_path=None
-    #     )
-
-    # # elif len(ckpt_path_list) > 0:
-    # #     latest_ckpt_path = ckpt_path_list[-1]
-    # #     print('\n', f'+++ Reloading from {latest_ckpt_path} +++ \n')
-    ckpt_path = './lightning_logs/DeepTaR/chair/test_dfnet_framegru/checkpoints/0000003800.ckpt'
-    model = TaR_frame(args, ddf)
     trainer.fit(
         model=model, 
         train_dataloaders=train_dataloader, 
         val_dataloaders=val_dataloader, 
         datamodule=None, 
-        ckpt_path=ckpt_path # latest_ckpt_path
+        ckpt_path=None
         )
+
+    # # # elif len(ckpt_path_list) > 0:
+    # # #     latest_ckpt_path = ckpt_path_list[-1]
+    # # #     print('\n', f'+++ Reloading from {latest_ckpt_path} +++ \n')
+    # ckpt_path = './lightning_logs/DeepTaR/chair/test_dfnet_framegru/checkpoints/0000003800.ckpt'
+    # model = TaR_frame(args, ddf)
+    # trainer.fit(
+    #     model=model, 
+    #     train_dataloaders=train_dataloader, 
+    #     val_dataloaders=val_dataloader, 
+    #     datamodule=None, 
+    #     ckpt_path=ckpt_path # latest_ckpt_path
+    #     )

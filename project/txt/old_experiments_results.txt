@@ -91,3 +91,57 @@ ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200
 avg_err_axis_green : 0.0006212945547656181
 avg_err_axis_red : 0.0019860340556337136
 avg_err_depth : 0.0432470329105854
+
+
+
+
+#########################
+加重平均_Ver
+#########################
+シングル訓練・最適化ネット（３枚の平均）
+time_log : 2022_05_11_01_20_57
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.000377874506018042
+avg_err_axis_red : 0.0012707919751877542
+avg_err_depth : 0.04431907460093498
+
+シングル訓練・最適化ネット（シーケンス）
+time_log : 2022_05_11_02_47_39
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.0005250063648991178
+avg_err_axis_red : 0.0017711352542267673
+avg_err_depth : 0.04241233691573143
+
+シーケンス訓練・最適化ネット
+time_log : 2022_05_11_03_55_02
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_frame/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.00047558412022507233
+avg_err_axis_red : 0.0012696708104828344
+avg_err_depth : 0.04239796847105026
+
+シングル訓練・最適化ネットGRU（３枚の平均）
+time_log : 2022_05_11_12_17_43
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.00025380793325130056
+avg_err_axis_red : 0.0009025955255064173
+avg_err_depth : 0.042539238929748535
+
+シングル訓練・最適化ネットGRU（シーケンス）
+time_log : 2022_05_11_13_40_59
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.00041461516941761363
+avg_err_axis_red : 0.001520849409460205
+avg_err_depth : 0.04157927259802818
+
+シーケンス訓練・最適化ネットGRU
+time_log : 2022_05_11_14_46_45
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_framegru/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.0004177626149530332
+avg_err_axis_red : 0.0009540297678837575
+avg_err_depth : 0.0379682220518589
+
+time_log : 2022_05_11_14_59_23
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_catgru/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.0004327185469626034
+avg_err_axis_red : 0.0013354522846856316
+avg_err_depth : 0.04709259793162346

@@ -176,11 +176,11 @@ class df_resnet_encoder_with_gru(pl.LightningModule):
                 nn.Linear(512, 512), nn.LeakyReLU(0.2),
                 nn.Linear(512, args.latent_size), 
                 )
-        self.fc_deep = nn.Sequential(
-                nn.Linear(4096, 2048), nn.LeakyReLU(0.2),
-                nn.Linear(2048, 2048),
-                )
-        # self.gru = nn.GRU(input_size=2048, hidden_size=2048) # 試し
+        self.gru = nn.GRU(input_size=2048, hidden_size=2048) # 試し
+        # self.fc_deep = nn.Sequential(
+        #         nn.Linear(4096, 2048), nn.LeakyReLU(0.2),
+        #         nn.Linear(2048, 2048),
+        #         )
 
     
     def forward(self, inp, pre_axis_green, pre_axis_red, pre_shape_code, h_0):
@@ -191,15 +191,15 @@ class df_resnet_encoder_with_gru(pl.LightningModule):
         #########################
         #########################
         #########################
-        x = torch.cat([x, h_0], dim=-1)
-        x = self.fc_deep(x)
-        h_1 = x
-        # x, post_h = self.gru(x.unsqueeze(0), h_0.unsqueeze(0))
-        # x = x.reshape(batch_size, -1)
-        # h_1 = post_h.reshape(batch_size, -1)
-        #########################
-        #########################
-        #########################
+        x, post_h = self.gru(x.unsqueeze(0), h_0.unsqueeze(0))
+        x = x.reshape(batch_size, -1)
+        h_1 = post_h.reshape(batch_size, -1)
+        # x = torch.cat([x, h_0], dim=-1)
+        # x = self.fc_deep(x)
+        # h_1 = x
+        # #########################
+        # #########################
+        # #########################
 
         axis_green_x = torch.cat([x, pre_axis_green], dim=-1)
         diff_axis_green = self.fc_axis_green(axis_green_x)
@@ -312,102 +312,99 @@ class TaR_init_only(pl.LightningModule):
         loss_axis = loss_axis_green + .5 * loss_axis_red
         loss = loss_axis + 1e2 * loss_shape_code
 
-        # import pdb; pdb.set_trace()
 
 
 
 
+        # # Check depth map.
+        # # if (self.current_epoch + 1) % 10 == 0 and batch_idx==0:
+        # result_map = []
+        # with torch.no_grad():
+        #     for batch_idx in range(batch_size):
+        #         # # batch_idx = 0
+        #         # rays_o = rays_o_obj[batch_idx].unsqueeze(0)
+        #         # rays_d = rays_d_obj[batch_idx].unsqueeze(0)
 
+        #         # input_lat_vec = gt_shape_code[batch_idx]
+        #         # gt_pose_gt_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         # gt_pose_gt_shape_code_mask = gt_pose_gt_shape_code_invdepth_map > .5
+        #         # gt_pose_gt_shape_code_depth_map = torch.zeros_like(gt_pose_gt_shape_code_invdepth_map)
+        #         # gt_pose_gt_shape_code_depth_map[gt_pose_gt_shape_code_mask] = 1. / gt_pose_gt_shape_code_invdepth_map[gt_pose_gt_shape_code_mask]
 
-        # Check depth map.
-        # if (self.current_epoch + 1) % 10 == 0 and batch_idx==0:
-        result_map = []
-        with torch.no_grad():
-            for batch_idx in range(batch_size):
-                # # batch_idx = 0
-                # rays_o = rays_o_obj[batch_idx].unsqueeze(0)
-                # rays_d = rays_d_obj[batch_idx].unsqueeze(0)
+        #         # input_lat_vec = est_shape_code[batch_idx]
+        #         # gt_pose_est_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         # gt_pose_est_shape_code_mask = gt_pose_est_shape_code_invdepth_map > .5
+        #         # gt_pose_est_shape_code_depth_map = torch.zeros_like(gt_pose_est_shape_code_invdepth_map)
+        #         # gt_pose_est_shape_code_depth_map[gt_pose_est_shape_code_mask] = 1. / gt_pose_est_shape_code_invdepth_map[gt_pose_est_shape_code_mask]
 
-                # input_lat_vec = gt_shape_code[batch_idx]
-                # gt_pose_gt_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
-                # gt_pose_gt_shape_code_mask = gt_pose_gt_shape_code_invdepth_map > .5
-                # gt_pose_gt_shape_code_depth_map = torch.zeros_like(gt_pose_gt_shape_code_invdepth_map)
-                # gt_pose_gt_shape_code_depth_map[gt_pose_gt_shape_code_mask] = 1. / gt_pose_gt_shape_code_invdepth_map[gt_pose_gt_shape_code_mask]
+        #         # result_map_1 = torch.cat([frame_depth_map[batch_idx, frame_idx], gt_pose_gt_shape_code_depth_map[0], gt_pose_est_shape_code_depth_map[0]], dim=1)
 
-                # input_lat_vec = est_shape_code[batch_idx]
-                # gt_pose_est_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
-                # gt_pose_est_shape_code_mask = gt_pose_est_shape_code_invdepth_map > .5
-                # gt_pose_est_shape_code_depth_map = torch.zeros_like(gt_pose_est_shape_code_invdepth_map)
-                # gt_pose_est_shape_code_depth_map[gt_pose_est_shape_code_mask] = 1. / gt_pose_est_shape_code_invdepth_map[gt_pose_est_shape_code_mask]
+        #         # axis_green = est_axis_green
+        #         # axis_red = est_axis_red
+        #         # axis_blue = torch.cross(axis_red, axis_green, dim=-1)
+        #         # axis_blue = F.normalize(axis_blue, dim=-1)
+        #         # axis_red = torch.cross(axis_green, axis_blue, dim=-1)
+        #         # est_o2c = torch.stack([axis_red, axis_green, axis_blue], dim=-1)
+        #         # rays_d_obj = torch.sum(rays_d_cam[..., None, :]*est_o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
+        #         # rays_d = rays_d_obj[batch_idx].unsqueeze(0)
 
-                # result_map_1 = torch.cat([frame_depth_map[batch_idx, frame_idx], gt_pose_gt_shape_code_depth_map[0], gt_pose_est_shape_code_depth_map[0]], dim=1)
+        #         # input_lat_vec = gt_shape_code[batch_idx]
+        #         # est_pose_gt_shape_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         # est_pose_gt_shape_mask = est_pose_gt_shape_invdepth_map > .5
+        #         # est_pose_gt_shape_depth_map = torch.zeros_like(est_pose_gt_shape_invdepth_map)
+        #         # est_pose_gt_shape_depth_map[est_pose_gt_shape_mask] = 1. / est_pose_gt_shape_invdepth_map[est_pose_gt_shape_mask]
 
-                # axis_green = est_axis_green
-                # axis_red = est_axis_red
-                # axis_blue = torch.cross(axis_red, axis_green, dim=-1)
-                # axis_blue = F.normalize(axis_blue, dim=-1)
-                # axis_red = torch.cross(axis_green, axis_blue, dim=-1)
-                # est_o2c = torch.stack([axis_red, axis_green, axis_blue], dim=-1)
-                # rays_d_obj = torch.sum(rays_d_cam[..., None, :]*est_o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
-                # rays_d = rays_d_obj[batch_idx].unsqueeze(0)
+        #         # input_lat_vec = est_shape_code[batch_idx]
+        #         # est_pose_est_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         # est_pose_est_shape_code_mask = est_pose_est_shape_code_invdepth_map > .5
+        #         # est_pose_est_shape_code_depth_map = torch.zeros_like(est_pose_est_shape_code_invdepth_map)
+        #         # est_pose_est_shape_code_depth_map[est_pose_est_shape_code_mask] = 1. / est_pose_est_shape_code_invdepth_map[est_pose_est_shape_code_mask]
 
-                # input_lat_vec = gt_shape_code[batch_idx]
-                # est_pose_gt_shape_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
-                # est_pose_gt_shape_mask = est_pose_gt_shape_invdepth_map > .5
-                # est_pose_gt_shape_depth_map = torch.zeros_like(est_pose_gt_shape_invdepth_map)
-                # est_pose_gt_shape_depth_map[est_pose_gt_shape_mask] = 1. / est_pose_gt_shape_invdepth_map[est_pose_gt_shape_mask]
-
-                # input_lat_vec = est_shape_code[batch_idx]
-                # est_pose_est_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
-                # est_pose_est_shape_code_mask = est_pose_est_shape_code_invdepth_map > .5
-                # est_pose_est_shape_code_depth_map = torch.zeros_like(est_pose_est_shape_code_invdepth_map)
-                # est_pose_est_shape_code_depth_map[est_pose_est_shape_code_mask] = 1. / est_pose_est_shape_code_invdepth_map[est_pose_est_shape_code_mask]
-
-                # dummy_result = torch.zeros_like(frame_depth_map[batch_idx, frame_idx])
-                # result_map_2 = torch.cat([dummy_result, est_pose_gt_shape_depth_map[0], est_pose_est_shape_code_depth_map[0]], dim=1)
+        #         # dummy_result = torch.zeros_like(frame_depth_map[batch_idx, frame_idx])
+        #         # result_map_2 = torch.cat([dummy_result, est_pose_gt_shape_depth_map[0], est_pose_est_shape_code_depth_map[0]], dim=1)
                 
-                # result_map = torch.cat([result_map_1, result_map_2], dim=0)
-                # check_map(result_map, 'initnet_results/train/' + str(batch_idx + 1).zfill(10) + '.png', figsize=[10,8])
-                # Get rotation matrix.
-                axis_green = est_axis_green
-                axis_red = est_axis_red
-                axis_blue = torch.cross(axis_red, axis_green, dim=-1)
-                axis_blue = F.normalize(axis_blue, dim=-1)
-                axis_red = torch.cross(axis_green, axis_blue, dim=-1)
-                est_o2c = torch.stack([axis_red, axis_green, axis_blue], dim=-1)
+        #         # result_map = torch.cat([result_map_1, result_map_2], dim=0)
+        #         # check_map(result_map, 'initnet_results/train/' + str(batch_idx + 1).zfill(10) + '.png', figsize=[10,8])
+        #         # Get rotation matrix.
+        #         axis_green = est_axis_green
+        #         axis_red = est_axis_red
+        #         axis_blue = torch.cross(axis_red, axis_green, dim=-1)
+        #         axis_blue = F.normalize(axis_blue, dim=-1)
+        #         axis_red = torch.cross(axis_green, axis_blue, dim=-1)
+        #         est_o2c = torch.stack([axis_red, axis_green, axis_blue], dim=-1)
                 
-                # Get rays direction.
-                rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
-                rays_d_obj = torch.sum(rays_d_cam[..., None, :]*est_o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
+        #         # Get rays direction.
+        #         rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
+        #         rays_d_obj = torch.sum(rays_d_cam[..., None, :]*est_o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
             
-                # Get rays origin.
-                cam_pos_wrd = frame_camera_pos[:, frame_idx]
-                obj_pos_wrd = torch.zeros_like(cam_pos_wrd)
-                est_o2w = torch.bmm(w2c.to(est_o2c.dtype).permute(0, 2, 1), est_o2c)
-                cam_pos_obj = torch.sum((cam_pos_wrd - obj_pos_wrd)[..., None, :] * est_o2w.permute(0, 2, 1), dim=-1) # = -obj_T_c2o
-                rays_o_obj = cam_pos_obj[:, None, None, :].expand(-1, self.H, self.H, -1)
+        #         # Get rays origin.
+        #         cam_pos_wrd = frame_camera_pos[:, frame_idx]
+        #         obj_pos_wrd = torch.zeros_like(cam_pos_wrd)
+        #         est_o2w = torch.bmm(w2c.to(est_o2c.dtype).permute(0, 2, 1), est_o2c)
+        #         cam_pos_obj = torch.sum((cam_pos_wrd - obj_pos_wrd)[..., None, :] * est_o2w.permute(0, 2, 1), dim=-1) # = -obj_T_c2o
+        #         rays_o_obj = cam_pos_obj[:, None, None, :].expand(-1, self.H, self.H, -1)
 
-                # for batch_idx in range(batch_size):
-                # batch_idx = 0
-                rays_d = rays_d_obj[batch_idx].unsqueeze(0)
-                rays_o = rays_o_obj[batch_idx].unsqueeze(0)
-                input_lat_vec = est_shape_code[batch_idx]
+        #         # for batch_idx in range(batch_size):
+        #         # batch_idx = 0
+        #         rays_d = rays_d_obj[batch_idx].unsqueeze(0)
+        #         rays_o = rays_o_obj[batch_idx].unsqueeze(0)
+        #         input_lat_vec = est_shape_code[batch_idx]
 
-                est_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
-                est_mask = est_invdepth_map > .5
-                est_depth_map = torch.zeros_like(est_invdepth_map)
-                est_depth_map[est_mask] = 1. / est_invdepth_map[est_mask]
+        #         est_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         est_mask = est_invdepth_map > .5
+        #         est_depth_map = torch.zeros_like(est_invdepth_map)
+        #         est_depth_map[est_mask] = 1. / est_invdepth_map[est_mask]
 
-                result_map_i = torch.cat([depth_map[batch_idx], est_depth_map[0]], dim=0)
-                result_map.append(result_map_i)
+        #         result_map_i = torch.cat([depth_map[batch_idx], est_depth_map[0]], dim=0)
+        #         result_map.append(result_map_i)
                 
-                if batch_idx > 10:
-                    break
+        #         if batch_idx > 10:
+        #             break
 
-            result_map = torch.cat(result_map, dim=1)
-            check_map(result_map, 'tes_ini.png', figsize=[10,2])
+        #     result_map = torch.cat(result_map, dim=1)
+        #     check_map(result_map, 'tes_ini.png', figsize=[10,2])
 
-            import pdb; pdb.set_trace()
+        #     import pdb; pdb.set_trace()
 
 
 
@@ -536,50 +533,50 @@ class TaR_init_only(pl.LightningModule):
         err_axis_red = torch.mean(-self.cossim(est_axis_red, gt_axis_red) + 1.)
 
 
-        with torch.no_grad():
-            for batch_idx in range(batch_size):
-                # batch_idx = 0
-                cam_pos_wrd = frame_camera_pos[:, frame_idx]
-                obj_pos_wrd = torch.zeros_like(cam_pos_wrd)
-                obj_pos_cam = torch.sum((obj_pos_wrd - cam_pos_wrd)[..., None, :] * w2c, dim=-1)
-                cam_pos_obj = torch.sum((cam_pos_wrd - obj_pos_wrd)[..., None, :] * o2w.permute(0, 2, 1), dim=-1) # = -obj_T_c2o
+        # with torch.no_grad():
+        #     for batch_idx in range(batch_size):
+        #         # batch_idx = 0
+        #         cam_pos_wrd = frame_camera_pos[:, frame_idx]
+        #         obj_pos_wrd = torch.zeros_like(cam_pos_wrd)
+        #         obj_pos_cam = torch.sum((obj_pos_wrd - cam_pos_wrd)[..., None, :] * w2c, dim=-1)
+        #         cam_pos_obj = torch.sum((cam_pos_wrd - obj_pos_wrd)[..., None, :] * o2w.permute(0, 2, 1), dim=-1) # = -obj_T_c2o
                 
-                rays_o_wrd = cam_pos_wrd[:, None, None, :].expand(-1, self.H, self.H, -1)
-                rays_o_obj = cam_pos_obj[:, None, None, :].expand(-1, self.H, self.H, -1)
-                rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
-                rays_d_wrd = torch.sum(rays_d_cam[..., None, :]*w2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
-                rays_d_obj = torch.sum(rays_d_cam[..., None, :]*o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
-                rays_o = rays_o_obj[batch_idx].unsqueeze(0)
-                rays_d = rays_d_obj[batch_idx].unsqueeze(0)
+        #         rays_o_wrd = cam_pos_wrd[:, None, None, :].expand(-1, self.H, self.H, -1)
+        #         rays_o_obj = cam_pos_obj[:, None, None, :].expand(-1, self.H, self.H, -1)
+        #         rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
+        #         rays_d_wrd = torch.sum(rays_d_cam[..., None, :]*w2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
+        #         rays_d_obj = torch.sum(rays_d_cam[..., None, :]*o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
+        #         rays_o = rays_o_obj[batch_idx].unsqueeze(0)
+        #         rays_d = rays_d_obj[batch_idx].unsqueeze(0)
 
-                input_lat_vec = est_shape_code[batch_idx]
-                gt_pose_est_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
-                gt_pose_est_shape_code_mask = gt_pose_est_shape_code_invdepth_map > .5
-                gt_pose_est_shape_code_depth_map = torch.zeros_like(gt_pose_est_shape_code_invdepth_map)
-                gt_pose_est_shape_code_depth_map[gt_pose_est_shape_code_mask] = 1. / gt_pose_est_shape_code_invdepth_map[gt_pose_est_shape_code_mask]
+        #         input_lat_vec = est_shape_code[batch_idx]
+        #         gt_pose_est_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         gt_pose_est_shape_code_mask = gt_pose_est_shape_code_invdepth_map > .5
+        #         gt_pose_est_shape_code_depth_map = torch.zeros_like(gt_pose_est_shape_code_invdepth_map)
+        #         gt_pose_est_shape_code_depth_map[gt_pose_est_shape_code_mask] = 1. / gt_pose_est_shape_code_invdepth_map[gt_pose_est_shape_code_mask]
 
-                axis_green = est_axis_green
-                axis_red = est_axis_red
-                axis_blue = torch.cross(axis_red, axis_green, dim=-1)
-                axis_blue = F.normalize(axis_blue, dim=-1)
-                axis_red = torch.cross(axis_green, axis_blue, dim=-1)
-                est_o2c = torch.stack([axis_red, axis_green, axis_blue], dim=-1)
-                rays_d_obj = torch.sum(rays_d_cam[..., None, :]*est_o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
-                rays_d = rays_d_obj[batch_idx].unsqueeze(0)
+        #         axis_green = est_axis_green
+        #         axis_red = est_axis_red
+        #         axis_blue = torch.cross(axis_red, axis_green, dim=-1)
+        #         axis_blue = F.normalize(axis_blue, dim=-1)
+        #         axis_red = torch.cross(axis_green, axis_blue, dim=-1)
+        #         est_o2c = torch.stack([axis_red, axis_green, axis_blue], dim=-1)
+        #         rays_d_obj = torch.sum(rays_d_cam[..., None, :]*est_o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
+        #         rays_d = rays_d_obj[batch_idx].unsqueeze(0)
                 
-                est_o2w = torch.bmm(w2c.to(est_o2c.dtype).permute(0, 2, 1), est_o2c)
-                cam_pos_obj = torch.sum((cam_pos_wrd - obj_pos_wrd)[..., None, :] * est_o2w.permute(0, 2, 1), dim=-1) # = -obj_T_c2o
-                rays_o_obj = cam_pos_obj[:, None, None, :].expand(-1, self.H, self.H, -1)
-                rays_o = rays_o_obj[batch_idx].unsqueeze(0)
+        #         est_o2w = torch.bmm(w2c.to(est_o2c.dtype).permute(0, 2, 1), est_o2c)
+        #         cam_pos_obj = torch.sum((cam_pos_wrd - obj_pos_wrd)[..., None, :] * est_o2w.permute(0, 2, 1), dim=-1) # = -obj_T_c2o
+        #         rays_o_obj = cam_pos_obj[:, None, None, :].expand(-1, self.H, self.H, -1)
+        #         rays_o = rays_o_obj[batch_idx].unsqueeze(0)
 
-                input_lat_vec = est_shape_code[batch_idx]
-                est_pose_est_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
-                est_pose_est_shape_code_mask = est_pose_est_shape_code_invdepth_map > .5
-                est_pose_est_shape_code_depth_map = torch.zeros_like(est_pose_est_shape_code_invdepth_map)
-                est_pose_est_shape_code_depth_map[est_pose_est_shape_code_mask] = 1. / est_pose_est_shape_code_invdepth_map[est_pose_est_shape_code_mask]
+        #         input_lat_vec = est_shape_code[batch_idx]
+        #         est_pose_est_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         est_pose_est_shape_code_mask = est_pose_est_shape_code_invdepth_map > .5
+        #         est_pose_est_shape_code_depth_map = torch.zeros_like(est_pose_est_shape_code_invdepth_map)
+        #         est_pose_est_shape_code_depth_map[est_pose_est_shape_code_mask] = 1. / est_pose_est_shape_code_invdepth_map[est_pose_est_shape_code_mask]
 
-                result_map = torch.cat([frame_depth_map[batch_idx, frame_idx], gt_pose_est_shape_code_depth_map[0], est_pose_est_shape_code_depth_map[0]], dim=1)
-                check_map(result_map, 'initnet_results/val/' + str(batch_idx + 1).zfill(10) + '.png', figsize=[10,5])
+        #         result_map = torch.cat([frame_depth_map[batch_idx, frame_idx], gt_pose_est_shape_code_depth_map[0], est_pose_est_shape_code_depth_map[0]], dim=1)
+        #         check_map(result_map, 'initnet_results/val/' + str(batch_idx + 1).zfill(10) + '.png', figsize=[10,5])
 
 
 

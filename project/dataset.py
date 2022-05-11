@@ -114,7 +114,7 @@ class TaR_testset(data.Dataset):
         with open(instance_list_txt, 'r') as f:
             lines = f.read().splitlines()
             for line in lines:
-                for view_ind in range(5):
+                for view_ind in range(N_views):
                     self.instance_path_list.append(
                         os.path.join(
                             data_dir, 

@@ -35,7 +35,7 @@ from DDF.train_pl import DDF
 
 target_metrics = {'avg_err_axis_green', 'avg_err_axis_red'}
 lines = []
-with open('old_experiments_results.txt', 'r') as f:
+with open('txt/old_experiments_results.txt', 'r') as f:
     file_data = f.readlines()
     for line in file_data:
         line_list = line.split(' ')
@@ -46,7 +46,7 @@ with open('old_experiments_results.txt', 'r') as f:
         else:
             lines.append(line)
 
-with open('old_experiments_digresults.txt', 'w') as f:
+with open('txt/old_experiments_digresults.txt', 'w') as f:
     for line in lines:
         f.write(line)
 
