@@ -164,7 +164,7 @@ if __name__=='__main__':
     # Create dfnet.
     args.use_gru = True
     df_net = TaR(args, ddf)
-    checkpoint_path = './lightning_logs/DeepTaR/chair/test_dfnet_catgru/checkpoints/0000003200.ckpt'
+    checkpoint_path = './lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200.ckpt'
     df_net = df_net.load_from_checkpoint(
         checkpoint_path=checkpoint_path, 
         args=args, 

@@ -415,3 +415,65 @@
                         est_axis_green_cam_i = F.normalize(pre_axis_green + diff_axis_green, dim=-1)
                         est_axis_red_cam_i = F.normalize(pre_axis_red + diff_axis_red, dim=-1)
                         est_shape_code_i = pre_shape_code + diff_shape_code
+
+
+                        
+
+
+                        
+
+                    # else:
+                    #     # Set variables with requires_grad = True.
+                    #     torch.set_grad_enabled(True)
+                    #     axis_green_for_cal_grads = pre_axis_green.detach().clone()
+                    #     axis_red_for_cal_grads = pre_axis_red.detach().clone()
+                    #     shape_code_for_cal_grads = pre_shape_code.detach().clone()
+                    #     axis_green_for_cal_grads.requires_grad = True
+                    #     axis_red_for_cal_grads.requires_grad = True
+                    #     shape_code_for_cal_grads.requires_grad = True
+
+                    #     params = [axis_green_for_cal_grads, 
+                    #                 axis_red_for_cal_grads, 
+                    #                 shape_code_for_cal_grads]
+                    #     lr = 0.01
+                    #     optimizer = torch.optim.Adam(params, lr)
+
+                    #     print('start')
+
+                    #     self.grad_optim_max = 100
+                    #     for grad_optim_idx in range(self.grad_optim_max):
+                    #         optimizer.zero_grad()
+                    #         rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
+                    #         obj_pos_wrd = torch.zeros(batch_size, 3, device=frame_camera_rot.device)
+                    #         est_invdepth_map, est_mask, est_depth_map = get_depth_map_from_axis(
+                    #                                                         H = self.H, 
+                    #                                                         axis_green = axis_green_for_cal_grads, 
+                    #                                                         axis_red = axis_red_for_cal_grads,
+                    #                                                         cam_pos_wrd = frame_camera_pos[:, frame_idx].detach(), 
+                    #                                                         obj_pos_wrd = obj_pos_wrd.detach(), 
+                    #                                                         rays_d_cam = rays_d_cam.detach(), 
+                    #                                                         w2c = w2c.detach(), 
+                    #                                                         input_lat_vec = shape_code_for_cal_grads, 
+                    #                                                         ddf = self.ddf, 
+                    #                                                         with_invdepth_map = True, 
+                    #                                                         )
+                    #         invdepth_map = torch.zeros_like(depth_map)
+                    #         invdepth_map[mask] = 1. / depth_map[mask]
+                    #         energy = self.l1(est_invdepth_map, invdepth_map.detach())
+                    #         energy.backward()
+                    #         optimizer.step()
+
+                    #         print(energy)
+                    #     torch.set_grad_enabled(False)
+                    #     import pdb; pdb.set_trace()
+
+                    #     pre_axis_green_wrd = torch.sum(pre_axis_green[..., None, :]*w2c.permute(0, 2, 1), -1)
+                    #     pre_axis_red_wrd = torch.sum(pre_axis_red[..., None, :]*w2c.permute(0, 2, 1), -1)
+                    #     # Stack final estimation on this frame.
+                    #     if self.average_each_results:
+                    #         # 現フレームに対する推論結果をスタックする。
+                    #         frame_est_list['axis_green'].append(pre_axis_green_wrd.clone())
+                    #         frame_est_list['axis_red'].append(pre_axis_red_wrd.clone())
+                    #         frame_est_list['shape_code'].append(pre_shape_code.clone())
+                    #         frame_est_list['error'].append(energy)
+                    #     break
