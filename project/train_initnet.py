@@ -51,7 +51,7 @@ if device=='cuda':
 
 
 
-class resnet_encoder(pl.LightningModule):
+class resnet_encoder_prot(pl.LightningModule):
 
     def __init__(self, args, in_channel=2):
         super().__init__()
@@ -91,6 +91,79 @@ class resnet_encoder(pl.LightningModule):
         shape_code = self.fc_shape_code(x)
 
         if use_gru:
+            return x_cim, y_cim, z_diff, axis_green, axis_red, scale_diff, shape_code, x
+        else:
+            return x_cim, y_cim, z_diff, axis_green, axis_red, scale_diff, shape_code
+
+
+
+
+
+class resnet_encoder(pl.LightningModule):
+
+    def __init__(self, args, in_channel=2):
+        super().__init__()
+
+        self.backbone_encoder = nn.Sequential(
+                ResNet50(args, in_channel=in_channel), 
+                )
+        self.backbone_fc = nn.Sequential(
+                nn.Linear(2048 + 6, 512), nn.LeakyReLU(0.2)
+                )
+        self.fc_axis_green = nn.Sequential(
+                nn.Linear(512, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 3), 
+                )
+        self.fc_axis_red = nn.Sequential(
+                nn.Linear(512, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 3), 
+                )
+        self.fc_shape_code = nn.Sequential(
+                nn.Linear(512, 512), nn.LeakyReLU(0.2),
+                nn.Linear(512, 512), nn.LeakyReLU(0.2),
+                nn.Linear(512, args.latent_size), 
+                )
+        self.fc_pos = nn.Sequential(
+                nn.Linear(512, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 3), 
+                )
+        self.fc_scale = nn.Sequential(
+                nn.Linear(512, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 1), 
+                )
+        self.use_gru = args.use_gru
+
+    
+    def forward(self, inp, bbox_info):
+        # Backbone.
+        x = self.backbone_encoder(inp)
+        x = x.reshape(inp.shape[0], -1)
+        x = self.backbone_fc(torch.cat([x, bbox_info], dim=-1))
+
+        # Get pose.
+        x_pos = self.fc_pos(x)
+        x_cim = x_pos[:, 0]
+        y_cim = x_pos[:, 1]
+        z_diff = x_pos[:, 2]
+
+        # Get axis.
+        x_green = self.fc_axis_green(x)
+        axis_green = F.normalize(x_green, dim=-1)
+        x_red = self.fc_axis_red(x)
+        axis_red = F.normalize(x_red, dim=-1)
+
+        # Get scale.
+        x_scale = self.fc_scale(x).reshape(-1)
+        scale_diff = x_scale + torch.ones_like(x_scale)
+
+        # Get shape code.
+        shape_code = self.fc_shape_code(x)
+
+        if self.use_gru:
             return x_cim, y_cim, z_diff, axis_green, axis_red, scale_diff, shape_code, x
         else:
             return x_cim, y_cim, z_diff, axis_green, axis_red, scale_diff, shape_code
@@ -423,6 +496,7 @@ class TaR_init_only(pl.LightningModule):
 
         # Get input.
         inp = torch.stack([clopped_distance_map, clopped_mask], 1)
+        bbox_info = torch.cat([bbox_list, bbox_list.mean(1)[:, None]], dim=-2).reshape(-1, 6).to(inp) # bbox[max_x, max_y, min_x, min_y, cen_x, cen_y]
 
         # Estimating.
         # est_x_cim, est_y_cim : クロップされた画像座標（[-1, 1]で定義）における物体中心の予測, 
@@ -430,7 +504,7 @@ class TaR_init_only(pl.LightningModule):
         # est_axis_green : カメラ座標系での物体の上方向, 
         # est_axis_red : カメラ座標系での物体の右方向,
         # est_scale_diff : Clopping-BBoxの対角と物体のカノニカルBBoxの対角がどれくらいずれているか？, 
-        est_x_cim, est_y_cim, est_z_diff, est_axis_green, est_axis_red, est_scale_diff, est_shape_code = self.model(inp)
+        est_x_cim, est_y_cim, est_z_diff, est_axis_green, est_axis_red, est_scale_diff, est_shape_code = self.model(inp, bbox_info)
         est_obj_pos_cam, est_obj_scale = diff2estimation(est_x_cim, est_y_cim, est_z_diff, est_scale_diff, bbox_list, avg_depth_map, self.fov)
         est_obj_pos_wrd = torch.sum(est_obj_pos_cam[..., None, :]*w2c.permute(0, 2, 1), dim=-1) + cam_pos_wrd
 
@@ -438,10 +512,12 @@ class TaR_init_only(pl.LightningModule):
         loss_axis_green = torch.mean(-self.cossim(est_axis_green, gt_axis_green) + 1.)
         loss_axis_red = torch.mean(-self.cossim(est_axis_red, gt_axis_red) + 1.)
         loss_shape_code = F.mse_loss(est_shape_code, gt_shape_code)
+        loss_pos = F.mse_loss(est_obj_pos_wrd, gt_obj_pos_wrd)
+        loss_scale = F.mse_loss(est_obj_scale, gt_obj_scale)
 
         # Cal total loss.
         loss_axis = loss_axis_green + .5 * loss_axis_red
-        loss = loss_axis + 1e2 * loss_shape_code
+        loss = 1e1 * loss_pos + 1e1 * loss_scale + loss_axis + 1e1 * loss_shape_code
 
 
         # Check distance map.
@@ -449,10 +525,10 @@ class TaR_init_only(pl.LightningModule):
             rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
             est_invdistance_map, est_mask, est_distance_map = render_distance_map_from_axis(
                                                                     H = self.ddf_H, 
-                                                                    obj_pos_wrd = est_obj_pos_wrd, 
+                                                                    obj_pos_wrd = gt_obj_pos_wrd, 
                                                                     axis_green = gt_axis_green, 
                                                                     axis_red = gt_axis_red, 
-                                                                    obj_scale = est_obj_scale, 
+                                                                    obj_scale = gt_obj_scale, 
                                                                     cam_pos_wrd = cam_pos_wrd, 
                                                                     rays_d_cam = rays_d_cam,  
                                                                     w2c = w2c.detach(), 
@@ -483,7 +559,7 @@ class TaR_init_only(pl.LightningModule):
             ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
             ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
             rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
-            obj_pos_cam = torch.sum((est_obj_pos_wrd-cam_pos_wrd)[..., None, :]*w2c, dim=-1).to('cpu').detach().numpy().copy()
+            obj_pos_cam = torch.sum((gt_obj_pos_wrd-cam_pos_wrd)[..., None, :]*w2c, dim=-1).to('cpu').detach().numpy().copy()
             rays_d = rays_d_cam
             depth_map = clopped_est_distance_map
             mask = clopped_est_mask

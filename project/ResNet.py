@@ -171,4 +171,13 @@ def ResNet50(args, in_channel=3):
         BatchNorm = nn.BatchNorm2d
     model = ResNet(Bottleneck, [3, 4, 6, 3], args.output_stride, BatchNorm, in_channel=in_channel)
     return model
+
+def ResNet50(args, in_channel=3):
+    args.output_stride = 8
+    if args.gpu_num > 1:
+        BatchNorm = SynchronizedBatchNorm2d
+    else:
+        BatchNorm = nn.BatchNorm2d
+    model = ResNet(Bottleneck, [3, 4, 6, 3], args.output_stride, BatchNorm, in_channel=in_channel)
+    return model
     

@@ -48,6 +48,8 @@ def config_parser():
                         help='')
     parser.add_argument("--frame_num", type=int, 
                         help='')
+    parser.add_argument("--use_gru", type=bool, default=False,
+                        help='')
 
     # training options
     parser.add_argument("--H", type=int, default=256, 

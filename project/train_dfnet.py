@@ -123,7 +123,7 @@ class TaR(pl.LightningModule):
 
         # Make model
         self.ddf = ddf
-        self.init_net = resnet_encoder(args, in_channel=2) #init_net
+        self.init_net = resnet_encoder_prot(args, in_channel=2) #init_net
         self.use_gru = args.use_gru
         if self.use_gru:
             self.df_net = df_resnet_encoder_with_gru(args, in_channel=5)
