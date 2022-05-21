@@ -258,6 +258,7 @@ class DDF(pl.LightningModule):
         self.vec_lrate = args.vec_lrate
         self.model_lrate = args.model_lrate
 
+        self.canonical_bbox_diagonal = 1.0
         self.use_3d_code = args.use_3d_code
         self.only_latent = args.only_latent
         self.latent_size = args.latent_size

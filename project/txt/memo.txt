@@ -1150,3 +1150,12 @@ training end epochでの画像ログコード
         #     check_map(result_map, 'tes_ini.png', figsize=[10,2])
 
         #     import pdb; pdb.set_trace()
+
+
+
+
+def diff2estimation(x_cim, y_cim, z_diff, scale_diff, bbox_list, avg_z_map, fov, canonical_bbox_diagonal=1.0):のメモ
+    # central_z = [(z_map_i[mask_i].max() + z_map_i[mask_i].min()) / 2 for mask_i, z_map_i, in zip(mask, z_map)]
+    # central_z = torch.tensor(central_z).to(z_diff)
+    # z_at_xycim = F.grid_sample(z_map[:, None], xy_cim[:, None, None, :], align_corners=True)[:, 0, 0, 0] # ゼロなら？？
+    # im2cam_scale = z_at_xycim * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)

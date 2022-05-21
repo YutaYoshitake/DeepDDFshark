@@ -210,7 +210,7 @@ def render_distance_map_from_axis(
 
     # Get rays origin.
     o2w = torch.bmm(w2c.to(o2c.dtype).permute(0, 2, 1), o2c)
-    cam_pos_obj = torch.sum((cam_pos_wrd - obj_pos_wrd)[..., None, :] * o2w.permute(0, 2, 1), dim=-1) / obj_scale
+    cam_pos_obj = torch.sum((cam_pos_wrd - obj_pos_wrd)[..., None, :] * o2w.permute(0, 2, 1), dim=-1) / obj_scale[:, None]
     rays_o_obj = cam_pos_obj[:, None, None, :].expand(-1, H, H, -1)
 
     # Get rays inputs.
@@ -219,10 +219,10 @@ def render_distance_map_from_axis(
 
     # Estimating.
     est_invdistance_map_obj_scale, negative_D_mask, whitch_t_used = ddf.forward_from_far(rays_o, rays_d, input_lat_vec)
-    est_invdistance_map = est_invdistance_map_obj_scale / obj_scale
+    est_invdistance_map = est_invdistance_map_obj_scale / obj_scale[:, None, None]
 
     # Get distance map.
-    mask_under_border = 1 / (cam_pos_obj.norm(dim=-1) + obj_scale * ddf.radius)
+    mask_under_border = 1 / (cam_pos_obj.norm(dim=-1) + 0.5 * obj_scale * ddf.radius) # 良いのか...？
     est_mask = [map_i > border_i for map_i, border_i in zip(est_invdistance_map, mask_under_border)]
     est_mask = torch.stack(est_mask, dim=0)
     est_distance_map = torch.zeros_like(est_invdistance_map)
@@ -320,9 +320,29 @@ def get_clopped_rays_d_cam(size, fov, bbox_list):
 
 
 
-def batch_linspace(start, end, step):
-    raw = torch.linspace(0, 1, step)[None, :]
-    return (end - start)[:, None] * raw + start[:, None]
+def diff2estimation(x_cim, y_cim, z_diff, scale_diff, bbox_list, avg_z_map, fov, canonical_bbox_diagonal=1.0):
+    # Get Bbox info.
+    bbox_list = bbox_list.to(x_cim)
+    fov = torch.deg2rad(torch.tensor(fov, dtype=torch.float))
+    xy_cim = torch.stack([x_cim, y_cim], dim=-1)
+    bbox_hight = bbox_list[:, 0, 1] - bbox_list[:, 1, 1]
+    bbox_center = bbox_list.mean(1)
+
+    # clopした深度マップでの予測物体中心(x, y)をカメラ座標系における(x, y)に変換
+    cim2im_scale = (bbox_hight) / 2 # clopしたBBoxの高さ÷画像の高さ２
+    im2cam_scale = avg_z_map * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)
+    xy_im = cim2im_scale * xy_cim + bbox_center # 元画像における物体中心
+    xy_cam = im2cam_scale * xy_im
+
+    # 正規化深度画像での物体中心zをカメラ座標系におけるzに変換
+    z_cam = z_diff + avg_z_map
+
+    # clopしたBBoxの対角
+    clopping_bbox_diagonal = 2 * math.sqrt(2)
+
+    # clopしたBBoxの対角とカノニカルBBoxの対角の比を変換
+    scale = scale_diff * im2cam_scale * cim2im_scale * clopping_bbox_diagonal / canonical_bbox_diagonal
+    return torch.cat([xy_cam, z_cam[..., None]], dim=-1), scale
 
 
 
@@ -368,8 +388,12 @@ class TaR_init_only(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_pos, frame_obj_rot, frame_obj_scale, instance_id = batch
         batch_size = len(instance_id)
+
+        # Get ground truth.
         instance_idx = [self.ddf_instance_list.index(instance_id_i) for instance_id_i in instance_id]
         gt_shape_code = self.ddf.lat_vecs(torch.tensor(instance_idx, device=self.ddf.device)).detach()
+
+        # Set frame.
         frame_idx = random.randint(0, frame_mask.shape[1]-1) # ランダムなフレームを選択
 
         with torch.no_grad():
@@ -377,66 +401,37 @@ class TaR_init_only(pl.LightningModule):
             raw_mask = frame_mask[:, frame_idx]
             raw_distance_map = frame_distance_map[:, frame_idx]
             clopped_mask, clopped_distance_map, bbox_list = clopping_distance_map(
-                                                                raw_mask, 
-                                                                raw_distance_map, 
-                                                                self.image_coord, 
-                                                                self.input_H, 
-                                                                self.input_W, 
-                                                                self.ddf_H
+                                                                raw_mask, raw_distance_map, self.image_coord, self.input_H, self.input_W, self.ddf_H
                                                                 )
 
             # Get normalized depth map.
             rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
             clopped_depth_map, normalized_depth_map, avg_depth_map = get_normalized_depth_map(
-                                                                        clopped_mask, 
-                                                                        clopped_distance_map, 
-                                                                        rays_d_cam
+                                                                        clopped_mask, clopped_distance_map, rays_d_cam
                                                                         )
 
             # Get ground truth.
             o2w = frame_obj_rot[:, frame_idx]
             w2c = frame_camera_rot[:, frame_idx]
             o2c = torch.bmm(w2c, o2w) # とりあえずこれを推論する
-            o2w = torch.bmm(w2c.permute(0, 2, 1), o2c)
-            o2o = torch.bmm(o2w.permute(0, 2, 1), o2w)
             gt_axis_green = o2c[:, :, 1] # Y
             gt_axis_red = o2c[:, :, 0] # X
-
             cam_pos_wrd = frame_camera_pos[:, frame_idx]
-            obj_pos_wrd = frame_obj_pos[:, frame_idx]
+            gt_obj_pos_wrd = frame_obj_pos[:, frame_idx]
+            gt_obj_scale = frame_obj_scale[:, frame_idx]
+        
 
-
+        # Get input.
+        inp = torch.stack([clopped_distance_map, clopped_mask], 1)
 
         # Estimating.
-        inp = torch.stack([clopped_distance_map, clopped_mask], 1)
+        # est_x_cim, est_y_cim : クロップされた画像座標（[-1, 1]で定義）における物体中心の予測, 
+        # est_z_diff : デプス画像の正則に用いた平均から、物体中心がどれだけズレているか？, 
+        # est_axis_green : カメラ座標系での物体の上方向, 
+        # est_axis_red : カメラ座標系での物体の右方向,
+        # est_scale_diff : Clopping-BBoxの対角と物体のカノニカルBBoxの対角がどれくらいずれているか？, 
         est_x_cim, est_y_cim, est_z_diff, est_axis_green, est_axis_red, est_scale_diff, est_shape_code = self.model(inp)
-        # est_x_cim, est_y_cim : クロップされた画像座標（[-1, 1]で定義）における物体中心の予測
-        # est_z_diff : デプス画像の正則に用いた平均から、物体中心がどれだけズレているか？
-
-        def get_obj_pos_from_est(x_cim, y_cim, z_diff, bbox_list, mask, z_map, fov):
-            bbox_list = bbox_list.to(x_cim)
-            fov = torch.deg2rad(torch.tensor(fov, dtype=torch.float))
-            xy_cim = torch.stack([x_cim, y_cim], dim=-1)
-            bbox_hight = bbox_list[:, 0, 1] - bbox_list[:, 1, 1]
-            bbox_center = bbox_list.mean(1)
-            central_z = [(z_map_i[mask_i].max() + z_map_i[mask_i].min()) / 2 for mask_i, z_map_i, in zip(mask, z_map)]
-            central_z = torch.tensor(central_z).to(z_diff)
-
-            # clopした深度マップでの予測物体中心(x, y)をカメラ座標系における(x, y)に変換
-            cim2im_scale = (bbox_hight) / 2 # clopしたBBoxの高さ÷画像の高さ２
-            # z_at_xycim = F.grid_sample(z_map[:, None], xy_cim[:, None, None, :], align_corners=True)[:, 0, 0, 0] # ゼロなら？？
-            # im2cam_scale = z_at_xycim * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)
-            im2cam_scale = central_z * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)
-            xy_im = cim2im_scale * xy_cim + bbox_center # 元画像における物体中心
-            xy_cam = im2cam_scale * xy_im
-
-            # 正規化深度画像での物体中心zをカメラ座標系におけるzに変換
-            z_cam = z_diff + central_z
-            return torch.cat([xy_cam, z_cam[..., None]], dim=-1), bbox_center
-
-        est_obj_pos_cam, bbox_center = get_obj_pos_from_est(est_x_cim, est_y_cim, est_z_diff, bbox_list, clopped_mask, clopped_depth_map, self.fov)
-        obj_pos_cam = torch.sum((obj_pos_wrd-cam_pos_wrd)[..., None, :]*w2c, dim=-1)
-        est_obj_pos_cam[:, -1] = obj_pos_cam[:, -1]
+        est_obj_pos_cam, est_obj_scale = diff2estimation(est_x_cim, est_y_cim, est_z_diff, est_scale_diff, bbox_list, avg_depth_map, self.fov)
         est_obj_pos_wrd = torch.sum(est_obj_pos_cam[..., None, :]*w2c.permute(0, 2, 1), dim=-1) + cam_pos_wrd
 
         # Cal loss.
@@ -448,16 +443,17 @@ class TaR_init_only(pl.LightningModule):
         loss_axis = loss_axis_green + .5 * loss_axis_red
         loss = loss_axis + 1e2 * loss_shape_code
 
+
         # Check distance map.
         with torch.no_grad():
             rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
             est_invdistance_map, est_mask, est_distance_map = render_distance_map_from_axis(
                                                                     H = self.ddf_H, 
-                                                                    obj_pos_wrd = obj_pos_wrd, 
+                                                                    obj_pos_wrd = est_obj_pos_wrd, 
                                                                     axis_green = gt_axis_green, 
                                                                     axis_red = gt_axis_red, 
-                                                                    obj_scale = 0.5, 
-                                                                    cam_pos_wrd = frame_camera_pos[:, frame_idx].detach(), 
+                                                                    obj_scale = est_obj_scale, 
+                                                                    cam_pos_wrd = cam_pos_wrd, 
                                                                     rays_d_cam = rays_d_cam,  
                                                                     w2c = w2c.detach(), 
                                                                     input_lat_vec = gt_shape_code, 
@@ -465,16 +461,10 @@ class TaR_init_only(pl.LightningModule):
                                                                     with_invdistance_map = True, 
                                                                     )
             clopped_est_mask, clopped_est_distance_map, _ = clopping_distance_map(
-                                                                est_mask, 
-                                                                est_distance_map, 
-                                                                self.image_coord, 
-                                                                self.input_H, 
-                                                                self.input_W, 
-                                                                self.ddf_H, 
-                                                                bbox_list
+                                                                est_mask, est_distance_map, self.image_coord, self.input_H, self.input_W, self.ddf_H, bbox_list
                                                                 )
-                
-            
+
+
             # Check point cloud.
             batch_idx = 0
             fig = plt.figure()
@@ -484,6 +474,7 @@ class TaR_init_only(pl.LightningModule):
             ax.set_zlabel("Z")
 
             rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
+            obj_pos_cam = torch.sum((gt_obj_pos_wrd-cam_pos_wrd)[..., None, :]*w2c, dim=-1).to('cpu').detach().numpy().copy()
             rays_d = rays_d_cam
             depth_map = clopped_distance_map
             mask = clopped_mask
@@ -491,25 +482,31 @@ class TaR_init_only(pl.LightningModule):
             point = point.to('cpu').detach().numpy().copy()
             ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
             ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
+            rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
+            obj_pos_cam = torch.sum((est_obj_pos_wrd-cam_pos_wrd)[..., None, :]*w2c, dim=-1).to('cpu').detach().numpy().copy()
+            rays_d = rays_d_cam
             depth_map = clopped_est_distance_map
             mask = clopped_est_mask
             point = (depth_map[batch_idx][..., None] * rays_d[batch_idx])[mask[batch_idx]]
             point = point.to('cpu').detach().numpy().copy()
             ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='c', s=0.05)
             ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='c', s=0.05)
+            ax.scatter(obj_pos_cam[batch_idx, 0], obj_pos_cam[batch_idx, 1], obj_pos_cam[batch_idx, 2], marker="o", linestyle='None', c='b', s=10)
 
             ax.view_init(elev=0, azim=0)
             fig.savefig("point_cloud_cam.png")
             plt.close()
-            import pdb; pdb.set_trace()
 
 
             # Plotを作成
             fig = pylab.figure(figsize=(20, 8))
             # BBoxをピクセル座標へ
             bbox_list = 128 * (bbox_list.to('cpu').detach().numpy().copy() + 1)
-            bbox_center = 128 * (bbox_center.to('cpu').detach().numpy().copy() + 1)
-            bbox = np.concatenate([bbox_list, bbox_center[:, None, :]], axis=1)
+            bbox_center = bbox_list.mean(1)
+            obj_pos_cam = 128 * (obj_pos_cam + 1)
+            # bbox_center = 128 * (bbox_center.to('cpu').detach().numpy().copy() + 1)
+            # bbox = np.concatenate([bbox_list, bbox_center[:, None, :], obj_pos_cam[:, None, :2]], axis=1)
+            bbox = np.concatenate([bbox_list, obj_pos_cam[:, None, :2]], axis=1)
             bbox_1 = bbox[0]
             bbox_2 = bbox[1]
             # 元画像

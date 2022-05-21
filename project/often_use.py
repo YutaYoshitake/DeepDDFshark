@@ -290,3 +290,9 @@ def batch_pi2rot_y(pi):
 def get_weighted_average(target, ratio): # [Batch, Sample, Values]
     ratio = ratio / torch.sum(ratio, dim=1)[..., None] # [Batch, Sample]
     return torch.sum(ratio[..., None] * target, dim=1) # [Batch, Sample, Values]
+
+
+
+def batch_linspace(start, end, step):
+    raw = torch.linspace(0, 1, step)[None, :]
+    return (end - start)[:, None] * raw + start[:, None]
