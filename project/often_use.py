@@ -71,12 +71,28 @@ def xyz2polar(x, y, z):
 
 
 
-def check_map(image, path = 'tes.png', figsize=[10,10]):
+def check_map_torch(image, path = 'tes.png', figsize=[10,10]):
     fig = pylab.figure(figsize=figsize)
 
     ax1 = fig.add_subplot(1, 1, 1)
     ax1.set_title('result')
     ax1.imshow(image.to('cpu').detach().numpy().copy())
+
+    ax1.xaxis.set_ticklabels([])
+    ax1.yaxis.set_ticklabels([])
+    fig.savefig(path, dpi=300)
+    pylab.close()
+
+
+
+
+
+def check_map_np(image, path = 'tes.png', figsize=[10,10]):
+    fig = pylab.figure(figsize=figsize)
+
+    ax1 = fig.add_subplot(1, 1, 1)
+    ax1.set_title('result')
+    ax1.imshow(image)
 
     ax1.xaxis.set_ticklabels([])
     ax1.yaxis.set_ticklabels([])

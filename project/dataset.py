@@ -63,13 +63,14 @@ class TaR_dataset(data.Dataset):
             lines = f.read().splitlines()
             for line in lines:
                 self.instance_path_list.append(os.path.join(data_dir, line.rstrip('\n')))
+        self.dynamic = args.dynamic
         self.H = args.H
         self.fov = args.fov
         self.N_views = N_views
-        self.rgb_transform = T.Compose([
-            T.Resize(self.H),
-            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+        # self.rgb_transform = T.Compose([
+        #     T.Resize(self.H),
+        #     T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        # ])
 
     def __getitem__(self, index):
 
@@ -80,19 +81,25 @@ class TaR_dataset(data.Dataset):
             f'{str(view_ind).zfill(5)}.pickle')
         data_dict = pickle_load(path)
 
-        frame_rgb_map = data_dict['rgb_map'].transpose(0, 3, 1, 2)
+        # frame_rgb_map = data_dict['rgb_map'].transpose(0, 3, 1, 2)
         frame_mask = data_dict['mask']
-        frame_depth_map = data_dict['depth_map']
+        frame_distance_map = data_dict['depth_map']
         frame_camera_pos = data_dict['camera_pos']
         frame_camera_rot = data_dict['camera_rot']
         frame_obj_rot = data_dict['obj_rot']
+        if self.dynamic:
+            frame_obj_pos = data_dict['obj_pos']
+            frame_obj_scale = data_dict['obj_scale']
 
         # Preprocessing.
-        frame_rgb_map = torch.from_numpy(frame_rgb_map.astype(np.float32)).clone()
-        frame_rgb_map = self.rgb_transform(frame_rgb_map)
+        # frame_rgb_map = torch.from_numpy(frame_rgb_map.astype(np.float32)).clone()
+        frame_rgb_map = 0 # self.rgb_transform(frame_rgb_map)
         instance_id = self.instance_path_list[index].split('/')[-1]
 
-        return frame_rgb_map, frame_mask, frame_depth_map, frame_camera_pos, frame_camera_rot, frame_obj_rot, instance_id
+        if self.dynamic:
+            return frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_pos, frame_obj_rot, frame_obj_scale, instance_id
+        if not self.dynamic:
+            return frame_rgb_map, frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_rot, instance_id
 
     def __len__(self):
         return len(self.instance_path_list)
@@ -135,7 +142,7 @@ class TaR_testset(data.Dataset):
 
         frame_rgb_map = data_dict['rgb_map'].transpose(0, 3, 1, 2)
         frame_mask = data_dict['mask']
-        frame_depth_map = data_dict['depth_map']
+        frame_distance_map = data_dict['depth_map']
         frame_camera_pos = data_dict['camera_pos']
         frame_camera_rot = data_dict['camera_rot']
         frame_obj_rot = data_dict['obj_rot']
@@ -145,7 +152,7 @@ class TaR_testset(data.Dataset):
         frame_rgb_map = self.rgb_transform(frame_rgb_map)
         instance_id = self.instance_path_list[index].split('/')[-1]
 
-        return frame_rgb_map, frame_mask, frame_depth_map, frame_camera_pos, frame_camera_rot, frame_obj_rot, instance_id
+        return frame_rgb_map, frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_rot, instance_id
 
     def __len__(self):
         return len(self.instance_path_list)

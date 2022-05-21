@@ -15,9 +15,9 @@ project/dataset/
 project/DDF/__pycache__/
 project/DDF/lightning_logs/
 project/FS_Net
-project/initnet_results
 project/lightning_logs
-project/old_files/
+project/old_files/until_0324
+project/old_files/until_0421
 project/sample_images/
 project/sync_batchnorm/__pycache__/
 project/test_dfnet_png

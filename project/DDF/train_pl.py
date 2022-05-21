@@ -499,53 +499,8 @@ class DDF(pl.LightningModule):
 
 
 
-    # def validation_step(self, batch, batch_idx):
-
-    #     # Get input
-    #     instance_id, pos, c2w, rays_d_cam, inverced_depth, blur_mask, gt_normal_map, normal_mask = batch
-    #     rays_o = pos[:, None, None, :].expand(-1, self.H, self.W, -1).detach()
-
-    #     # Train with only one instance
-    #     if self.same_instances:
-    #         instance_id = torch.zeros_like(instance_id)
-
-    #     # Get ray direction
-    #     if not self.use_world_dir:
-    #         print('Support for world coordinate system only.')
-    #         sys.exit()
-    #     rays_d_wrd = torch.sum(rays_d_cam[:, :, :, None, :] * c2w[:, None, None, :, :], -1)
-
-    #     # Get latent code
-    #     input_lat_vec = self.lat_vecs(instance_id)
-
-    #     # Estimate inverced depth
-    #     est_inverced_depth = self(rays_o, rays_d_wrd, input_lat_vec, blur_mask).reshape(-1)
-
-    #     # Cal depth err.
-    #     depth_err = F.mse_loss(est_inverced_depth, inverced_depth[blur_mask])
-        
-        
-    #     # # log image
-    #     # if batch_idx == 0:
-    #     #     sample_img = torch.zeros_like(blur_mask[0], dtype=est_inverced_depth.dtype, device=est_inverced_depth.device)
-    #     #     sample_img[blur_mask[0]] = est_inverced_depth[:torch.sum(blur_mask[0])]
-    #     #     sample_img = sample_img.unsqueeze(0)
-    #     #     sample_img = sample_img / sample_img.max()
-    #     #     self.logger.experiment.add_image('train/batch_sample_depth', sample_img, 0)
-
-    #     return {'depth_err': depth_err}
-
-
-
-    # def validation_epoch_end(self, outputs):
-    #     # Log loss.
-    #     avg_depth_err = torch.stack([x['depth_err'] for x in outputs]).mean()
-    #     current_epoch = torch.tensor(self.current_epoch + 1., dtype=avg_depth_err.dtype)
-    #     self.log_dict({'validation/total_depth_err': avg_depth_err, "step": current_epoch})
-
-
-
-    def forward_from_far(self, rays_o, rays_d, input_lat_vec, blur_mask='without_mask', inverced_depth = True):
+    # https://risalc.info/src/sphere-line-intersection.html を参考
+    def forward_from_far(self, rays_o, rays_d, input_lat_vec, return_invdepth = True):
         # def depthmap_renderer_voxel(self, decoder, model, instance_id, lat_vecs, pos, c2w):
         origin = self.origin.to(rays_o)
         radius = self.radius
@@ -554,54 +509,34 @@ class DDF(pl.LightningModule):
             print('Can use only world dir.')
 
         D = torch.sum(rays_d * (rays_o - origin), dim=-1)**2 - (torch.sum((rays_o - origin)**2, dim=-1) - radius**2)
-        D_mask = D > 0
-        masked_D = D[D_mask]
-        masked_rays_d = rays_d[D_mask]
-        masked_rays_o = rays_o[D_mask]
+        negative_D_mask = D < 0
 
+        d_dot_o = torch.sum(rays_d * (rays_o - origin), dim=-1)
+        D[negative_D_mask] = 0.
+        sqrt_D = torch.sqrt(D)
+        t_minus = - d_dot_o - sqrt_D
+        t_plus = - d_dot_o + sqrt_D
 
-        t_minus = - torch.sum(masked_rays_d * (masked_rays_o - origin), dim=-1) - torch.sqrt(masked_D)
-        t_plus = - torch.sum(masked_rays_d * (masked_rays_o - origin), dim=-1) + torch.sqrt(masked_D)
-
-        rays_o_minus = masked_rays_o + t_minus[..., None] * masked_rays_d
-        rays_o_plus = masked_rays_o + t_plus[..., None] * masked_rays_d
-        t_mask = torch.abs(t_plus) > torch.abs(t_minus)
-
+        t_mask = (torch.abs(t_plus) > torch.abs(t_minus))[torch.logical_not(negative_D_mask)]
         if t_mask.all():
-            masked_rays_o = rays_o_minus
             t = t_minus
-            t_minus_used = True
+            whitch_t_used = 't_minus'
+            intersect_rays_o = rays_o + t_minus[..., None] * rays_d
         elif torch.logical_not(t_mask).all():
-            masked_rays_o = rays_o_plus
             t = t_plus
-            t_minus_used = False
+            whitch_t_used = 't_plus'
+            intersect_rays_o = rays_o + t_plus[..., None] * rays_d
         else:
             print('t sign err!')
             sys.exit()
-        
-        # Supported only for a single instance.
-        if D_mask.shape[0] > 1:
-            # num_D_mask = [torch.sum(D_mask_i) for D_mask_i in D_mask] # 最大sample数に合わせ後は零埋め？
-            print('Too many instances.')
-            sys.exit()
-
-        # Make dummy batch.
-        masked_rays_o = masked_rays_o[None, None] # batch=1, dummy_H=1, dummy_W=mask_True_num, 3
-        masked_rays_d = masked_rays_d[None, None] # batch=1, dummy_H=1, dummy_W=mask_True_num, 3
-        dummy_blur_mask = torch.ones_like(masked_rays_o[..., 0], dtype=torch.bool) # batch=1, dummy_H=1, sample=mask_True_num
 
         # Estimate inverced depth
-        est_inverced_depth = self(masked_rays_o, masked_rays_d, input_lat_vec, dummy_blur_mask)
+        est_invdepth_rawmap = self.forward(intersect_rays_o, rays_d, input_lat_vec)
+        est_invdepth_map = est_invdepth_rawmap / (1. + est_invdepth_rawmap * t)
+        est_invdepth_map[negative_D_mask] = 0.
 
-        # Return results.
-        if inverced_depth:
-            return est_inverced_depth, D_mask, t_minus_used
-        else:
-            est_mask = est_inverced_depth > .5
-            hit_obj_mask = torch.zeros_like(D_mask)
-            hit_obj_mask[D_mask] = est_mask
-            est_depth = 1 / est_inverced_depth[est_mask] + t[est_mask]
-            return est_depth, hit_obj_mask, t_minus_used
+        if return_invdepth:
+            return est_invdepth_map, negative_D_mask, whitch_t_used
     
 
 

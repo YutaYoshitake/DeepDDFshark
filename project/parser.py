@@ -68,6 +68,12 @@ def config_parser():
                         help='epoch size')
     parser.add_argument("--lr", type=float,
                         help="")
+    parser.add_argument("--dynamic", type=bool, default=False,
+                        help='')
+    parser.add_argument("--use_depth_error", type=bool, default=False,
+                        help='')
+    parser.add_argument("--train_optim_num", type=int, default=3,
+                        help='')
 
     # ddf config.
     parser.add_argument("--ddf_model_path", type=str, 

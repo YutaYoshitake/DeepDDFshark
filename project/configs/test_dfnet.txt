@@ -1,16 +1,17 @@
-expname = DeepTaR/chair/test_initnet
+expname = DeepTaR/chair/test_dfnet
 train_data_dir = /home/yyoshitake/works/DeepSDF/project/dataset/dugon/test_moving_camera/test_moving_camera_train_data
 train_N_views = 100
 train_instance_list_txt = ./instance_lists/test_moving_canmera_instance_train_list.txt
 val_data_dir = /home/yyoshitake/works/DeepSDF/project/dataset/dugon/test_moving_camera/test_moving_camera_val_data
 val_N_views = 25
 val_instance_list_txt = ./instance_lists/test_moving_canmera_instance_val_list.txt
+frame_num = 5
 
 
 
 save_interval = 100
-N_epoch = 5010
-N_batch = 120
+N_epoch = 10000
+N_batch = 25
 check_val_every_n_epoch = 1
 lr = 0.0001
 

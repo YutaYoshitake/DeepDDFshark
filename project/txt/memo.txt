@@ -477,3 +477,676 @@
                     #         frame_est_list['shape_code'].append(pre_shape_code.clone())
                     #         frame_est_list['error'].append(energy)
                     #     break
+
+
+
+
+
+
+
+
+Ray上の情報の統合に、Volume Renderingを用いた際の実験コード
+→精度は出ていなそうであった。バグの可能性もある
+→定量的には、ボクセルによる離散化のあらが目立っているよう。
+        # Integrate sampled features
+        if self.integrate_sampling_mode == 'Volume_Rendering':
+            if blur_mask == 'without_mask':
+                batch, H, W, _, _ = sampled_lat_vec.shape
+                sampled_lat_vec = sampled_lat_vec.reshape(-1, self.voxel_sample_num, self.voxel_ch_num).permute(0, 2, 1).reshape(-1, self.voxel_sample_num)
+                
+                raw2alpha = lambda raw, dists, act_fn=F.relu: 1.-torch.exp(-act_fn(raw)*dists)
+                z_vals = (self.voxel_scale * self.sample_ind).permute(0, 1, 2, 4, 3).reshape(-1, args.voxel_sample_num)
+                dists = z_vals[..., 1:] - z_vals[..., :-1]
+                dists = torch.cat([dists, torch.Tensor([1e10]).expand(dists[..., :1].shape)], -1)
+                alpha = raw2alpha(sampled_lat_vec, dists.to(sampled_lat_vec.device)) # N_rays, N_voxel_ch, N_samples
+
+                weights = alpha * torch.cumprod(torch.cat([torch.ones((alpha.shape[0], 1), device=alpha.device), 1.-alpha + 1e-10], -1), -1)[:, :-1]
+                depth_feature_map = torch.sum(weights * z_vals.to(sampled_lat_vec.device), -1)
+                return depth_feature_map.reshape(-1, H, W, self.voxel_ch_num)
+
+            else:
+                sampled_lat_vec = sampled_lat_vec[blur_mask].permute(0, 2, 1).reshape(-1, self.voxel_sample_num) # N_rays*N_voxel_ch, N_samples
+                
+                raw2alpha = lambda raw, dists, act_fn=F.relu: 1.-torch.exp(-act_fn(raw)*dists)
+                z_vals = (self.voxel_scale * self.sample_ind).permute(0, 1, 2, 4, 3).reshape(-1, args.voxel_sample_num)
+                dists = z_vals[..., 1:] - z_vals[..., :-1]
+                dists = torch.cat([dists, torch.Tensor([1e10]).expand(dists[..., :1].shape)], -1)
+                alpha = raw2alpha(sampled_lat_vec, dists.to(sampled_lat_vec.device)) # N_rays, N_voxel_ch, N_samples
+
+                weights = alpha * torch.cumprod(torch.cat([torch.ones((alpha.shape[0], 1), device=alpha.device), 1.-alpha + 1e-10], -1), -1)[:, :-1]
+                depth_feature_map = torch.sum(weights * z_vals.to(sampled_lat_vec.device), -1).reshape(-1, self.voxel_ch_num)
+                return depth_feature_map
+
+
+
+
+
+
+
+
+
+
+
+    # diff_rad = args.pixel_diff_ratio * torch.pi 
+    # rays_o_cam = torch.tensor([0., 0., -1])
+    # rot_r = Exp(torch.tensor([0., diff_rad, 0.]))
+    # rot_u = Exp(torch.tensor([diff_rad ,0., 0.]))
+
+    # with torch.no_grad():
+    #     rays_d_cam_r = torch.sum(rays_d_cam[:, :, :, None, :] * rot_r[None, None, None, :, :], -1)
+    #     rays_d_cam_r = rays_d_cam_r.to(c2w.device).to(c2w.dtype)
+    #     rays_d_wrd_r = torch.sum(rays_d_cam_r[:, :, :, None, :] * c2w[:, None, None, :, :], -1).detach()
+    #     rays_d_cam_u = torch.sum(rays_d_cam[:, :, :, None, :] * rot_u[None, None, None, :, :], -1)
+    #     rays_d_cam_u = rays_d_cam_u.to(c2w.device).to(c2w.dtype)
+    #     rays_d_wrd_u = torch.sum(rays_d_cam_u[:, :, :, None, :] * c2w[:, None, None, :, :], -1).detach()
+
+    # est_inverced_depth_r = model(rays_o, rays_d_wrd_r, input_lat_vec, blur_mask=hit_obj_mask)
+    # est_inverced_depth_u = model(rays_o, rays_d_wrd_u, input_lat_vec, blur_mask=hit_obj_mask)
+
+    # est_depth = 1 / est_inverced_depth[hit_obj_mask[blur_mask]]
+    # est_depth_r = 1 / est_inverced_depth_r
+    # est_depth_u = 1 / est_inverced_depth_u
+
+    # est_point = est_depth[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+    # est_point_r = est_depth_r[..., None] * rays_d_wrd_r[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+    # est_point_u = est_depth_u[..., None] * rays_d_wrd_u[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+
+    # diff_from_right = est_point - est_point_r
+    # diff_from_under = est_point - est_point_u
+    # est_normal = F.normalize(torch.cross(diff_from_right, diff_from_under, dim=-1), dim=-1)
+
+    # # rot_r = rot_r[None, ...].to(c2w.device).to(c2w.dtype)
+    # # rot_wrd_r = torch.bmm(torch.bmm(c2w, rot_r), c2w.permute(0, 2, 1))
+    # # rays_d_wrd_r = torch.sum(rays_d_wrd[:, :, :, None, :] * rot_wrd_r[:, None, None, :, :], -1)
+    # # masked_rays_d_wrd_r = rays_d_wrd_r[hit_obj_mask]
+
+    # # rot_u = rot_u[None, ...].to(c2w.device).to(c2w.dtype)
+    # # rot_wrd_u = torch.bmm(torch.bmm(c2w, rot_u), c2w.permute(0, 2, 1))
+    # # rays_d_wrd_u = torch.sum(rays_d_wrd[:, :, :, None, :] * rot_wrd_u[:, None, None, :, :], -1)
+    # # masked_rays_d_wrd_u = rays_d_wrd_u[hit_obj_mask]
+
+    # est_inverced_depth_r = model(rays_o, rays_d_wrd_r, input_lat_vec, blur_mask=hit_obj_mask)
+    # est_inverced_depth_u = model(rays_o, rays_d_wrd_u, input_lat_vec, blur_mask=hit_obj_mask)
+
+    # est_depth = 1 / est_inverced_depth[hit_obj_mask[blur_mask]]
+    # est_depth_r = 1 / est_inverced_depth_r
+    # est_depth_u = 1 / est_inverced_depth_u
+
+    # est_point = est_depth[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+    # est_point_r = est_depth_r[..., None] * rays_d_wrd_r[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+    # est_point_u = est_depth_u[..., None] * rays_d_wrd_u[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+
+    # diff_from_right = est_point - est_point_r
+    # diff_from_under = est_point - est_point_u
+    # est_normal = F.normalize(torch.cross(diff_from_right, diff_from_under, dim=-1), dim=-1)
+
+    # # if not eval_mode:
+    #     # est_normal_image = False
+    # # else:
+    # est_normal_image = torch.zeros_like(rays_o)
+    # est_normal_image[hit_obj_mask] = (est_normal + 1) / 2
+    # check_map(est_normal_image[0])
+
+
+
+
+
+    # rays_d_wrd = get_ray_direction(args.H, args.fov, c2w)
+    # rot_r = rot_r[None, ...].to(c2w.device).to(c2w.dtype)
+    # rot_wrd_r = torch.bmm(torch.bmm(c2w, rot_r), c2w.permute(0, 2, 1))
+    # rays_d_wrd_r_ = torch.sum(rays_d_wrd[:, :, :, None, :] * rot_wrd_r[:, None, None, :, :], -1)
+
+
+
+
+
+将来的には、Rayが一本与えられてもノーマルを出せるようにしたい
+今は必要なさそう
+現在は、画像一枚全体をマスクが決して計算している。
+# def perturb_normal(args, decoder, model, lat_vecs, pos, c2w, instance_id, rays_d_cam, rays_d_wrd, rays_o, masked_rays_d, masked_rays_o, blur_mask, est_inverced_depth, sampler=False, eval_mode=True, gt_normal_map=False):
+    
+#     batch_size = c2w.shape[0]
+#     diff_rad = args.pixel_diff_ratio * torch.pi
+#     rays_o_cam = torch.tensor([0., 0., -1])
+
+#     rot_r = Exp(torch.tensor([0., diff_rad, 0.]))
+#     rot_u = Exp(torch.tensor([diff_rad ,0., 0.]))
+#     if args.pixel_diff_type == 'pos':
+#         rays_o_cam_r = torch.sum(rays_o_cam[None, :] * rot_r[:, :], -1)[None, :].expand(batch_size, -1)
+#         rays_o_r = torch.sum(rays_o_cam_r[:, None, :] * c2w[:, :, :], -1).detach()
+#         masked_rays_o_r = rays_o_r[:, None, None, :].expand(-1, args.H, args.W, -1)[blur_mask]
+#         rays_o_cam_u = torch.sum(rays_o_cam[None, :] * rot_u[:, :], -1)[None, :].expand(batch_size, -1)
+#         rays_o_u = torch.sum(rays_o_cam_u[:, None, :] * c2w[:, :, :], -1).detach()
+#         masked_rays_o_u = rays_o_u[:, None, None, :].expand(-1, args.H, args.W, -1)[blur_mask]
+#     elif args.pixel_diff_type == 'dir':
+#         rays_d_cam_r = torch.sum(rays_d_cam[:, :, :, None, :] * rot_r[None, None, None, :, :], -1)
+#         rays_d_wrd_r = torch.sum(rays_d_cam_r[:, :, :, None, :] * c2w[:, None, None, :, :], -1).detach()
+#         masked_rays_d_r = rays_d_wrd_r[blur_mask]
+#         rays_d_cam_u = torch.sum(rays_d_cam[:, :, :, None, :] * rot_u[None, None, None, :, :], -1)
+#         rays_d_wrd_u = torch.sum(rays_d_cam_u[:, :, :, None, :] * c2w[:, None, None, :, :], -1).detach()
+#         masked_rays_d_u = rays_d_wrd_u[blur_mask]
+    
+#     if args.pixel_diff_type == 'pos':
+#         inp_r, _ = get_inp(args, decoder, lat_vecs, instance_id, rays_d_wrd, rays_o_r, masked_rays_d, masked_rays_o_r, blur_mask, sampler)
+#         inp_u, _ = get_inp(args, decoder, lat_vecs, instance_id, rays_d_wrd, rays_o_u, masked_rays_d, masked_rays_o_u, blur_mask, sampler)
+#     elif args.pixel_diff_type == 'dir':
+#         inp_r, _ = get_inp(args, decoder, lat_vecs, instance_id, rays_d_wrd_r, rays_o, masked_rays_d_r, masked_rays_o, blur_mask, sampler)
+#         inp_u, _ = get_inp(args, decoder, lat_vecs, instance_id, rays_d_wrd_u, rays_o, masked_rays_d_u, masked_rays_o, blur_mask, sampler)
+#     est_inverced_depth_r = model(inp_r).reshape(-1)
+#     est_inverced_depth_u = model(inp_u).reshape(-1)
+
+#     hit_obj_mask = torch.full_like(instance_id, False, dtype=bool)
+#     hit_obj_mask[blur_mask] = (est_inverced_depth > .5) * (est_inverced_depth_r > .5) * (est_inverced_depth_u > .5)
+#     if not eval_mode:
+#         hit_obj_mask[blur_mask] = (torch.norm(gt_normal_map[blur_mask], dim=-1) > .5) * hit_obj_mask[blur_mask]
+
+#     est_depth = 1 / est_inverced_depth[hit_obj_mask[blur_mask]]
+#     est_depth_r = 1 / est_inverced_depth_r[hit_obj_mask[blur_mask]]
+#     est_depth_u = 1 / est_inverced_depth_u[hit_obj_mask[blur_mask]]
+
+#     est_point = est_depth[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask].reshape(-1, 3)
+#     if args.pixel_diff_type == 'pos':
+#         est_point_r = est_depth_r[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + masked_rays_o_r[hit_obj_mask[blur_mask]].reshape(-1, 3)
+#         est_point_u = est_depth_u[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + masked_rays_o_u[hit_obj_mask[blur_mask]].reshape(-1, 3)
+#     elif args.pixel_diff_type == 'dir':
+#         est_point_r = est_depth_r[..., None] * rays_d_wrd_r[hit_obj_mask].reshape(-1, 3) + masked_rays_o[hit_obj_mask[blur_mask]].reshape(-1, 3)
+#         est_point_u = est_depth_u[..., None] * rays_d_wrd_u[hit_obj_mask].reshape(-1, 3) + masked_rays_o[hit_obj_mask[blur_mask]].reshape(-1, 3)
+
+#     diff_from_right = est_point - est_point_r
+#     diff_from_under = est_point - est_point_u
+#     est_normal = F.normalize(torch.cross(diff_from_right, diff_from_under, dim=-1), dim=-1)
+
+#     if not eval_mode:
+#         est_normal_image = False
+#     else:
+#         est_normal_image = torch.zeros(batch_size, args.H, args.W, 3)
+#         est_normal_image[hit_obj_mask] = (est_normal - 1) / 2
+
+#     return hit_obj_mask, est_normal, est_normal_image
+
+
+
+
+
+トランスフォーマー用
+class PositionalEncoding(nn.Module):
+
+    def __init__(self, d_model, dropout=0.1, max_len=5000):
+        super(PositionalEncoding, self).__init__()
+        self.dropout = nn.Dropout(p=dropout)
+
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(0).transpose(0, 1)
+        self.register_buffer('pe', pe)
+
+    def forward(self, x):
+        x = x + self.pe[:x.size(0), :]
+        return self.dropout(x)
+
+            # Integrate sampled features
+            if self.integrate_sampling_mode=='TransFormer':
+                if blur_mask == 'without_mask':
+                    batch, H, W, _, _ = sampled_lat_vec.shape
+                    sampled_lat_vec = sampled_lat_vec.reshape(-1, self.voxel_sample_num, self.voxel_ch_num).permute(1, 0, 2)
+                    # sampled_lat_vec = self.positional_encoding(sampled_lat_vec)
+                    Q = K = V = sampled_lat_vec
+                    attn_output, attn_weights = self.time_series_model(Q, K, V)
+                    if  self.integrate_TransFormer_mode == 'tf_sum':
+                        integrated_lat_vec = attn_output.permute(1, 2, 0).sum(-1)
+                    elif self.integrate_TransFormer_mode == 'tf_cat':
+                        integrated_lat_vec = attn_output.permute(1, 2, 0).reshape(-1, self.latent_3d_size)
+                    return integrated_lat_vec.reshape(-1, H, W, self.latent_3d_size)
+                else:
+                    sampled_lat_vec = sampled_lat_vec[blur_mask].permute(1, 0, 2)
+                    # sampled_lat_vec = self.positional_encoding(sampled_lat_vec)
+                    Q = K = V = sampled_lat_vec
+                    attn_output, attn_weights = self.time_series_model(Q, K, V)
+                    if  self.integrate_TransFormer_mode == 'tf_sum':
+                        integrated_lat_vec = attn_output.permute(1, 2, 0).sum(-1)
+                    elif self.integrate_TransFormer_mode == 'tf_cat':
+                        integrated_lat_vec = attn_output.permute(1, 2, 0).reshape(-1, self.latent_3d_size)
+                    return integrated_lat_vec
+
+
+
+
+
+Train Stepの画像チェックコード
+        
+            # check normal
+            est_sample_image = torch.zeros_like(gt_normal_map[0])
+            est_sample_image[normal_mask[0]] = (est_normal[:torch.sum(normal_mask[0])].to(est_sample_image.dtype) + 1) / 2
+            gt_sample_image = torch.zeros_like(gt_normal_map[0])
+            gt_sample_image[normal_mask[0]] = (gt_normal_map[0][normal_mask[0]] + 1) / 2
+            check_map(torch.cat([est_sample_image, gt_sample_image], 1), 'tes_normal.png')
+
+            # check normal
+            est_sample_image = torch.zeros_like(inverced_depth_map[0])
+            est_sample_image[normal_mask[0]] = torch.clamp(est_depth_r[:torch.sum(normal_mask[0])].to(est_sample_image.dtype), min=0., max=1.5)
+            gt_sample_image = torch.zeros_like(inverced_depth_map[0])
+            gt_sample_image[normal_mask[0]] = 1 / inverced_depth_map[0][normal_mask[0]].to(est_sample_image.dtype)
+            check_map(torch.cat([est_sample_image, gt_sample_image], 1), 'tes_depth.png')
+
+            # check normal
+            est_sample_image = torch.zeros_like(inverced_depth_map[1])
+            est_sample_image[normal_mask[1]] = est_inverced_depth_r[torch.sum(normal_mask[0]):].to(est_sample_image.dtype)
+            # est_sample_image[blur_mask[1]] = est_inverced_depth[torch.sum(blur_mask[0]):].to(est_sample_image.dtype)
+            check_map(torch.cat([est_sample_image, inverced_depth_map[1].to(est_sample_image.dtype)], 1), 'tes_inverse.png')
+
+
+
+
+training end epochでの画像ログコード
+        # log image
+        if self.current_epoch % self.log_image_interval == 0:
+            with torch.no_grad():
+                # Load path info
+                instance_id = torch.zeros(1, dtype=torch.long).to(self.device)
+                test_H = test_W = 256
+                pos, c2w = path2posc2w(self.test_path, self) # returen as torchtensor
+
+                # Get ray direction
+                rays_o = pos[:, None, None, :].expand(-1, test_H, test_W, -1).detach()
+                rays_d_wrd = get_ray_direction(test_H, self.fov, c2w)
+                
+                # Get latent code
+                input_lat_vec = self.lat_vecs(instance_id)
+
+                # Estimate inverced depth
+                sample_img = self(rays_o, rays_d_wrd, input_lat_vec)[0].unsqueeze(0)
+
+                # Load depth info
+                inverced_depth, blur_mask = path2depthinfo(self.test_path, self, H=256)
+                sample_img = torch.cat([sample_img, inverced_depth], dim=-1)
+
+                # log image
+                sample_img = sample_img / sample_img.max()
+                self.logger.experiment.add_image('train/estimated_depth', sample_img, 0)
+
+
+
+
+    
+
+
+    def test_step(self, batch, batch_idx):
+
+        frame_rgb_map, frame_mask, frame_depth_map, frame_camera_pos, frame_camera_rot, frame_obj_rot, instance_id = batch
+        batch_size = len(instance_id)
+        
+        ###########################################################################
+        #########################        average          #########################
+        ###########################################################################
+        if self.test_mode == 'average':
+            # 各フレームで独立して初期推定->最適化ステップを行い、それを平均する。
+
+
+
+            est_axis_green_wrd = []
+            est_axis_red_wrd = []
+            est_shape_code = []
+            
+            
+            
+            # ランダムなあるフレームからframe_sequence_num個を取得
+            frame_est_list = {'axis_green':[], 'axis_red':[], 'shape_code':[], 'error':[]}
+            for frame_sequence_idx in range(self.frame_sequence_num):
+                frame_idx = self.start_frame_idx + frame_sequence_idx
+
+                for optim_idx in range(self.optim_step_num):
+
+                    # Get ground truth.
+                    o2w = batch_pi2rot_y(frame_obj_rot[:, frame_idx]).permute(0, 2, 1)
+                    w2c = frame_camera_rot[:, frame_idx]
+                    o2c = torch.bmm(w2c, o2w) # とりあえずこれを推論する
+                    o2w = torch.bmm(w2c.permute(0, 2, 1), o2c)
+                    o2o = torch.bmm(o2w.permute(0, 2, 1), o2w)
+                    gt_axis_green_wrd = torch.sum(o2c[:, :, 1][..., None, :]*w2c.permute(0, 2, 1), -1) # Y
+                    gt_axis_red_wrd = torch.sum(o2c[:, :, 0][..., None, :]*w2c.permute(0, 2, 1), -1) # X
+
+                    # Get input.
+                    mask = frame_mask[:, frame_idx]
+                    depth_map = frame_depth_map[:, frame_idx]
+                    
+                    # Estimating.
+                    if optim_idx == 0:
+                        inp = torch.stack([depth_map, mask], 1)
+                        if self.use_gru:
+                            est_axis_green_cam_i, est_axis_red_cam_i, est_shape_code_i, feature_vec = self.init_net(inp, self.use_gru)
+                            pre_hidden_state = feature_vec
+                        else:
+                            est_axis_green_cam_i, est_axis_red_cam_i, est_shape_code_i = self.init_net(inp, self.use_gru)
+                    # else:
+                    #     inp = torch.stack([depth_map, mask, pre_depth_map, pre_mask, depth_map - pre_depth_map], 1)
+                    #     if self.use_gru:
+                    #         print('a')
+                    #         diff_axis_green, diff_axis_red, diff_shape_code, feature_vec, pre_hidden_state = self.df_net(inp, pre_axis_green, pre_axis_red, pre_shape_code, pre_hidden_state)
+                    #     else:
+                    #         diff_axis_green, diff_axis_red, diff_shape_code = self.df_net(inp, pre_axis_green, pre_axis_red, pre_shape_code)
+                    #     est_axis_green_cam_i = F.normalize(pre_axis_green + diff_axis_green, dim=-1)
+                    #     est_axis_red_cam_i = F.normalize(pre_axis_red + diff_axis_red, dim=-1)
+                    #     est_shape_code_i = pre_shape_code + diff_shape_code
+                    #     print(f'frame_sequence_idx:{frame_sequence_idx}, frame_idx:{frame_idx}, optim_idx:{optim_idx}')
+                    else:
+                        # Set variables with requires_grad = True.
+                        torch.set_grad_enabled(True)
+                        axis_green_for_cal_grads = pre_axis_green.detach().clone()
+                        axis_red_for_cal_grads = pre_axis_red.detach().clone()
+                        shape_code_for_cal_grads = pre_shape_code.detach().clone()
+                        axis_green_for_cal_grads.requires_grad = True
+                        axis_red_for_cal_grads.requires_grad = True
+                        shape_code_for_cal_grads.requires_grad = True
+
+                        params = [axis_green_for_cal_grads, 
+                                    axis_red_for_cal_grads, 
+                                    shape_code_for_cal_grads]
+                        lr = 0.01
+                        optimizer = torch.optim.Adam(params, lr)
+
+                        print('start')
+
+                        self.grad_optim_max = 100
+                        for grad_optim_idx in range(self.grad_optim_max):
+                            optimizer.zero_grad()
+                            rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
+                            obj_pos_wrd = torch.zeros(batch_size, 3, device=frame_camera_rot.device)
+                            est_invdepth_map, est_mask, est_depth_map = get_depth_map_from_axis(
+                                                                            H = self.H, 
+                                                                            axis_green = axis_green_for_cal_grads, 
+                                                                            axis_red = axis_red_for_cal_grads,
+                                                                            cam_pos_wrd = frame_camera_pos[:, frame_idx].detach(), 
+                                                                            obj_pos_wrd = obj_pos_wrd.detach(), 
+                                                                            rays_d_cam = rays_d_cam.detach(), 
+                                                                            w2c = w2c.detach(), 
+                                                                            input_lat_vec = shape_code_for_cal_grads, 
+                                                                            ddf = self.ddf, 
+                                                                            with_invdepth_map = True, 
+                                                                            )
+                            invdepth_map = torch.zeros_like(depth_map)
+                            invdepth_map[mask] = 1. / depth_map[mask]
+                            energy = self.l1(est_invdepth_map, invdepth_map.detach())
+                            energy.backward()
+                            optimizer.step()
+
+                            print(energy)
+                        torch.set_grad_enabled(False)
+                        import pdb; pdb.set_trace()
+
+                        pre_axis_green_wrd = torch.sum(pre_axis_green[..., None, :]*w2c.permute(0, 2, 1), -1)
+                        pre_axis_red_wrd = torch.sum(pre_axis_red[..., None, :]*w2c.permute(0, 2, 1), -1)
+                        # Stack final estimation on this frame.
+                        if self.average_each_results:
+                            # 現フレームに対する推論結果をスタックする。
+                            frame_est_list['axis_green'].append(pre_axis_green_wrd.clone())
+                            frame_est_list['axis_red'].append(pre_axis_red_wrd.clone())
+                            frame_est_list['shape_code'].append(pre_shape_code.clone())
+                            frame_est_list['error'].append(energy)
+                        break
+
+                    # 最適化ステップ内の、ラムダステップを実行
+                    for half_lambda_idx in range(self.half_lambda_max):
+                        # Get simulation results.
+                        rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
+                        obj_pos_wrd = torch.zeros(batch_size, 3, device=frame_camera_rot.device)
+                        est_mask, est_depth_map = get_depth_map_from_axis(
+                                                        H = self.H, 
+                                                        axis_green = est_axis_green_cam_i, 
+                                                        axis_red = est_axis_red_cam_i,
+                                                        cam_pos_wrd = frame_camera_pos[:, frame_idx], 
+                                                        obj_pos_wrd = obj_pos_wrd, 
+                                                        rays_d_cam = rays_d_cam, 
+                                                        w2c = w2c, 
+                                                        input_lat_vec = est_shape_code_i, 
+                                                        ddf = self.ddf, 
+                                                        )
+
+                        # 初期推定をセット、ラムダステップはなし
+                        if optim_idx == 0:
+                            # Get next inputs
+                            pre_axis_green = est_axis_green_cam_i.detach()
+                            pre_axis_red = est_axis_red_cam_i.detach()
+                            pre_shape_code = est_shape_code_i.detach()
+                            pre_mask = est_mask.detach()
+                            pre_depth_map = est_depth_map.detach()
+                            pre_error = torch.abs(pre_depth_map - depth_map).mean(dim=-1).mean(dim=-1)
+                            break
+
+                        # 最適化のラムダステップ
+                        else:
+                            # エラーを計算
+                            error = torch.abs(est_depth_map - depth_map).mean(dim=-1).mean(dim=-1)
+                            un_update_mask = (pre_error - error) < 0. #エラーが大きくなった場合、True
+                            update_mask = torch.logical_not(un_update_mask)
+
+                            # 更新により、エラーが全てのバッチで小さくなった
+                            # ラムダステップの最大まで行った
+                            # -> 次の最適化ステップ or フレームへ
+                            decade_all_error = update_mask.all()
+                            over_lamda_step = half_lambda_idx + 1 == self.half_lambda_max
+                            last_optim_step = optim_idx + 1 == self.test_optim_num[frame_sequence_idx]
+                            not_last_frame = frame_sequence_idx < self.frame_sequence_num - 1
+                            go_next_frame = last_optim_step and not_last_frame
+
+                            if decade_all_error or over_lamda_step:
+                                # get next inputs
+                                pre_axis_green[update_mask] = est_axis_green_cam_i[update_mask].detach()
+                                pre_axis_red[update_mask] = est_axis_red_cam_i[update_mask].detach()
+                                pre_shape_code[update_mask] = est_shape_code_i[update_mask].detach()
+                                pre_mask[update_mask] = est_mask[update_mask].detach()
+                                pre_depth_map[update_mask] = est_depth_map[update_mask].detach()
+                                pre_error[update_mask] = error[update_mask].detach()
+                                
+                                # 全ての要素を更新出来なかった -> もうこれ以上の最適化ステップは意味がない
+                                # ※　GRUの時は別
+                                # ※　この先のフレームもやらない？
+                                # if un_update_mask.all() and over_lamda_step:
+                                #     early_stop = True
+
+                                if last_optim_step:
+                                    pre_axis_green_wrd = torch.sum(pre_axis_green[..., None, :]*w2c.permute(0, 2, 1), -1)
+                                    pre_axis_red_wrd = torch.sum(pre_axis_red[..., None, :]*w2c.permute(0, 2, 1), -1)
+
+                                    # Stack final estimation on this frame.
+                                    if self.average_each_results:
+                                        # 現フレームに対する推論結果をスタックする。
+                                        frame_est_list['axis_green'].append(pre_axis_green_wrd.clone())
+                                        frame_est_list['axis_red'].append(pre_axis_red_wrd.clone())
+                                        frame_est_list['shape_code'].append(pre_shape_code.clone())
+                                        frame_est_list['error'].append(pre_error) # 現フレームに対するエラーを見たい。
+                                break
+
+                            # 更新により、エラーが全てのバッチで小さくななかった
+                            # -> ならなかったUpdateを半減させて再計算
+                            else:
+                                lamda_i = 1 / 2**(half_lambda_idx+1)
+                                est_axis_green_cam_i[un_update_mask] = pre_axis_green[un_update_mask] + lamda_i * diff_axis_green[un_update_mask]
+                                est_axis_green_cam_i = F.normalize(est_axis_green_cam_i, dim=-1)
+                                est_axis_red_cam_i[un_update_mask] = pre_axis_red[un_update_mask] + lamda_i * diff_axis_red[un_update_mask]
+                                est_axis_red_cam_i = F.normalize(est_axis_red_cam_i, dim=-1)
+                                est_shape_code_i[un_update_mask] = pre_shape_code[un_update_mask] + lamda_i * diff_shape_code[un_update_mask]
+            
+            # Get average.
+            if self.average_each_results:
+                est_axis_green_wrd = get_weighted_average(
+                                        target = torch.stack(frame_est_list['axis_green'], dim=1).detach(), 
+                                        ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                est_axis_red_wrd = get_weighted_average(
+                                        target = torch.stack(frame_est_list['axis_red'], dim=1).detach(), 
+                                        ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                est_axis_green_wrd = F.normalize(est_axis_green_wrd, dim=1)
+                est_axis_red_wrd = F.normalize(est_axis_red_wrd, dim=1)
+                est_shape_code = get_weighted_average(
+                                        target = torch.stack(frame_est_list['shape_code'], dim=1).detach(), 
+                                        ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach()
+                print((ratio / torch.sum(ratio, dim=1)[..., None])[0])
+                print(torch.stack(frame_est_list['error'], dim=1)[0])
+            elif not self.average_each_results:
+                est_axis_green_wrd = torch.stack(frame_est_list['axis_green'], dim=1).mean(dim=1)
+                est_axis_red_wrd = torch.stack(frame_est_list['axis_red'], dim=1).mean(dim=1)
+                est_axis_green_wrd = F.normalize(est_axis_green_wrd, dim=1)
+                est_axis_red_wrd = F.normalize(est_axis_red_wrd, dim=1)
+                est_shape_code = torch.stack(frame_est_list['shape_code'], dim=1).mean(dim=1)
+
+
+
+        ###########################################################################
+        #########################      check result       #########################
+        ###########################################################################
+        with torch.no_grad():
+            # Set random frames.
+            frame_idx = -1 # random.randint(0, frame_rgb_map.shape[1]-1)
+            mask = frame_mask[:, frame_idx]
+            depth_map = frame_depth_map[:, frame_idx]
+
+            # Get simulation results.
+            w2c = frame_camera_rot[:, frame_idx]
+            est_axis_green = torch.sum(est_axis_green_wrd[..., None, :]*w2c, -1)
+            est_axis_red = torch.sum(est_axis_red_wrd[..., None, :]*w2c, -1)
+            rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
+            obj_pos_wrd = torch.zeros(batch_size, 3, device=frame_camera_rot.device)
+            est_mask, est_depth_map = get_depth_map_from_axis(
+                                            H = self.H, 
+                                            axis_green = est_axis_green, 
+                                            axis_red = est_axis_red,
+                                            cam_pos_wrd = frame_camera_pos[:, frame_idx], 
+                                            obj_pos_wrd = obj_pos_wrd, 
+                                            rays_d_cam = rays_d_cam, 
+                                            w2c = w2c, 
+                                            input_lat_vec = est_shape_code_i, 
+                                            ddf = self.ddf, 
+                                            )
+                    
+            # # Check depth map.
+            # check_map_1 = []
+            # for batch_i in range(batch_size):
+            #     check_map_i = torch.cat([depth_map[batch_i], est_depth_map[batch_i]], dim=0)
+            #     check_map_1.append(check_map_i)
+            # check_map_1 = torch.cat(check_map_1, dim=1)
+            # check_map(check_map_1, f'check_batch_{str(batch_idx).zfill(5)}.png', figsize=[10,2])
+            # check_map_1 = []
+
+        # Cal err.
+        err_axis_green = torch.mean(-self.cossim(est_axis_green_wrd, gt_axis_green_wrd) + 1.)
+        err_axis_red = torch.mean(-self.cossim(est_axis_red_wrd, gt_axis_red_wrd) + 1.)
+        err_depth = F.mse_loss(est_depth_map, depth_map)
+
+        return {'err_axis_green': err_axis_green.detach(), 'err_axis_red': err_axis_red.detach(), 'err_depth': err_depth.detach()}
+
+
+
+    def test_epoch_end(self, outputs):
+        # Log loss.
+        avg_err_axis_green = torch.stack([x['err_axis_green'] for x in outputs]).mean()
+        avg_err_axis_red = torch.stack([x['err_axis_red'] for x in outputs]).mean()
+        avg_err_depth = torch.stack([x['err_depth'] for x in outputs]).mean()
+
+        with open(self.test_log_path, 'a') as file:
+            file.write('avg_err_axis_green : ' + str(avg_err_axis_green.item()) + '\n')
+            file.write('avg_err_axis_red : ' + str(avg_err_axis_red.item()) + '\n')
+            file.write('avg_err_depth : ' + str(avg_err_depth.item()) + '\n')
+
+
+
+
+
+
+
+
+
+
+
+
+        # # Check depth map.
+        # # if (self.current_epoch + 1) % 10 == 0 and batch_idx==0:
+        # result_map = []
+        # with torch.no_grad():
+        #     for batch_idx in range(batch_size):
+        #         # # batch_idx = 0
+        #         # rays_o = rays_o_obj[batch_idx].unsqueeze(0)
+        #         # rays_d = rays_d_obj[batch_idx].unsqueeze(0)
+
+        #         # input_lat_vec = gt_shape_code[batch_idx]
+        #         # gt_pose_gt_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         # gt_pose_gt_shape_code_mask = gt_pose_gt_shape_code_invdepth_map > .5
+        #         # gt_pose_gt_shape_code_depth_map = torch.zeros_like(gt_pose_gt_shape_code_invdepth_map)
+        #         # gt_pose_gt_shape_code_depth_map[gt_pose_gt_shape_code_mask] = 1. / gt_pose_gt_shape_code_invdepth_map[gt_pose_gt_shape_code_mask]
+
+        #         # input_lat_vec = est_shape_code[batch_idx]
+        #         # gt_pose_est_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         # gt_pose_est_shape_code_mask = gt_pose_est_shape_code_invdepth_map > .5
+        #         # gt_pose_est_shape_code_depth_map = torch.zeros_like(gt_pose_est_shape_code_invdepth_map)
+        #         # gt_pose_est_shape_code_depth_map[gt_pose_est_shape_code_mask] = 1. / gt_pose_est_shape_code_invdepth_map[gt_pose_est_shape_code_mask]
+
+        #         # result_map_1 = torch.cat([frame_depth_map[batch_idx, frame_idx], gt_pose_gt_shape_code_depth_map[0], gt_pose_est_shape_code_depth_map[0]], dim=1)
+
+        #         # axis_green = est_axis_green
+        #         # axis_red = est_axis_red
+        #         # axis_blue = torch.cross(axis_red, axis_green, dim=-1)
+        #         # axis_blue = F.normalize(axis_blue, dim=-1)
+        #         # axis_red = torch.cross(axis_green, axis_blue, dim=-1)
+        #         # est_o2c = torch.stack([axis_red, axis_green, axis_blue], dim=-1)
+        #         # rays_d_obj = torch.sum(rays_d_cam[..., None, :]*est_o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
+        #         # rays_d = rays_d_obj[batch_idx].unsqueeze(0)
+
+        #         # input_lat_vec = gt_shape_code[batch_idx]
+        #         # est_pose_gt_shape_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         # est_pose_gt_shape_mask = est_pose_gt_shape_invdepth_map > .5
+        #         # est_pose_gt_shape_depth_map = torch.zeros_like(est_pose_gt_shape_invdepth_map)
+        #         # est_pose_gt_shape_depth_map[est_pose_gt_shape_mask] = 1. / est_pose_gt_shape_invdepth_map[est_pose_gt_shape_mask]
+
+        #         # input_lat_vec = est_shape_code[batch_idx]
+        #         # est_pose_est_shape_code_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         # est_pose_est_shape_code_mask = est_pose_est_shape_code_invdepth_map > .5
+        #         # est_pose_est_shape_code_depth_map = torch.zeros_like(est_pose_est_shape_code_invdepth_map)
+        #         # est_pose_est_shape_code_depth_map[est_pose_est_shape_code_mask] = 1. / est_pose_est_shape_code_invdepth_map[est_pose_est_shape_code_mask]
+
+        #         # dummy_result = torch.zeros_like(frame_depth_map[batch_idx, frame_idx])
+        #         # result_map_2 = torch.cat([dummy_result, est_pose_gt_shape_depth_map[0], est_pose_est_shape_code_depth_map[0]], dim=1)
+                
+        #         # result_map = torch.cat([result_map_1, result_map_2], dim=0)
+        #         # check_map(result_map, 'initnet_results/train/' + str(batch_idx + 1).zfill(10) + '.png', figsize=[10,8])
+        #         # Get rotation matrix.
+        #         axis_green = est_axis_green
+        #         axis_red = est_axis_red
+        #         axis_blue = torch.cross(axis_red, axis_green, dim=-1)
+        #         axis_blue = F.normalize(axis_blue, dim=-1)
+        #         axis_red = torch.cross(axis_green, axis_blue, dim=-1)
+        #         est_o2c = torch.stack([axis_red, axis_green, axis_blue], dim=-1)
+                
+        #         # Get rays direction.
+        #         rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
+        #         rays_d_obj = torch.sum(rays_d_cam[..., None, :]*est_o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
+            
+        #         # Get rays origin.
+        #         cam_pos_wrd = frame_camera_pos[:, frame_idx]
+        #         obj_pos_wrd = torch.zeros_like(cam_pos_wrd)
+        #         est_o2w = torch.bmm(w2c.to(est_o2c.dtype).permute(0, 2, 1), est_o2c)
+        #         cam_pos_obj = torch.sum((cam_pos_wrd - obj_pos_wrd)[..., None, :] * est_o2w.permute(0, 2, 1), dim=-1) # = -obj_T_c2o
+        #         rays_o_obj = cam_pos_obj[:, None, None, :].expand(-1, self.H, self.H, -1)
+
+        #         # for batch_idx in range(batch_size):
+        #         # batch_idx = 0
+        #         rays_d = rays_d_obj[batch_idx].unsqueeze(0)
+        #         rays_o = rays_o_obj[batch_idx].unsqueeze(0)
+        #         input_lat_vec = est_shape_code[batch_idx]
+
+        #         est_invdepth_map = self.ddf.forward(rays_o, rays_d, input_lat_vec)
+        #         est_mask = est_invdepth_map > .5
+        #         est_depth_map = torch.zeros_like(est_invdepth_map)
+        #         est_depth_map[est_mask] = 1. / est_invdepth_map[est_mask]
+
+        #         result_map_i = torch.cat([depth_map[batch_idx], est_depth_map[0]], dim=0)
+        #         result_map.append(result_map_i)
+                
+        #         if batch_idx > 10:
+        #             break
+
+        #     result_map = torch.cat(result_map, dim=1)
+        #     check_map(result_map, 'tes_ini.png', figsize=[10,2])
+
+        #     import pdb; pdb.set_trace()

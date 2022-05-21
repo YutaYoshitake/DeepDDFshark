@@ -25,6 +25,12 @@ ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/00000032
 avg_err_axis_green : 0.0003669918208809559
 avg_err_axis_red : 0.0013574047467625012
 avg_err_depth : 0.044481828808784485
+            model.half_lambda_max = 3
+            time_log : 2022_05_14_20_18_42
+            ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
+            avg_err_axis_green : 0.00036543444152214527
+            avg_err_axis_red : 0.0013495740810120422
+            avg_err_depth : 0.0486648865044117
 
 シングル訓練・最適化ネットGRU（３枚の平均）？？？
 time_log : 2022_05_09_11_21_44
@@ -53,6 +59,48 @@ ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_frame/checkpoints/00000032
 avg_err_axis_green : 0.0005629769739879759
 avg_err_axis_red : 0.0015352779785481666
 avg_err_depth : 0.04344688728451729
+
+初期化ネット
+model.only_init_net = True
+if model.only_init_net:
+    model.test_mode = 'average'
+    model.test_optim_num = [1, 1, 1]
+１time_log : 2022_05_15_00_51_28
+　ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
+　avg_err_axis_green : 0.0006938051756069983
+　avg_err_axis_red : 0.0030432569386413806
+　avg_err_depth : 0.05511524900794029
+２time_log : 2022_05_15_01_02_31
+　ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
+　avg_err_axis_green : 0.0005183815815084362
+　avg_err_axis_red : 0.0029646214958196798
+　avg_err_depth : 0.05556037649512291
+３time_log : 2022_05_15_01_05_25
+　ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_frame/checkpoints/0000003200.ckpt
+　avg_err_axis_green : 0.00038910681123995483
+　avg_err_axis_red : 0.002432583971864713
+　avg_err_depth : 0.052864138036966324
+
+シングル訓練・最適化ネットGRU（３枚の平均）
+time_log : 2022_05_15_02_01_47
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000009700.ckpt
+avg_err_axis_green : 0.00036266484651705866
+avg_err_axis_red : 0.0008605525772370453
+avg_err_depth : 0.04777204245328903
+シーケンス訓練・最適化ネットGRU
+time_log : 2022_05_15_10_36_34
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_framegruseed7/checkpoints/0000009700.ckpt
+avg_err_axis_green : 0.00038285312894076155
+avg_err_axis_red : 0.0011603910028579422
+avg_err_depth : 0.043669674545526505
+Adam最適化
+time_log : 2022_05_15_02_06_57
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.00014949672368584787
+avg_err_axis_red : 0.0006814291201610437
+avg_err_depth : 0.030002959072589874
+
+
 
 
 
