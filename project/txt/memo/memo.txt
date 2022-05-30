@@ -1159,3 +1159,172 @@ def diff2estimation(x_cim, y_cim, z_diff, scale_diff, bbox_list, avg_z_map, fov,
     # central_z = torch.tensor(central_z).to(z_diff)
     # z_at_xycim = F.grid_sample(z_map[:, None], xy_cim[:, None, None, :], align_corners=True)[:, 0, 0, 0] # ゼロなら？？
     # im2cam_scale = z_at_xycim * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)
+
+
+
+# Dynamic カメラのPC確認陽コード
+                # Check point cloud.
+                batch_i = 0
+                fig = plt.figure()
+                ax = Axes3D(fig)
+                ax.set_xlabel("X")
+                ax.set_ylabel("Y")
+                ax.set_zlabel("Z")
+
+                rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
+                obj_pos_cam = torch.sum((gt_obj_pos_wrd-cam_pos_wrd)[..., None, :]*w2c, dim=-1).to('cpu').detach().numpy().copy()
+                rays_d = rays_d_cam
+                depth_map = clopped_distance_map
+                mask = clopped_mask
+                point = (depth_map[batch_i][..., None] * rays_d[batch_i])[mask[batch_i]]
+                point = point.to('cpu').detach().numpy().copy()
+                ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
+                rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
+                gt_obj_pos_cam = torch.sum((gt_obj_pos_wrd-cam_pos_wrd)[..., None, :]*w2c, dim=-1)
+                obj_pos_cam = gt_obj_pos_cam.to('cpu').detach().numpy().copy()
+                rays_d = rays_d_cam
+                depth_map = clopped_est_distance_map
+                mask = clopped_est_mask
+                point = (depth_map[batch_i][..., None] * rays_d[batch_i])[mask[batch_i]]
+                point = point.to('cpu').detach().numpy().copy()
+                ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='c', s=0.05)
+                ax.scatter(obj_pos_cam[batch_i, 0], obj_pos_cam[batch_i, 1], obj_pos_cam[batch_i, 2], marker="o", linestyle='None', c='b', s=10)
+
+                ax.view_init(elev=0, azim=0)
+                fig.savefig("point_cloud_cam.png")
+                plt.close()
+
+
+
+
+
+
+
+
+
+
+class resnet_encoder_prot(pl.LightningModule):
+
+    def __init__(self, args, in_channel=2):
+        super().__init__()
+
+        self.encoder = ResNet50(args, in_channel=in_channel)
+        self.fc_axis_green = nn.Sequential(
+                nn.Linear(2048, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 3), 
+                )
+        self.fc_axis_red = nn.Sequential(
+                nn.Linear(2048, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 3), 
+                )
+        self.fc_shape_code = nn.Sequential(
+                nn.Linear(2048, 512), nn.LeakyReLU(0.2),
+                nn.Linear(512, 512), nn.LeakyReLU(0.2),
+                nn.Linear(512, args.latent_size), 
+                )
+
+    
+    def forward(self, inp, use_gru=False):
+        batch_size = inp.shape[0]
+        x = self.encoder(inp)
+        x = x.reshape(batch_size, -1)
+
+        x_green = self.fc_axis_green(x)
+        axis_green = F.normalize(x_green, dim=-1)
+        x_red = self.fc_axis_red(x)
+        axis_red = F.normalize(x_red, dim=-1)
+
+        shape_code = self.fc_shape_code(x)
+        if use_gru:
+            return axis_green, axis_red, shape_code, x
+        else:
+            return axis_green, axis_red, shape_code
+
+
+
+
+
+class df_resnet_encoder(pl.LightningModule):
+
+    def __init__(self, args, in_channel=2):
+        super().__init__()
+
+        self.encoder = ResNet50(args, in_channel=in_channel)
+        self.fc_axis_green = nn.Sequential(
+                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 3), 
+                )
+        self.fc_axis_red = nn.Sequential(
+                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 3), 
+                )
+        self.fc_shape_code = nn.Sequential(
+                nn.Linear(2048 + args.latent_size, 512), nn.LeakyReLU(0.2),
+                nn.Linear(512, 512), nn.LeakyReLU(0.2),
+                nn.Linear(512, args.latent_size), 
+                )
+
+    
+    def forward(self, inp, pre_axis_green, pre_axis_red, pre_shape_code):
+        batch_size = inp.shape[0]
+        x = self.encoder(inp)
+        x = x.reshape(batch_size, -1)
+
+        axis_green_x = torch.cat([x, pre_axis_green], dim=-1)
+        diff_axis_green = self.fc_axis_green(axis_green_x)
+        axis_red_x = torch.cat([x, pre_axis_red], dim=-1)
+        diff_axis_red = self.fc_axis_red(axis_red_x)
+        shape_code_x = torch.cat([x, pre_shape_code], dim=-1)
+        diff_shape_code = self.fc_shape_code(shape_code_x)
+
+        return diff_axis_green, diff_axis_red, diff_shape_code
+
+
+
+
+
+class df_resnet_encoder_with_gru(pl.LightningModule):
+
+    def __init__(self, args, in_channel=2):
+        super().__init__()
+
+        self.encoder = ResNet50(args, in_channel=in_channel)
+        self.fc_axis_green = nn.Sequential(
+                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 3), 
+                )
+        self.fc_axis_red = nn.Sequential(
+                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 256), nn.LeakyReLU(0.2),
+                nn.Linear(256, 3), 
+                )
+        self.fc_shape_code = nn.Sequential(
+                nn.Linear(2048 + args.latent_size, 512), nn.LeakyReLU(0.2),
+                nn.Linear(512, 512), nn.LeakyReLU(0.2),
+                nn.Linear(512, args.latent_size), 
+                )
+        self.gru = nn.GRU(input_size=2048, hidden_size=2048) # 試し
+    
+    def forward(self, inp, pre_axis_green, pre_axis_red, pre_shape_code, h_0):
+        batch_size = inp.shape[0]
+        
+        x = self.encoder(inp)
+        x = x.reshape(batch_size, -1)
+
+        x, post_h = self.gru(x.unsqueeze(0), h_0.unsqueeze(0))
+        x = x.reshape(batch_size, -1)
+        h_1 = post_h.reshape(batch_size, -1)
+
+        axis_green_x = torch.cat([x, pre_axis_green], dim=-1)
+        diff_axis_green = self.fc_axis_green(axis_green_x)
+        axis_red_x = torch.cat([x, pre_axis_red], dim=-1)
+        diff_axis_red = self.fc_axis_red(axis_red_x)
+        shape_code_x = torch.cat([x, pre_shape_code], dim=-1)
+        diff_shape_code = self.fc_shape_code(shape_code_x)
+        
+        return diff_axis_green, diff_axis_red, diff_shape_code, x, h_1

@@ -51,54 +51,6 @@ if device=='cuda':
 
 
 
-class resnet_encoder_prot(pl.LightningModule):
-
-    def __init__(self, args, in_channel=2):
-        super().__init__()
-
-        self.encoder = ResNet50(args, in_channel=in_channel)
-        self.fc_axis_green = nn.Sequential(
-                nn.Linear(2048, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 3), 
-                )
-        self.fc_axis_red = nn.Sequential(
-                nn.Linear(2048, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 3), 
-                )
-        self.fc_shape_code = nn.Sequential(
-                nn.Linear(2048, 512), nn.LeakyReLU(0.2),
-                nn.Linear(512, 512), nn.LeakyReLU(0.2),
-                nn.Linear(512, args.latent_size), 
-                )
-
-    
-    def forward(self, inp, use_gru=False):
-        batch_size = inp.shape[0]
-        x = self.encoder(inp)
-        x = x.reshape(batch_size, -1)
-
-        x_green = self.fc_axis_green(x)
-        axis_green = F.normalize(x_green, dim=-1)
-        x_red = self.fc_axis_red(x)
-        axis_red = F.normalize(x_red, dim=-1)
-        z_diff = 0. * torch.ones_like(axis_green)[..., 0]
-        x_cim = 0. * torch.ones_like(axis_green)[..., 0]
-        y_cim = 0. * torch.ones_like(axis_green)[..., 0]
-        scale_diff = torch.ones_like(axis_green)[..., 0]
-
-        shape_code = self.fc_shape_code(x)
-
-        if use_gru:
-            return x_cim, y_cim, z_diff, axis_green, axis_red, scale_diff, shape_code, x
-        else:
-            return x_cim, y_cim, z_diff, axis_green, axis_red, scale_diff, shape_code
-
-
-
-
-
 class resnet_encoder(pl.LightningModule):
 
     def __init__(self, args, in_channel=2):
@@ -108,7 +60,8 @@ class resnet_encoder(pl.LightningModule):
                 ResNet50(args, in_channel=in_channel), 
                 )
         self.backbone_fc = nn.Sequential(
-                nn.Linear(2048 + 6, 512), nn.LeakyReLU(0.2)
+                nn.Linear(2048 + 7, 512), nn.LeakyReLU(0.2),
+                nn.Linear(512, 512), nn.LeakyReLU(0.2),
                 )
         self.fc_axis_green = nn.Sequential(
                 nn.Linear(512, 256), nn.LeakyReLU(0.2),
@@ -131,7 +84,7 @@ class resnet_encoder(pl.LightningModule):
                 nn.Linear(256, 3), 
                 )
         self.fc_scale = nn.Sequential(
-                nn.Linear(512, 256), nn.LeakyReLU(0.2),
+                nn.Linear(512, 256), nn.LeakyReLU(0.2), # nn.Linear(518, 256), nn.LeakyReLU(0.2),
                 nn.Linear(256, 256), nn.LeakyReLU(0.2),
                 nn.Linear(256, 1), 
                 )
@@ -157,7 +110,7 @@ class resnet_encoder(pl.LightningModule):
         axis_red = F.normalize(x_red, dim=-1)
 
         # Get scale.
-        x_scale = self.fc_scale(x).reshape(-1)
+        x_scale = self.fc_scale(x)
         scale_diff = x_scale + torch.ones_like(x_scale)
 
         # Get shape code.
@@ -166,94 +119,7 @@ class resnet_encoder(pl.LightningModule):
         if self.use_gru:
             return x_cim, y_cim, z_diff, axis_green, axis_red, scale_diff, shape_code, x
         else:
-            return x_cim, y_cim, z_diff, axis_green, axis_red, scale_diff, shape_code
-
-
-
-
-
-class df_resnet_encoder(pl.LightningModule):
-
-    def __init__(self, args, in_channel=2):
-        super().__init__()
-
-        self.encoder = ResNet50(args, in_channel=in_channel)
-        self.fc_axis_green = nn.Sequential(
-                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 3), 
-                )
-        self.fc_axis_red = nn.Sequential(
-                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 3), 
-                )
-        self.fc_shape_code = nn.Sequential(
-                nn.Linear(2048 + args.latent_size, 512), nn.LeakyReLU(0.2),
-                nn.Linear(512, 512), nn.LeakyReLU(0.2),
-                nn.Linear(512, args.latent_size), 
-                )
-
-    
-    def forward(self, inp, pre_axis_green, pre_axis_red, pre_shape_code):
-        batch_size = inp.shape[0]
-        x = self.encoder(inp)
-        x = x.reshape(batch_size, -1)
-
-        axis_green_x = torch.cat([x, pre_axis_green], dim=-1)
-        diff_axis_green = self.fc_axis_green(axis_green_x)
-        axis_red_x = torch.cat([x, pre_axis_red], dim=-1)
-        diff_axis_red = self.fc_axis_red(axis_red_x)
-        shape_code_x = torch.cat([x, pre_shape_code], dim=-1)
-        diff_shape_code = self.fc_shape_code(shape_code_x)
-
-        return diff_axis_green, diff_axis_red, diff_shape_code
-
-
-
-
-
-class df_resnet_encoder_with_gru(pl.LightningModule):
-
-    def __init__(self, args, in_channel=2):
-        super().__init__()
-
-        self.encoder = ResNet50(args, in_channel=in_channel)
-        self.fc_axis_green = nn.Sequential(
-                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 3), 
-                )
-        self.fc_axis_red = nn.Sequential(
-                nn.Linear(2048 + 3, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 3), 
-                )
-        self.fc_shape_code = nn.Sequential(
-                nn.Linear(2048 + args.latent_size, 512), nn.LeakyReLU(0.2),
-                nn.Linear(512, 512), nn.LeakyReLU(0.2),
-                nn.Linear(512, args.latent_size), 
-                )
-        self.gru = nn.GRU(input_size=2048, hidden_size=2048) # 試し
-    
-    def forward(self, inp, pre_axis_green, pre_axis_red, pre_shape_code, h_0):
-        batch_size = inp.shape[0]
-        
-        x = self.encoder(inp)
-        x = x.reshape(batch_size, -1)
-
-        x, post_h = self.gru(x.unsqueeze(0), h_0.unsqueeze(0))
-        x = x.reshape(batch_size, -1)
-        h_1 = post_h.reshape(batch_size, -1)
-
-        axis_green_x = torch.cat([x, pre_axis_green], dim=-1)
-        diff_axis_green = self.fc_axis_green(axis_green_x)
-        axis_red_x = torch.cat([x, pre_axis_red], dim=-1)
-        diff_axis_red = self.fc_axis_red(axis_red_x)
-        shape_code_x = torch.cat([x, pre_shape_code], dim=-1)
-        diff_shape_code = self.fc_shape_code(shape_code_x)
-        
-        return diff_axis_green, diff_axis_red, diff_shape_code, x, h_1
+            return x_cim, y_cim, z_diff, axis_green, axis_red, scale_diff, shape_code, 0
 
 
 
@@ -295,7 +161,7 @@ def render_distance_map_from_axis(
     est_invdistance_map = est_invdistance_map_obj_scale / obj_scale[:, None, None]
 
     # Get distance map.
-    mask_under_border = 1 / (cam_pos_obj.norm(dim=-1) + 0.5 * obj_scale * ddf.radius) # 良いのか...？
+    mask_under_border = 1 / (cam_pos_obj.norm(dim=-1) + 1.0 * obj_scale * ddf.radius) # 良いのか...？
     est_mask = [map_i > border_i for map_i, border_i in zip(est_invdistance_map, mask_under_border)]
     est_mask = torch.stack(est_mask, dim=0)
     est_distance_map = torch.zeros_like(est_invdistance_map)
@@ -359,15 +225,20 @@ def clopping_distance_map(mask, distance_map, image_coord, input_H, input_W, ddf
 
 
 
-def get_normalized_depth_map(mask, distance_map, rays_d_cam, avg_depth_map=False):
+def get_normalized_depth_map(mask, distance_map, rays_d_cam, avg_depth_map='not_given'):
     # Convert to depth map.
     depth_map = rays_d_cam[..., -1] * distance_map
 
     # Get average.
-    if not avg_depth_map:
-        avg_depth_map = torch.tensor(
-            [depth_map_i[mask_i].mean() for mask_i, depth_map_i in zip(mask, depth_map)]
-            , device=depth_map.device) # 物体の存在しているピクセルで平均を取る。
+    if avg_depth_map=='not_given':
+        # avg_depth_map = torch.tensor(
+        #     [depth_map_i[mask_i].mean() for mask_i, depth_map_i in zip(mask, depth_map)]
+        #     , device=depth_map.device) # 物体の存在しているピクセルで平均を取る。
+        top_n = 10 # top_nからtop_n//2までの平均を取る
+        avg_depth_map = torch.stack([
+                            torch.topk(depth_map_i[mask_i], top_n).values[top_n//2:].mean() - torch.topk(-depth_map_i[mask_i], top_n).values[top_n//2:].mean() 
+                            for mask_i, depth_map_i in zip(mask, depth_map)], dim=0)
+        avg_depth_map = avg_depth_map / 2
 
     # Normalizing.
     normalized_depth_map = depth_map - avg_depth_map[:, None, None]
@@ -404,8 +275,8 @@ def diff2estimation(x_cim, y_cim, z_diff, scale_diff, bbox_list, avg_z_map, fov,
     # clopした深度マップでの予測物体中心(x, y)をカメラ座標系における(x, y)に変換
     cim2im_scale = (bbox_hight) / 2 # clopしたBBoxの高さ÷画像の高さ２
     im2cam_scale = avg_z_map * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)
-    xy_im = cim2im_scale * xy_cim + bbox_center # 元画像における物体中心
-    xy_cam = im2cam_scale * xy_im
+    xy_im = cim2im_scale[:, None] * xy_cim + bbox_center # 元画像における物体中心
+    xy_cam = im2cam_scale[:, None] * xy_im
 
     # 正規化深度画像での物体中心zをカメラ座標系におけるzに変換
     z_cam = z_diff + avg_z_map
@@ -414,8 +285,26 @@ def diff2estimation(x_cim, y_cim, z_diff, scale_diff, bbox_list, avg_z_map, fov,
     clopping_bbox_diagonal = 2 * math.sqrt(2)
 
     # clopしたBBoxの対角とカノニカルBBoxの対角の比を変換
-    scale = scale_diff * im2cam_scale * cim2im_scale * clopping_bbox_diagonal / canonical_bbox_diagonal
-    return torch.cat([xy_cam, z_cam[..., None]], dim=-1), scale
+    scale = scale_diff * im2cam_scale[:, None] * cim2im_scale[:, None] * clopping_bbox_diagonal / canonical_bbox_diagonal
+    return torch.cat([xy_cam, z_cam[..., None]], dim=-1), scale, im2cam_scale
+
+
+
+
+
+def diffcim2diffcam(diff_x_cim, diff_y_cim, diff_z_diff, bbox_list, avg_z_map, fov):
+    # Get Bbox info.
+    bbox_list = bbox_list.to(diff_x_cim)
+    fov = torch.deg2rad(torch.tensor(fov, dtype=torch.float))
+    diff_xy_cim = torch.stack([diff_x_cim, diff_y_cim], dim=-1)
+    bbox_hight = bbox_list[:, 0, 1] - bbox_list[:, 1, 1]
+
+    # clopした深度マップでの予測物体中心(x, y)をカメラ座標系における(x, y)に変換
+    cim2im_scale = (bbox_hight) / 2 # clopしたBBoxの高さ÷画像の高さ２
+    im2cam_scale = avg_z_map * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)
+    diff_xy_im = cim2im_scale[:, None] * diff_xy_cim # 元画像における物体中心
+    diff_xy_cam = im2cam_scale[:, None] * diff_xy_im
+    return torch.cat([diff_xy_cam, diff_z_diff[:, None]], dim=-1)
 
 
 
@@ -495,133 +384,101 @@ class TaR_init_only(pl.LightningModule):
         
 
         # Get input.
-        inp = torch.stack([clopped_distance_map, clopped_mask], 1)
-        bbox_info = torch.cat([bbox_list, bbox_list.mean(1)[:, None]], dim=-2).reshape(-1, 6).to(inp) # bbox[max_x, max_y, min_x, min_y, cen_x, cen_y]
+        inp = torch.stack([normalized_depth_map, clopped_mask], 1)
+        bbox_info = torch.cat([bbox_list.reshape(-1, 4), bbox_list.mean(1), avg_depth_map.to('cpu')[:, None]], dim=-1).to(inp)
+        # axis_info = torch.cat([gt_axis_green, gt_axis_red], dim=-1).to(inp)
 
         # Estimating.
         # est_x_cim, est_y_cim : クロップされた画像座標（[-1, 1]で定義）における物体中心の予測, 
         # est_z_diff : デプス画像の正則に用いた平均から、物体中心がどれだけズレているか？, 
         # est_axis_green : カメラ座標系での物体の上方向, 
-        # est_axis_red : カメラ座標系での物体の右方向,
-        # est_scale_diff : Clopping-BBoxの対角と物体のカノニカルBBoxの対角がどれくらいずれているか？, 
-        est_x_cim, est_y_cim, est_z_diff, est_axis_green, est_axis_red, est_scale_diff, est_shape_code = self.model(inp, bbox_info)
-        est_obj_pos_cam, est_obj_scale = diff2estimation(est_x_cim, est_y_cim, est_z_diff, est_scale_diff, bbox_list, avg_depth_map, self.fov)
+        # est_axis_red : カメラ座標系での物体の右方向, 
+        # est_scale_diff : Clopping-BBoxの対角と物体のカノニカルBBoxの対角がどれくらいずれているか, 
+        est_x_cim, est_y_cim, est_z_diff, est_axis_green, est_axis_red, est_scale_diff, est_shape_code, _ = self.model(inp, bbox_info) # self.model(inp, bbox_info, axis_info)
+        est_obj_pos_cam, est_obj_scale, im2cam_scale = diff2estimation(est_x_cim, est_y_cim, est_z_diff, est_scale_diff, bbox_list, avg_depth_map, self.fov)
         est_obj_pos_wrd = torch.sum(est_obj_pos_cam[..., None, :]*w2c.permute(0, 2, 1), dim=-1) + cam_pos_wrd
 
+
         # Cal loss.
+        loss_pos = F.mse_loss(est_obj_pos_wrd, gt_obj_pos_wrd)
+        loss_scale = F.mse_loss(est_obj_scale, gt_obj_scale.to(est_obj_scale))
         loss_axis_green = torch.mean(-self.cossim(est_axis_green, gt_axis_green) + 1.)
         loss_axis_red = torch.mean(-self.cossim(est_axis_red, gt_axis_red) + 1.)
         loss_shape_code = F.mse_loss(est_shape_code, gt_shape_code)
-        loss_pos = F.mse_loss(est_obj_pos_wrd, gt_obj_pos_wrd)
-        loss_scale = F.mse_loss(est_obj_scale, gt_obj_scale)
 
         # Cal total loss.
-        loss_axis = loss_axis_green + .5 * loss_axis_red
-        loss = 1e1 * loss_pos + 1e1 * loss_scale + loss_axis + 1e1 * loss_shape_code
-
+        loss = 1e1 * loss_pos + 1e1 * loss_scale + loss_axis_green + loss_axis_red + 1e1 * loss_shape_code
 
         # Check distance map.
-        with torch.no_grad():
-            rays_d_cam = self.rays_d_cam.expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
-            est_invdistance_map, est_mask, est_distance_map = render_distance_map_from_axis(
-                                                                    H = self.ddf_H, 
-                                                                    obj_pos_wrd = gt_obj_pos_wrd, 
-                                                                    axis_green = gt_axis_green, 
-                                                                    axis_red = gt_axis_red, 
-                                                                    obj_scale = gt_obj_scale, 
-                                                                    cam_pos_wrd = cam_pos_wrd, 
-                                                                    rays_d_cam = rays_d_cam,  
-                                                                    w2c = w2c.detach(), 
-                                                                    input_lat_vec = gt_shape_code, 
-                                                                    ddf = self.ddf, 
-                                                                    with_invdistance_map = True, 
+        if (self.current_epoch+1)//10==0 and batch_idx==0:
+            with torch.no_grad():
+                rays_d_cam = self.rays_d_cam.expand(2, -1, -1, -1).to(frame_camera_rot.device)
+                est_invdistance_map, est_mask, est_distance_map = render_distance_map_from_axis(
+                                                                        H = self.ddf_H, 
+                                                                        obj_pos_wrd = est_obj_pos_wrd[:2], 
+                                                                        axis_green = est_axis_green[:2], 
+                                                                        axis_red = est_axis_red[:2], 
+                                                                        obj_scale = est_obj_scale[:2], 
+                                                                        cam_pos_wrd = cam_pos_wrd[:2], 
+                                                                        rays_d_cam = rays_d_cam,  
+                                                                        w2c = w2c[:2].detach(), 
+                                                                        input_lat_vec = est_shape_code[:2], 
+                                                                        ddf = self.ddf, 
+                                                                        with_invdistance_map = True, 
+                                                                        )
+                clopped_est_mask, clopped_est_distance_map, _ = clopping_distance_map(
+                                                                    est_mask, est_distance_map, self.image_coord, self.input_H, self.input_W, self.ddf_H, bbox_list[:2]
                                                                     )
-            clopped_est_mask, clopped_est_distance_map, _ = clopping_distance_map(
-                                                                est_mask, est_distance_map, self.image_coord, self.input_H, self.input_W, self.ddf_H, bbox_list
-                                                                )
 
+                # Plotを作成
+                gt_obj_pos_cam = torch.sum((gt_obj_pos_wrd-cam_pos_wrd)[..., None, :]*w2c, dim=-1)
+                fig = pylab.figure(figsize=(20, 8))
+                # BBoxをピクセル座標へ
+                bbox_list = 128 * (bbox_list.to('cpu').detach().numpy().copy() + 1)
+                bbox_center = bbox_list.mean(1)
+                obj_pos_cam = 128 * (gt_obj_pos_cam / im2cam_scale[:, None] + 1).to('cpu').detach().numpy().copy()
+                obj_pos_cam_ = 128 * (est_obj_pos_cam / im2cam_scale[:, None] + 1).to('cpu').detach().numpy().copy()
+                # bbox_center = 128 * (bbox_center.to('cpu').detach().numpy().copy() + 1)
+                bbox = np.concatenate([bbox_list, bbox_center[:, None, :], obj_pos_cam[:, None, :2], obj_pos_cam_[:, None, :2]], axis=1)
+                # bbox = np.concatenate([bbox_list, obj_pos_cam[:, None, :2]], axis=1)
+                bbox_1 = bbox[0]
+                bbox_2 = bbox[1]
+                # 元画像
+                ax_1 = fig.add_subplot(2, 5, 1)
+                ax_1.scatter(bbox_1[:, 0], bbox_1[:, 1], c='red', s=20)
+                ax_1.imshow(raw_distance_map[0].to('cpu').detach().numpy().copy())
+                ax_2 = fig.add_subplot(2, 5, 6)
+                ax_2.scatter(bbox_2[:, 0], bbox_2[:, 1], c='red', s=20)
+                ax_2.imshow(raw_distance_map[1].to('cpu').detach().numpy().copy())
+                # クロップした観測画像
+                ax_3 = fig.add_subplot(2, 5, 2)
+                ax_3.imshow(clopped_distance_map[0].to('cpu').detach().numpy().copy())
+                ax_4 = fig.add_subplot(2, 5, 7)
+                ax_4.imshow(clopped_distance_map[1].to('cpu').detach().numpy().copy())
+                # 元画像の予測
+                ax_5 = fig.add_subplot(2, 5, 3)
+                ax_5.scatter(bbox_1[:, 0], bbox_1[:, 1], c='red', s=20)
+                ax_5.imshow(est_distance_map[0].to('cpu').detach().numpy().copy())
+                ax_6 = fig.add_subplot(2, 5, 8)
+                ax_6.scatter(bbox_2[:, 0], bbox_2[:, 1], c='red', s=20)
+                ax_6.imshow(est_distance_map[1].to('cpu').detach().numpy().copy())
+                # クロップした画像の予測
+                ax_7 = fig.add_subplot(2, 5, 4)
+                ax_7.imshow(clopped_est_distance_map[0].to('cpu').detach().numpy().copy())
+                ax_8 = fig.add_subplot(2, 5, 9)
+                ax_8.imshow(clopped_est_distance_map[1].to('cpu').detach().numpy().copy())
+                # 誤差
+                clopped_error = torch.abs(clopped_distance_map[:2] - clopped_est_distance_map)
+                ax_9 = fig.add_subplot(2, 5, 5)
+                ax_9.imshow(clopped_error[0].to('cpu').detach().numpy().copy())
+                ax_10 = fig.add_subplot(2, 5, 10)
+                ax_10.imshow(clopped_error[1].to('cpu').detach().numpy().copy())
+                # 画像を保存
+                fig.savefig(f"sample_images/initnet_first_test/epo_{str(self.current_epoch).zfill(5)}.png", dpi=300)
+                # fig.savefig(f"tes.png", dpi=300)
+                pylab.close()
 
-            # Check point cloud.
-            batch_idx = 0
-            fig = plt.figure()
-            ax = Axes3D(fig)
-            ax.set_xlabel("X")
-            ax.set_ylabel("Y")
-            ax.set_zlabel("Z")
-
-            rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
-            obj_pos_cam = torch.sum((gt_obj_pos_wrd-cam_pos_wrd)[..., None, :]*w2c, dim=-1).to('cpu').detach().numpy().copy()
-            rays_d = rays_d_cam
-            depth_map = clopped_distance_map
-            mask = clopped_mask
-            point = (depth_map[batch_idx][..., None] * rays_d[batch_idx])[mask[batch_idx]]
-            point = point.to('cpu').detach().numpy().copy()
-            ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
-            ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
-            rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
-            obj_pos_cam = torch.sum((gt_obj_pos_wrd-cam_pos_wrd)[..., None, :]*w2c, dim=-1).to('cpu').detach().numpy().copy()
-            rays_d = rays_d_cam
-            depth_map = clopped_est_distance_map
-            mask = clopped_est_mask
-            point = (depth_map[batch_idx][..., None] * rays_d[batch_idx])[mask[batch_idx]]
-            point = point.to('cpu').detach().numpy().copy()
-            ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='c', s=0.05)
-            ax.scatter(point[::3, 0], point[::3, 1], point[::3, 2], marker="o", linestyle='None', c='c', s=0.05)
-            ax.scatter(obj_pos_cam[batch_idx, 0], obj_pos_cam[batch_idx, 1], obj_pos_cam[batch_idx, 2], marker="o", linestyle='None', c='b', s=10)
-
-            ax.view_init(elev=0, azim=0)
-            fig.savefig("point_cloud_cam.png")
-            plt.close()
-
-
-            # Plotを作成
-            fig = pylab.figure(figsize=(20, 8))
-            # BBoxをピクセル座標へ
-            bbox_list = 128 * (bbox_list.to('cpu').detach().numpy().copy() + 1)
-            bbox_center = bbox_list.mean(1)
-            obj_pos_cam = 128 * (obj_pos_cam + 1)
-            # bbox_center = 128 * (bbox_center.to('cpu').detach().numpy().copy() + 1)
-            # bbox = np.concatenate([bbox_list, bbox_center[:, None, :], obj_pos_cam[:, None, :2]], axis=1)
-            bbox = np.concatenate([bbox_list, obj_pos_cam[:, None, :2]], axis=1)
-            bbox_1 = bbox[0]
-            bbox_2 = bbox[1]
-            # 元画像
-            ax_1 = fig.add_subplot(2, 5, 1)
-            ax_1.scatter(bbox_1[:, 0], bbox_1[:, 1], c='red', s=20)
-            ax_1.imshow(raw_distance_map[0].to('cpu').detach().numpy().copy())
-            ax_2 = fig.add_subplot(2, 5, 6)
-            ax_2.scatter(bbox_2[:, 0], bbox_2[:, 1], c='red', s=20)
-            ax_2.imshow(raw_distance_map[1].to('cpu').detach().numpy().copy())
-            # クロップした観測画像
-            ax_3 = fig.add_subplot(2, 5, 2)
-            ax_3.imshow(clopped_distance_map[0].to('cpu').detach().numpy().copy())
-            ax_4 = fig.add_subplot(2, 5, 7)
-            ax_4.imshow(clopped_distance_map[1].to('cpu').detach().numpy().copy())
-            # 元画像の予測
-            ax_5 = fig.add_subplot(2, 5, 3)
-            ax_5.scatter(bbox_1[:, 0], bbox_1[:, 1], c='red', s=20)
-            ax_5.imshow(est_distance_map[0].to('cpu').detach().numpy().copy())
-            ax_6 = fig.add_subplot(2, 5, 8)
-            ax_6.scatter(bbox_2[:, 0], bbox_2[:, 1], c='red', s=20)
-            ax_6.imshow(est_distance_map[1].to('cpu').detach().numpy().copy())
-            # クロップした画像の予測
-            ax_7 = fig.add_subplot(2, 5, 4)
-            ax_7.imshow(clopped_est_distance_map[0].to('cpu').detach().numpy().copy())
-            ax_8 = fig.add_subplot(2, 5, 9)
-            ax_8.imshow(clopped_est_distance_map[1].to('cpu').detach().numpy().copy())
-            # 誤差
-            clopped_error = torch.abs(clopped_distance_map - clopped_est_distance_map)
-            ax_9 = fig.add_subplot(2, 5, 5)
-            ax_9.imshow(clopped_error[0].to('cpu').detach().numpy().copy())
-            ax_10 = fig.add_subplot(2, 5, 10)
-            ax_10.imshow(clopped_error[1].to('cpu').detach().numpy().copy())
-            # 画像を保存
-            fig.savefig("tes.png", dpi=300)
-            pylab.close()
-
-        import pdb; pdb.set_trace()
-
-        return {'loss': loss, 'loss_axis': loss_axis.detach(), 'loss_shape_code': loss_shape_code.detach()}
+        return {'loss': loss, 'loss_pos':loss_pos.detach(), 'loss_scale': loss_scale.detach(), 'loss_axis_red': loss_axis_red.detach(), 'loss_shape_code': loss_shape_code.detach()}
 
 
 
@@ -632,8 +489,14 @@ class TaR_init_only(pl.LightningModule):
         current_epoch = torch.tensor(self.current_epoch + 1., dtype=avg_loss.dtype)
         self.log_dict({'train/total_loss': avg_loss, "step": current_epoch})
 
-        avg_loss_axis = torch.stack([x['loss_axis'] for x in outputs]).mean()
-        self.log_dict({'train/loss_axis': avg_loss_axis, "step": current_epoch})
+        avg_loss_pos = torch.stack([x['loss_pos'] for x in outputs]).mean()
+        self.log_dict({'train/loss_pos': avg_loss_pos, "step": current_epoch})
+
+        avg_loss_scale = torch.stack([x['loss_scale'] for x in outputs]).mean()
+        self.log_dict({'train/loss_scale': avg_loss_scale, "step": current_epoch})
+
+        avg_loss_axis_red = torch.stack([x['loss_axis_red'] for x in outputs]).mean()
+        self.log_dict({'train/loss_axis_red': avg_loss_axis_red, "step": current_epoch})
 
         avg_loss_shape_code = torch.stack([x['loss_shape_code'] for x in outputs]).mean()
         self.log_dict({'train/loss_shape_code': avg_loss_shape_code, "step": current_epoch})
@@ -643,6 +506,78 @@ class TaR_init_only(pl.LightningModule):
             ckpt_name = str(self.current_epoch + 1).zfill(10) + '.ckpt'
             ckpt_path = os.path.join(self.trainer.log_dir, 'checkpoints', ckpt_name)
             trainer.save_checkpoint(ckpt_path)
+
+
+
+    def validation_step(self, batch, batch_idx):
+        frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_pos, frame_obj_rot, frame_obj_scale, instance_id = batch
+        batch_size = len(instance_id)
+
+        # Set frame.
+        frame_idx = random.randint(0, frame_mask.shape[1]-1) # ランダムなフレームを選択
+
+        with torch.no_grad():
+            # Clop distance map.
+            raw_mask = frame_mask[:, frame_idx]
+            raw_distance_map = frame_distance_map[:, frame_idx]
+            clopped_mask, clopped_distance_map, bbox_list = clopping_distance_map(
+                                                                raw_mask, raw_distance_map, self.image_coord, self.input_H, self.input_W, self.ddf_H
+                                                                )
+
+            # Get normalized depth map.
+            rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
+            clopped_depth_map, normalized_depth_map, avg_depth_map = get_normalized_depth_map(
+                                                                        clopped_mask, clopped_distance_map, rays_d_cam
+                                                                        )
+
+            # Get ground truth.
+            o2w = frame_obj_rot[:, frame_idx]
+            w2c = frame_camera_rot[:, frame_idx]
+            o2c = torch.bmm(w2c, o2w) # とりあえずこれを推論する
+            gt_axis_green = o2c[:, :, 1] # Y
+            gt_axis_red = o2c[:, :, 0] # X
+            cam_pos_wrd = frame_camera_pos[:, frame_idx]
+            gt_obj_pos_wrd = frame_obj_pos[:, frame_idx]
+            gt_obj_scale = frame_obj_scale[:, frame_idx]
+        
+
+        # Get input.
+        inp = torch.stack([normalized_depth_map, clopped_mask], 1)
+        bbox_info = torch.cat([bbox_list.reshape(-1, 4), bbox_list.mean(1), avg_depth_map.to('cpu')[:, None]], dim=-1).to(inp)
+        # axis_info = torch.cat([gt_axis_green, gt_axis_red], dim=-1).to(inp)
+
+        # Estimating.
+        # est_x_cim, est_y_cim : クロップされた画像座標（[-1, 1]で定義）における物体中心の予測, 
+        # est_z_diff : デプス画像の正則に用いた平均から、物体中心がどれだけズレているか？, 
+        # est_axis_green : カメラ座標系での物体の上方向, 
+        # est_axis_red : カメラ座標系での物体の右方向, 
+        # est_scale_diff : Clopping-BBoxの対角と物体のカノニカルBBoxの対角がどれくらいずれているか, 
+        est_x_cim, est_y_cim, est_z_diff, est_axis_green, est_axis_red, est_scale_diff, est_shape_code, _ = self.model(inp, bbox_info) # self.model(inp, bbox_info, axis_info)
+        est_obj_pos_cam, est_obj_scale, im2cam_scale = diff2estimation(est_x_cim, est_y_cim, est_z_diff, est_scale_diff, bbox_list, avg_depth_map, self.fov)
+        est_obj_pos_wrd = torch.sum(est_obj_pos_cam[..., None, :]*w2c.permute(0, 2, 1), dim=-1) + cam_pos_wrd
+
+
+        # Cal err.
+        err_pos = F.mse_loss(est_obj_pos_wrd, gt_obj_pos_wrd)
+        err_scale = torch.mean(est_obj_scale / gt_obj_scale.to(est_obj_scale))
+        err_axis_red = torch.mean(-self.cossim(est_axis_red, gt_axis_red) + 1.)
+
+        return {'err_pos':err_pos.detach(), 'err_scale': err_scale.detach(), 'err_axis_red': err_axis_red.detach()}
+
+
+
+    def validation_epoch_end(self, outputs):
+        # Log err.
+        avg_err_axis_red = torch.stack([x['err_axis_red'] for x in outputs]).mean()
+        current_epoch = torch.tensor(self.current_epoch + 1., dtype=avg_err_axis_red.dtype)
+        self.log_dict({'validation/err_axis_red': avg_err_axis_red, "step": current_epoch})
+
+        avg_err_scale = torch.stack([x['err_scale'] for x in outputs]).mean()
+        self.log_dict({'validation/err_scale': avg_err_scale, "step": current_epoch})
+
+        avg_err_pos = torch.stack([x['err_pos'] for x in outputs]).mean()
+        self.log_dict({'validation/err_pos': avg_err_pos, "step": current_epoch})
+
 
 
 
@@ -698,30 +633,32 @@ if __name__=='__main__':
     # Create dataloader
     train_dataset = TaR_dataset(
         args, 
+        'train', 
         args.train_instance_list_txt, 
         args.train_data_dir, 
-        args.train_N_views
+        args.train_N_views, 
         )
     train_dataloader = data_utils.DataLoader(
         train_dataset, 
         batch_size=args.N_batch, 
         num_workers=args.num_workers, 
         drop_last=False, 
-        shuffle=True
+        shuffle=True, 
         )
-    # val_dataset = TaR_dataset(
-    #     args, 
-    #     args.val_instance_list_txt, 
-    #     args.val_data_dir, 
-    #     args.val_N_views
-    #     )
-    # val_dataloader = data_utils.DataLoader(
-    #     val_dataset, 
-    #     batch_size=args.N_batch, 
-    #     num_workers=args.num_workers, 
-    #     drop_last=False, 
-    #     shuffle=True
-    #     )
+    val_dataset = TaR_dataset(
+        args, 
+        'val', 
+        args.val_instance_list_txt, 
+        args.val_data_dir, 
+        args.val_N_views, 
+        )
+    val_dataloader = data_utils.DataLoader(
+        val_dataset, 
+        batch_size=args.N_batch, 
+        num_workers=args.num_workers, 
+        drop_last=False, 
+        shuffle=False, 
+        )
 
     # Get ddf.
     ddf = DDF(args)
@@ -738,9 +675,9 @@ if __name__=='__main__':
     trainer.fit(
         model=model, 
         train_dataloaders=train_dataloader, 
-        # val_dataloaders=val_dataloader, 
-        # datamodule=None, 
-        # ckpt_path=None
+        val_dataloaders=val_dataloader, 
+        datamodule=None, 
+        ckpt_path=None
         )
 
     # elif len(ckpt_path_list) > 0:

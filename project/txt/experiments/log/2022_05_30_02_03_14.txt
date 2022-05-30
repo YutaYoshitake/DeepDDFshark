@@ -1,0 +1,2 @@
+time_log : 2022_05_30_02_03_14
+ckpt_path : ./lightning_logs/DeepTaR/chair/initnet_first/checkpoints/0000001000.ckpt

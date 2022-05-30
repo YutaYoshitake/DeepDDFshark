@@ -71,7 +71,7 @@ def xyz2polar(x, y, z):
 
 
 
-def check_map_torch(image, path = 'tes.png', figsize=[10,10]):
+def check_map_torch(image, path = 'sample_images/tes.png', figsize=[10,10]):
     fig = pylab.figure(figsize=figsize)
 
     ax1 = fig.add_subplot(1, 1, 1)
@@ -87,7 +87,7 @@ def check_map_torch(image, path = 'tes.png', figsize=[10,10]):
 
 
 
-def check_map_np(image, path = 'tes.png', figsize=[10,10]):
+def check_map_np(image, path = 'sample_images/tes.png', figsize=[10,10]):
     fig = pylab.figure(figsize=figsize)
 
     ax1 = fig.add_subplot(1, 1, 1)

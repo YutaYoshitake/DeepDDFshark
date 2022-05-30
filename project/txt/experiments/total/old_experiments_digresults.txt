@@ -1,29 +1,29 @@
 初期化ネット（１枚）
 time_log : 2022_05_09_12_22_14
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_initnet_0/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.0011064400027643642
-avg_err_axis_red : 0.005450643810542092
+avg_err_axis_green : 2.6955141519896513
+avg_err_axis_red : 5.984928885170174
 avg_err_depth : 0.05405104160308838
 
 シングル訓練・最適化ネット（１枚）
 time_log : 2022_05_09_12_08_14
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt---average---single
-avg_err_axis_green : 0.0006954099792522223
-avg_err_axis_red : 0.002326657887100465
+avg_err_axis_green : 2.1368953817657217
+avg_err_axis_red : 3.9092022070744985
 avg_err_depth : 0.045205991715192795
 
 初期化ネット（３枚の平均）
 time_log : 2022_05_09_01_16_36
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_initnet_0/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.0006940908444741552
-avg_err_axis_red : 0.003059851543518451
+avg_err_axis_green : 2.1348674287351774
+avg_err_axis_red : 4.483308356928367
 avg_err_depth : 0.049022428691387177
 
 シングル訓練・最適化ネット（３枚の平均）
 time_log : 2022_05_09_03_17_51
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.0003669918208809559
-avg_err_axis_red : 0.0013574047467625012
+avg_err_axis_green : 1.5523123248252875
+avg_err_axis_red : 2.985667566380173
 avg_err_depth : 0.044481828808784485
             model.half_lambda_max = 3
             time_log : 2022_05_14_20_18_42
@@ -35,29 +35,29 @@ avg_err_depth : 0.044481828808784485
 シングル訓練・最適化ネットGRU（３枚の平均）？？？
 time_log : 2022_05_09_11_21_44
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.00024994761397131073
-avg_err_axis_red : 0.0009614491864043956
+avg_err_axis_green : 1.2810650242386439
+avg_err_axis_red : 2.5126708445893255
 avg_err_depth : 0.04257583245635033
 
 シングル訓練・最適化ネット（シーケンス）
 time_log : 2022_05_09_02_31_00
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt : lamda=8 : [5, 3, 2]
-avg_err_axis_green : 0.0006220568496875784
-avg_err_axis_red : 0.0025129533707697158
+avg_err_axis_green : 2.021041279928274
+avg_err_axis_red : 4.062756876306917
 avg_err_depth : 0.04380383715033531（最終フレーム：0.033182188868522644
 
 シーケンス訓練・最適化ネット（Lamda8Step）
 time_log : 2022_05_09_01_44_22
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_frame/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.0005598001324585843
-avg_err_axis_red : 0.0015150829975849381
+avg_err_axis_green : 1.9172307707016643
+avg_err_axis_red : 3.154355885778229
 avg_err_depth : 0.043397221714258194
 
 シーケンス訓練・最適化ネット（Lamda4Step）
 time_log : 2022_05_09_03_16_31
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_frame/checkpoints/0000003200.ckpt : opt=4
-avg_err_axis_green : 0.0005629769739879759
-avg_err_axis_red : 0.0015352779785481666
+avg_err_axis_green : 1.9226636843775315
+avg_err_axis_red : 3.1753143037989093
 avg_err_depth : 0.04344688728451729
 
 初期化ネット
@@ -84,45 +84,41 @@ if model.only_init_net:
 シングル訓練・最適化ネットGRU（３枚の平均）
 time_log : 2022_05_15_02_01_47
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000009700.ckpt
-avg_err_axis_green : 0.00036266484651705866
-avg_err_axis_red : 0.0008605525772370453
+avg_err_axis_green : 1.5431334552241944
+avg_err_axis_red : 2.377154912435153
 avg_err_depth : 0.04777204245328903
 シーケンス訓練・最適化ネットGRU
 time_log : 2022_05_15_10_36_34
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_framegruseed7/checkpoints/0000009700.ckpt
-avg_err_axis_green : 0.00038285312894076155
-avg_err_axis_red : 0.0011603910028579422
+avg_err_axis_green : 1.58550489627202
+avg_err_axis_red : 2.760462244325684
 avg_err_depth : 0.043669674545526505
 Adam最適化
 time_log : 2022_05_15_02_06_57
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.00014949672368584787
-avg_err_axis_red : 0.0006814291201610437
+avg_err_axis_green : 0.990738131257373
+avg_err_axis_red : 2.1153032635517235
 avg_err_depth : 0.030002959072589874
-
-
-
-
 
 
 
 シーケンス訓練・最適化ネットGRU
 time_log : 2022_05_09_10_43_46
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_framegru/checkpoints/0000003300.ckpt : opt=4
-avg_err_axis_green : 0.0003722276536686435
-avg_err_axis_red : 0.0011275662448542584
+avg_err_axis_green : 1.563347127149597
+avg_err_axis_red : 2.721131186715052
 avg_err_depth : 0.03679952397942543
 
 time_log : 2022_05_09_10_18_22
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_framegru/checkpoints/0000003200.ckpt : opt=4
-avg_err_axis_green : 0.0004975264762761652
-avg_err_axis_red : 0.0011533330476668233
+avg_err_axis_green : 1.8074393639541158
+avg_err_axis_red : 2.7520527110232953
 avg_err_depth : 0.038957543671131134
 
 time_log : 2022_05_09_11_24_20
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_framegru/checkpoints/0000003300.ckpt : opt=4 : [4, 2, 2]
-avg_err_axis_green : 0.0003836915325630656
-avg_err_axis_red : 0.0011126936765141087
+avg_err_axis_green : 1.5872400930352772
+avg_err_axis_red : 2.7031224419341853
 avg_err_depth : 0.037177104502916336
 
 
@@ -130,14 +126,14 @@ avg_err_depth : 0.037177104502916336
 シーケンス訓練・最適化ネットGRU（シーケンス）
 time_log : 2022_05_09_13_18_16
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200.ckpt : opt=4 : [4, 2, 2]
-avg_err_axis_green : 0.0006770180552396524
-avg_err_axis_red : 0.0018954670708061644
+avg_err_axis_green : 2.1084449231759637
+avg_err_axis_red : 3.5282908248670855
 avg_err_depth : 0.043681878596544266
 
 time_log : 2022_05_09_13_38_31
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.0006212945547656181
-avg_err_axis_red : 0.0019860340556337136
+avg_err_axis_green : 2.0198024370090275
+avg_err_axis_red : 3.6116268999254064
 avg_err_depth : 0.0432470329105854
 
 
@@ -149,47 +145,144 @@ avg_err_depth : 0.0432470329105854
 シングル訓練・最適化ネット（３枚の平均）
 time_log : 2022_05_11_01_20_57
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.000377874506018042
-avg_err_axis_red : 0.0012707919751877542
+avg_err_axis_green : 1.5751615539920307
+avg_err_axis_red : 2.8888225418895854
 avg_err_depth : 0.04431907460093498
 
 シングル訓練・最適化ネット（シーケンス）
 time_log : 2022_05_11_02_47_39
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.0005250063648991178
-avg_err_axis_red : 0.0017711352542267673
+avg_err_axis_green : 1.8566879421042903
+avg_err_axis_red : 3.41057507973443
 avg_err_depth : 0.04241233691573143
 
 シーケンス訓練・最適化ネット
 time_log : 2022_05_11_03_55_02
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_frame/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.00047558412022507233
-avg_err_axis_red : 0.0012696708104828344
+avg_err_axis_green : 1.76713006682185
+avg_err_axis_red : 2.887547649293143
 avg_err_depth : 0.04239796847105026
 
 シングル訓練・最適化ネットGRU（３枚の平均）
 time_log : 2022_05_11_12_17_43
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.00025380793325130056
-avg_err_axis_red : 0.0009025955255064173
+avg_err_axis_green : 1.290920247656678
+avg_err_axis_red : 2.434539861520882
 avg_err_depth : 0.042539238929748535
 
 シングル訓練・最適化ネットGRU（シーケンス）
 time_log : 2022_05_11_13_40_59
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.00041461516941761363
-avg_err_axis_red : 0.001520849409460205
+avg_err_axis_green : 1.649966894769583
+avg_err_axis_red : 3.1603544499900216
 avg_err_depth : 0.04157927259802818
 
 シーケンス訓練・最適化ネットGRU
 time_log : 2022_05_11_14_46_45
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_framegru/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.0004177626149530332
-avg_err_axis_red : 0.0009540297678837575
+avg_err_axis_green : 1.6562181406831766
+avg_err_axis_red : 2.502955490487092
 avg_err_depth : 0.0379682220518589
 
 time_log : 2022_05_11_14_59_23
 ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_catgru/checkpoints/0000003200.ckpt
-avg_err_axis_green : 0.0004327185469626034
-avg_err_axis_red : 0.0013354522846856316
+avg_err_axis_green : 1.6856059171263216
+avg_err_axis_red : 2.961421066099918
 avg_err_depth : 0.04709259793162346
+
+
+
+シングル訓練・最適化ネット（３枚の平均）
+time_log : 2022_05_09_03_17_51
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
+avg_err_axis_green : 1.5523123248252875
+avg_err_axis_red : 2.985667566380173
+avg_err_depth : 0.044481828808784485
+Adam最適化
+time_log : 2022_05_15_02_06_57
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
+avg_err_axis_green : 0.990738131257373
+avg_err_axis_red : 2.1153032635517235
+avg_err_depth : 0.030002959072589874
+
+
+
+
+
+
+
+
+#########################
+Depth付き_Ver
+#########################
+
+Adam最適化
+time_log : 2022_05_22_16_31_56
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_depth_first_test/checkpoints/0000010000.ckpt
+avg_err_axis_green : 0.9936472973021018
+avg_err_axis_red : 2.064994427528361
+avg_err_depth : 0.02911408245563507
+
+シングル訓練・Depth付き最適化ネット（３枚の平均）
+time_log : 2022_05_23_02_05_39
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_depth_first_test/checkpoints/0000009000.ckpt
+avg_err_axis_green : 1.2434793341865664
+avg_err_axis_red : 1.4911565456568565
+avg_err_depth : 0.03538462892174721
+
+シングル訓練・最適化ネット（３枚の平均）
+time_log : 2022_05_23_02_05_12
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_WithxLongTrain/checkpoints/0000009000.ckpt
+avg_err_axis_green : 1.309437294266607
+avg_err_axis_red : 2.0536581238800777
+avg_err_depth : 0.04574846103787422
+
+シングル訓練・最適化ネットGRU（３枚の平均）
+time_log : 2022_05_23_04_24_38
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000009000.ckpt
+avg_err_axis_green : 1.4264457435010232
+avg_err_axis_red : 2.1615872703622006
+avg_err_depth : 0.04775059223175049
+
+
+
+参考
+シングル訓練・Depth付き最適化ネット（３枚の平均）
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_depth_first_test/checkpoints/0000003200.ckpt
+avg_err_axis_green : 1.743316618135923
+avg_err_axis_red : 2.5745441592562304
+avg_err_depth : 0.044308584183454514
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_depth_first_test/checkpoints/0000010000.ckpt
+avg_err_axis_green : 1.1713037243322368
+avg_err_axis_red : 1.8364960195313647
+avg_err_depth : 0.034271977841854095
+
+
+シングル訓練・最適化ネット（３枚の平均）
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_withx/checkpoints/0000003200.ckpt
+avg_err_axis_green : 1.5787140392984869
+avg_err_axis_red : 2.8846917871082742
+avg_err_depth : 0.04847579821944237
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_WithxLongTrain/checkpoints/0000009500.ckpt
+avg_err_axis_green : 1.4466105531737232
+avg_err_axis_red : 1.8968938434767921
+avg_err_depth : 0.0474373884499073
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_WithxLongTrain/checkpoints/0000009700.ckpt
+avg_err_axis_green : 1.490007070845305
+avg_err_axis_red : 2.487973237791943
+avg_err_depth : 0.04718530923128128
+
+
+シングル訓練・最適化ネットGRU（３枚の平均）
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000009700.ckpt
+avg_err_axis_green : 1.5481669649621432
+avg_err_axis_red : 2.3808979650238435
+avg_err_depth : 0.04780737683176994
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000009500.ckpt
+avg_err_axis_green : 1.5148970821690593
+avg_err_axis_red : 2.0647733757037474
+avg_err_depth : 0.048225611448287964
+ckpt_path : ./lightning_logs/DeepTaR/chair/test_dfnet_gru/checkpoints/0000009000.ckpt
+avg_err_axis_green : 1.4264457435010232
+avg_err_axis_red : 2.1615872703622006
+avg_err_depth : 0.04775059223175049

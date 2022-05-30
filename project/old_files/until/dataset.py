@@ -53,46 +53,32 @@ class TaR_dataset(data.Dataset):
     def __init__(
         self, 
         args, 
-        mode, 
         instance_list_txt, 
         data_dir, 
-        N_views, 
+        N_views
         ):
-
-        self.mode = mode
-        self.dynamic = args.dynamic
-        self.N_views = N_views
-        self.H = args.H
-        self.fov = args.fov
-
+    
         self.instance_path_list = []
         with open(instance_list_txt, 'r') as f:
             lines = f.read().splitlines()
             for line in lines:
-                if self.mode=='train':
-                    self.instance_path_list.append(
-                        os.path.join(data_dir, line.rstrip('\n'))
-                        )
-                elif self.mode=='val':
-                    for view_ind in range(N_views):
-                        self.instance_path_list.append(
-                            os.path.join(data_dir, line.rstrip('\n'), f'{str(view_ind+1).zfill(5)}.pickle')
-                            )
-        
+                self.instance_path_list.append(os.path.join(data_dir, line.rstrip('\n')))
+        self.dynamic = args.dynamic
+        self.H = args.H
+        self.fov = args.fov
+        self.N_views = N_views
         # self.rgb_transform = T.Compose([
         #     T.Resize(self.H),
         #     T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         # ])
 
     def __getitem__(self, index):
+
         # Load data
-        if self.mode=='train':
-            view_ind = random.randrange(1, self.N_views + 1)
-            path = os.path.join(
-                self.instance_path_list[index], 
-                f'{str(view_ind).zfill(5)}.pickle')
-        elif self.mode=='val':
-            path = self.instance_path_list[index]
+        view_ind = random.randrange(1, self.N_views + 1)
+        path = os.path.join(
+            self.instance_path_list[index], 
+            f'{str(view_ind).zfill(5)}.pickle')
         data_dict = pickle_load(path)
 
         # frame_rgb_map = data_dict['rgb_map'].transpose(0, 3, 1, 2)

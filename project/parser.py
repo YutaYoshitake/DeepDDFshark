@@ -50,6 +50,8 @@ def config_parser():
                         help='')
     parser.add_argument("--use_gru", type=bool, default=False,
                         help='')
+    parser.add_argument("--xxx", type=str,
+                        help='')
 
     # training options
     parser.add_argument("--H", type=int, default=256, 
@@ -74,7 +76,7 @@ def config_parser():
                         help='')
     parser.add_argument("--use_depth_error", type=bool, default=False,
                         help='')
-    parser.add_argument("--train_optim_num", type=int, default=3,
+    parser.add_argument("--train_optim_num", type=int, default=5,
                         help='')
 
     # ddf config.

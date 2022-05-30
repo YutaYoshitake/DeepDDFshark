@@ -529,11 +529,12 @@ class DDF(pl.LightningModule):
             intersect_rays_o = rays_o + t_plus[..., None] * rays_d
         else:
             print('t sign err!')
+            import pdb; pdb.set_trace()
             sys.exit()
 
         # Estimate inverced depth
         est_invdepth_rawmap = self.forward(intersect_rays_o, rays_d, input_lat_vec)
-        est_invdepth_map = est_invdepth_rawmap / (1. + est_invdepth_rawmap * t)
+        est_invdepth_map = est_invdepth_rawmap / (1. + est_invdepth_rawmap * t.to(est_invdepth_rawmap))
         est_invdepth_map[negative_D_mask] = 0.
 
         if return_invdepth:

@@ -31,7 +31,7 @@ from ResNet import *
 from parser import *
 from dataset import *
 from often_use import *
-from train_init_net import *
+from train_initnet import *
 from train_dfnet import get_depth_map_from_axis
 from DDF.train_pl import DDF
 
@@ -79,7 +79,8 @@ class TaR_frame(pl.LightningModule):
 
         # Make model
         self.ddf = ddf
-        self.init_net = resnet_encoder(args, in_channel=2) #init_net
+        self.init_net = resnet_encoder_prot(args, in_channel=2) #init_net
+        # self.init_net = resnet_encoder(args, in_channel=2) #init_net
         self.use_gru = args.use_gru
         if self.use_gru:
             self.df_net = df_resnet_encoder_with_gru(args, in_channel=5)
