@@ -496,5 +496,5 @@ if __name__=='__main__':
         train_dataloaders=train_dataloader, 
         val_dataloaders=val_dataloader, 
         datamodule=None, 
-        ckpt_path='./lightning_logs/DeepTaR/chair/dfnet_optN3/checkpoints/0000001150.ckpt'
+        ckpt_path='./lightning_logs/DeepTaR/chair/dfnet_optN3/checkpoints/0000001180.ckpt'
         )

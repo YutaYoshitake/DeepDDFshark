@@ -145,86 +145,198 @@ class test_TaR(pl.LightningModule):
                     inp = torch.stack([normalized_depth_map, clopped_mask], 1)
                     est_x_cim, est_y_cim, est_z_diff, est_axis_green_cam, est_axis_red_cam, est_scale_diff, est_shape_code, pre_hidden_state = self.init_net(inp, bbox_info.to(inp))
                     est_obj_pos_cam, est_obj_scale, im2cam_scale = diff2estimation(est_x_cim, est_y_cim, est_z_diff, est_scale_diff, bbox_list, avg_depth_map, self.fov)
+                elif not perform_init_est:
+                    pre_obj_pos_cam = torch.sum((pre_obj_pos_wrd - cam_pos_wrd)[..., None, :]*w2c, dim=-1).to(inp)
+                    inp = torch.stack([normalized_depth_map, clopped_mask, pre_depth_map, pre_mask, normalized_depth_map - pre_depth_map], 1)
+                    diff_x_cim, diff_y_cim, diff_z_diff, diff_axis_green_cam, diff_axis_red_cam, diff_scale_diff, diff_shape_code, pre_hidden_state = self.df_net(
+                                                                                                                                                        inp, 
+                                                                                                                                                        bbox_info.to(inp), 
+                                                                                                                                                        pre_obj_pos_cam, 
+                                                                                                                                                        pre_axis_green_cam, 
+                                                                                                                                                        pre_axis_red_cam, 
+                                                                                                                                                        pre_obj_scale, 
+                                                                                                                                                        pre_shape_code, 
+                                                                                                                                                        pre_hidden_state
+                                                                                                                                                        )
+                    diff_obj_pos_cam = diffcim2diffcam(diff_x_cim, diff_y_cim, diff_z_diff, bbox_list, avg_depth_map, self.fov)
+                    diff_obj_pos_wrd = torch.sum(diff_obj_pos_cam[..., None, :]*w2c.permute(0, 2, 1), dim=-1)
+                    est_obj_pos_cam = pre_obj_pos_cam + diff_obj_pos_cam
+                    est_obj_scale = pre_obj_scale * diff_scale_diff
+                    est_axis_green_cam = F.normalize(pre_axis_green_cam + diff_axis_green_cam, dim=-1)
+                    est_axis_red_cam = F.normalize(pre_axis_red_cam + diff_axis_red_cam, dim=-1)
+                    est_shape_code = pre_shape_code + diff_shape_code
                 est_obj_pos_wrd = torch.sum(est_obj_pos_cam[..., None, :]*w2c.permute(0, 2, 1), dim=-1) + cam_pos_wrd
 
-                # Get simulation results.
-                est_invdistance_map, est_mask, est_distance_map = render_distance_map_from_axis(
-                                                H = self.ddf_H, 
-                                                obj_pos_wrd = est_obj_pos_wrd, # gt_obj_pos_wrd, 
-                                                axis_green = est_axis_green_cam, # gt_axis_green_cam, 
-                                                axis_red = est_axis_red_cam, # gt_axis_red_cam, 
-                                                obj_scale = est_obj_scale[:, 0], # gt_obj_scale[:, 0].to(est_obj_scale), 
-                                                input_lat_vec = est_shape_code, # gt_shape_code, 
-                                                cam_pos_wrd = cam_pos_wrd, 
-                                                rays_d_cam = rays_d_cam, 
-                                                w2c = w2c.detach(), 
-                                                ddf = self.ddf, 
-                                                with_invdistance_map = True, 
-                                                )
-                est_depth_map, est_normalized_depth_map, _ = get_normalized_depth_map(
-                                                                est_mask, est_distance_map, rays_d_cam, avg_depth_map, 
-                                                                )
 
-                # 最初のフレームの初期予測
-                # 最適化のラムダステップはなく、そのまま次の最適化ステップへ
-                if perform_init_est:
-                    # Get next inputs
-                    pre_obj_pos_wrd = est_obj_pos_wrd.detach()
-                    pre_obj_scale = est_obj_scale.detach()
-                    pre_axis_green_cam = est_axis_green_cam.detach()
-                    pre_axis_red_cam = est_axis_red_cam.detach()
-                    pre_shape_code = est_shape_code.detach()
-                    pre_mask = est_mask.detach()
-                    pre_depth_map = est_normalized_depth_map.detach()
-                    pre_error = torch.abs(pre_depth_map - normalized_depth_map).mean(dim=-1).mean(dim=-1)
+                # 最適化ステップ内の、ラムダステップを実行
+                for half_lambda_idx in range(self.half_lambda_max):
+                    # Get simulation results.
+                    est_invdistance_map, est_mask, est_distance_map = render_distance_map_from_axis(
+                                                    H = self.ddf_H, 
+                                                    obj_pos_wrd = est_obj_pos_wrd, # gt_obj_pos_wrd, 
+                                                    axis_green = est_axis_green_cam, # gt_axis_green_cam, 
+                                                    axis_red = est_axis_red_cam, # gt_axis_red_cam, 
+                                                    obj_scale = est_obj_scale[:, 0], # gt_obj_scale[:, 0].to(est_obj_scale), 
+                                                    input_lat_vec = est_shape_code, # gt_shape_code, 
+                                                    cam_pos_wrd = cam_pos_wrd, 
+                                                    rays_d_cam = rays_d_cam, 
+                                                    w2c = w2c.detach(), 
+                                                    ddf = self.ddf, 
+                                                    with_invdistance_map = True, 
+                                                    )
+                    _, est_normalized_depth_map, _ = get_normalized_depth_map(
+                                                        est_mask, est_distance_map, rays_d_cam, avg_depth_map, 
+                                                        )
 
-                    # Check pre results.
-                    check_map = []
-                    gt = normalized_depth_map
-                    est = pre_depth_map
-                    for i in range(batch_size):
-                        check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
-                    check_map_torch(torch.cat(check_map, dim=-1))
+                    # 最初のフレームの初期予測
+                    # 最適化のラムダステップはなく、そのまま次の最適化ステップへ
+                    if perform_init_est:
+                        # Get next inputs
+                        pre_obj_pos_wrd = est_obj_pos_wrd.detach()
+                        pre_obj_scale = est_obj_scale.detach()
+                        pre_axis_green_cam = est_axis_green_cam.detach()
+                        pre_axis_red_cam = est_axis_red_cam.detach()
+                        pre_shape_code = est_shape_code.detach()
+                        pre_mask = est_mask.detach()
+                        pre_depth_map = est_normalized_depth_map.detach()
+                        pre_error = torch.abs(pre_depth_map - normalized_depth_map).mean(dim=-1).mean(dim=-1)
                     
-                    # 初期化ネットだけの性能を評価する場合。
-                    if self.only_init_net:
-                        # 現フレームに対する推論結果をスタックする。
-                        pre_axis_green_wrd = torch.sum(pre_axis_green_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
-                        pre_axis_red_wrd = torch.sum(pre_axis_red_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
-                        frame_est_list['pos_wrd'].append(pre_obj_pos_wrd.clone())
-                        frame_est_list['scale'].append(pre_obj_scale.clone())
-                        frame_est_list['axis_green'].append(pre_axis_green_wrd.clone())
-                        frame_est_list['axis_red'].append(pre_axis_red_wrd.clone())
-                        frame_est_list['shape_code'].append(pre_shape_code.clone())
-                        frame_est_list['error'].append(pre_error) # 現フレームに対するエラーを見たい。
-                        break
-        
-        est_obj_pos_wrd = get_weighted_average(
-                                target = torch.stack(frame_est_list['pos_wrd'], dim=1).detach(), 
-                                ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
-        est_obj_scale = get_weighted_average(
-                                target = torch.stack(frame_est_list['scale'], dim=1).detach(), 
-                                ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
-        est_axis_green_wrd = get_weighted_average(
-                                target = torch.stack(frame_est_list['axis_green'], dim=1).detach(), 
-                                ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
-        est_axis_green_wrd = F.normalize(est_axis_green_wrd, dim=1)
-        est_axis_red_wrd = get_weighted_average(
-                                target = torch.stack(frame_est_list['axis_red'], dim=1).detach(), 
-                                ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
-        est_axis_red_wrd = F.normalize(est_axis_red_wrd, dim=1)
-        est_shape_code = get_weighted_average(
-                                target = torch.stack(frame_est_list['shape_code'], dim=1).detach(), 
-                                ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                        # Check pre results.
+                        check_map = []
+                        gt = normalized_depth_map
+                        est = pre_depth_map
+                        for i in range(batch_size):
+                            check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+                        check_map_torch(torch.cat(check_map, dim=-1), f'check_map_init.png', figsize=[10,2])
+                        
+                        # 初期化ネットだけの性能を評価する場合
+                        if self.only_init_net:
+                            # 現フレームに対する推論結果をスタックする。
+                            pre_axis_green_wrd = torch.sum(pre_axis_green_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
+                            pre_axis_red_wrd = torch.sum(pre_axis_red_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
+                            frame_est_list['pos_wrd'].append(pre_obj_pos_wrd.clone())
+                            frame_est_list['scale'].append(pre_obj_scale.clone())
+                            frame_est_list['axis_green'].append(pre_axis_green_wrd.clone())
+                            frame_est_list['axis_red'].append(pre_axis_red_wrd.clone())
+                            frame_est_list['shape_code'].append(pre_shape_code.clone())
+                            frame_est_list['error'].append(pre_error) # 現フレームに対するエラーを見たい。
+                            break
 
 
-        # est_obj_pos_wrd = frame_est_list['pos_wrd']
-        # est_obj_scale = frame_est_list['scale']
-        # est_axis_green_wrd = frame_est_list['axis_green']
-        # est_axis_red_wrd = frame_est_list['axis_red']
-        # est_axis_green_wrd = F.normalize(est_axis_green_wrd, dim=1)
-        # est_axis_red_wrd = F.normalize(est_axis_red_wrd, dim=1)
-        # est_shape_code = frame_est_list['shape_code'][0]
+                    # 最適化のラムダステップ
+                    elif self.use_deep_optimizer:
+                        # エラーを計算
+                        error = torch.abs(est_normalized_depth_map - normalized_depth_map).mean(dim=-1).mean(dim=-1)
+                        un_update_mask = (pre_error - error) < 0. #エラーが大きくなった場合、True
+                        update_mask = torch.logical_not(un_update_mask)
+
+                        # 更新により、エラーが全てのバッチで小さくなった
+                        # ラムダステップの最大まで行った
+                        # -> 次の最適化ステップ or フレームへ
+                        decade_all_error = update_mask.all()
+                        over_lamda_step = half_lambda_idx + 1 == self.half_lambda_max
+                        last_optim_step = optim_idx + 1 == self.test_optim_num[frame_sequence_idx]
+                        not_last_frame = frame_sequence_idx < self.frame_sequence_num - 1
+                        go_next_frame = last_optim_step and not_last_frame
+
+                        if decade_all_error or over_lamda_step:
+                            # Update values.
+                            pre_obj_pos_wrd[update_mask] = est_obj_pos_wrd[update_mask].detach()
+                            pre_obj_scale[update_mask] = est_obj_scale[update_mask].detach()
+                            pre_axis_green_cam[update_mask] = est_axis_green_cam[update_mask].detach()
+                            pre_axis_red_cam[update_mask] = est_axis_red_cam[update_mask].detach()
+                            pre_shape_code[update_mask] = est_shape_code[update_mask].detach()
+                            pre_mask[update_mask] = est_mask[update_mask].detach()
+                            pre_depth_map[update_mask] = est_normalized_depth_map[update_mask].detach()
+                            pre_error[update_mask] = error[update_mask].detach()
+
+                            # 現フレームに対する最適化が最終ステップ
+                            # -> 推定結果を保存する。
+                            if last_optim_step:
+                                # 現フレームに対する推論結果をスタックする。
+                                pre_axis_green_wrd = torch.sum(pre_axis_green_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
+                                pre_axis_red_wrd = torch.sum(pre_axis_red_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
+                                frame_est_list['pos_wrd'].append(pre_obj_pos_wrd.clone())
+                                frame_est_list['scale'].append(pre_obj_scale.clone())
+                                frame_est_list['axis_green'].append(pre_axis_green_wrd.clone())
+                                frame_est_list['axis_red'].append(pre_axis_red_wrd.clone())
+                                frame_est_list['shape_code'].append(pre_shape_code.clone())
+                                frame_est_list['error'].append(pre_error) # 現フレームに対するエラーを見たい。
+                                import pdb; pdb.set_trace()
+
+                                # Check pre results.
+                                check_map = []
+                                gt = normalized_depth_map
+                                est = pre_depth_map
+                                for i in range(batch_size):
+                                    check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+                                check_map_torch(torch.cat(check_map, dim=-1), f'check_map_{optim_idx}.png', figsize=[10,2])
+
+                                # # 現フレームまでの推論結果を平均し、それを元に次フレームを予測。
+                                # if self.use_weighted_average:
+                                #     pre_obj_pos_wrd = get_weighted_average(
+                                #                             target = torch.stack(frame_est_list['pos_wrd'], dim=1).detach(), 
+                                #                             ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                                #     pre_obj_scale = get_weighted_average(
+                                #                             target = torch.stack(frame_est_list['scale'], dim=1).detach(), 
+                                #                             ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                                #     pre_axis_green_wrd = get_weighted_average(
+                                #                             target = torch.stack(frame_est_list['axis_green'], dim=1).detach(), 
+                                #                             ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                                #     pre_axis_green_wrd = F.normalize(pre_axis_green_wrd, dim=1)
+                                #     pre_axis_red_wrd = get_weighted_average(
+                                #                             target = torch.stack(frame_est_list['axis_red'], dim=1).detach(), 
+                                #                             ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                                #     pre_axis_red_wrd = F.normalize(pre_axis_red_wrd, dim=1)
+                                #     pre_shape_code = get_weighted_average(
+                                #                             target = torch.stack(frame_est_list['shape_code'], dim=1).detach(), 
+                                #                             ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+
+                        # 更新により、エラーが全てのバッチで小さくななかった
+                        # -> ならなかったUpdateを半減させて再計算
+                        else:
+                            lamda_i = 1 / 2**(half_lambda_idx+1)
+                            est_obj_pos_wrd[un_update_mask] = est_obj_pos_wrd[un_update_mask] + lamda_i * diff_obj_pos_wrd[un_update_mask]
+                            est_obj_scale[un_update_mask] = est_obj_scale[un_update_mask] * (1. + lamda_i * (1. - diff_scale_diff[un_update_mask]))
+                            est_axis_green_cam[un_update_mask] = est_axis_green_cam[un_update_mask] + lamda_i * diff_axis_green_cam[un_update_mask]
+                            est_axis_green_cam = F.normalize(est_axis_green_cam, dim=-1)
+                            est_axis_red_cam[un_update_mask] = est_axis_red_cam[un_update_mask] + lamda_i * diff_axis_red_cam[un_update_mask]
+                            est_axis_red_cam = F.normalize(est_axis_red_cam, dim=-1)
+                            est_shape_code[un_update_mask] = est_shape_code[un_update_mask] + lamda_i * diff_shape_code[un_update_mask]
+
+                if self.only_init_net:
+                    break
+
+
+
+        # 各フレームの結果を融合
+        if self.use_weighted_average:
+            est_obj_pos_wrd = get_weighted_average(
+                                    target = torch.stack(frame_est_list['pos_wrd'], dim=1).detach(), 
+                                    ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+            est_obj_scale = get_weighted_average(
+                                    target = torch.stack(frame_est_list['scale'], dim=1).detach(), 
+                                    ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+            est_axis_green_wrd = get_weighted_average(
+                                    target = torch.stack(frame_est_list['axis_green'], dim=1).detach(), 
+                                    ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+            est_axis_green_wrd = F.normalize(est_axis_green_wrd, dim=1)
+            est_axis_red_wrd = get_weighted_average(
+                                    target = torch.stack(frame_est_list['axis_red'], dim=1).detach(), 
+                                    ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+            est_axis_red_wrd = F.normalize(est_axis_red_wrd, dim=1)
+            est_shape_code = get_weighted_average(
+                                    target = torch.stack(frame_est_list['shape_code'], dim=1).detach(), 
+                                    ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+        elif not self.use_weighted_average:
+            if self.test_mode == 'average':
+                est_obj_pos_wrd = torch.stack(frame_est_list['pos_wrd'], dim=1).mean(dim=1)
+                est_obj_scale = torch.stack(frame_est_list['scale'], dim=1).mean(dim=1)
+                est_axis_green_wrd = torch.stack(frame_est_list['axis_green'], dim=1).mean(dim=1)
+                est_axis_red_wrd = torch.stack(frame_est_list['axis_red'], dim=1).mean(dim=1)
+                est_axis_green_wrd = F.normalize(est_axis_green_wrd, dim=1)
+                est_axis_red_wrd = F.normalize(est_axis_red_wrd, dim=1)
+                est_shape_code = torch.stack(frame_est_list['shape_code'], dim=1).mean(dim=1)
 
 
 
@@ -348,23 +460,23 @@ if __name__=='__main__':
     #     ddf=ddf
     #     ).model
     # df_net.init_net = init_net
-    df_net.only_init_net = True
+    df_net.only_init_net = False
 
     # Setting model.
     model = df_net
     model.test_mode = 'average'
     model.start_frame_idx = 0
-    model.frame_sequence_num = 1
-    model.half_lambda_max = 8
+    model.frame_sequence_num = 5
+    model.half_lambda_max = 3
     if model.test_mode == 'average':
-        model.test_optim_num = [5, 5, 5]
+        model.test_optim_num = [3, 3, 3, 3, 3]
     if model.test_mode == 'sequence':
-        model.test_optim_num = [5, 3, 2]
+        model.test_optim_num = [3, 3, 3, 3, 3]
     if model.only_init_net:
         model.test_mode = 'average'
-        model.test_optim_num = [1, 1, 1, 1, 1, 1, 1]
-    model.use_deep_optimizer = False
-    model.use_adam_optimizer = True
+        model.test_optim_num = [1, 1, 1, 1, 1]
+    model.use_deep_optimizer = True
+    model.use_adam_optimizer = False
     model.use_weighted_average = True
 
     # Save logs.
