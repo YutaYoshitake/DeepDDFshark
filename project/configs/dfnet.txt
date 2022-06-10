@@ -13,11 +13,12 @@ frame_num = 7
 
 save_interval = 10
 N_epoch = 10000
-N_batch = 25
+N_batch = 30
 check_val_every_n_epoch = 10
 lr = 0.0001
 train_optim_num = 3
 use_depth_error = True
+model_mode = single
 
 
 

@@ -1,2 +1,2 @@
-CUDA_VISIBLE_DEVICES=4 python mix_optim.py --config=configs/test.txt --xxx=d
-CUDA_VISIBLE_DEVICES=4 python mix_optim.py --config=configs/test.txt --xxx=e
+CUDA_VISIBLE_DEVICES=7 python val_adam_multi01.py --config=configs/val.txt
+CUDA_VISIBLE_DEVICES=7 python val_adam_multi02.py --config=configs/val.txt

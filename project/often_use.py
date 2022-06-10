@@ -296,3 +296,23 @@ def get_weighted_average(target, ratio): # [Batch, Sample, Values]
 def batch_linspace(start, end, step):
     raw = torch.linspace(0, 1, step)[None, :]
     return (end - start)[:, None] * raw + start[:, None]
+
+
+
+def int_clamp(n, smallest, largest):
+    return int(max(smallest, min(n, largest)))
+
+# df = pickle_load('./txt/experiments/log/2022_06_06_00_01_29/log.pickle')
+# # df_wod = pickle_load('./txt/experiments/log/2022_06_05_13_15_22/log.pickle')
+# # ini = pickle_load('./txt/experiments/log/2022_06_05_22_24_47/log.pickle')
+
+# df_idx = np.argsort(df['red'])
+# # df_wod_idx = np.argsort(df['depth'])
+# # ini_idx = np.argsort(df['depth'])
+
+# for key in df.keys():
+#     print(key)
+#     print(df[key][df_idx][1000].mean().item())
+#     # print(df_wod[key][df_wod_idx][1000].mean().item())
+#     # print(ini[key][ini_idx][1000].mean().item())
+#     import pdb; pdb.set_trace()

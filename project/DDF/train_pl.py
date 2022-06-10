@@ -518,19 +518,25 @@ class DDF(pl.LightningModule):
         t_minus = - d_dot_o - sqrt_D
         t_plus = - d_dot_o + sqrt_D
 
-        t_mask = (torch.abs(t_plus) > torch.abs(t_minus))[torch.logical_not(negative_D_mask)]
-        if t_mask.all():
-            t = t_minus
-            whitch_t_used = 't_minus'
-            intersect_rays_o = rays_o + t_minus[..., None] * rays_d
-        elif torch.logical_not(t_mask).all():
-            t = t_plus
-            whitch_t_used = 't_plus'
-            intersect_rays_o = rays_o + t_plus[..., None] * rays_d
-        else:
-            print('t sign err!')
-            import pdb; pdb.set_trace()
-            sys.exit()
+        t_mask = torch.abs(t_plus) > torch.abs(t_minus)
+        t = t_plus
+        t[t_mask] = t_minus[t_mask]
+        intersect_rays_o = rays_o + t_plus[..., None] * rays_d
+        intersect_rays_o[t_mask] = (rays_o + t_minus[..., None] * rays_d)[t_mask]
+
+        # t_mask = (torch.abs(t_plus) > torch.abs(t_minus))[torch.logical_not(negative_D_mask)]
+        # if t_mask.all():
+        #     t_ = t_minus
+        #     whitch_t_used = 't_minus'
+        #     intersect_rays_o_ = rays_o + t_minus[..., None] * rays_d
+        # elif torch.logical_not(t_mask).all():
+        #     t_ = t_plus
+        #     whitch_t_used = 't_plus'
+        #     intersect_rays_o_ = rays_o + t_plus[..., None] * rays_d
+        # else:
+        #     print('t sign err!')
+        #     import pdb; pdb.set_trace()
+        #     sys.exit()
 
         # Estimate inverced depth
         est_invdepth_rawmap = self.forward(intersect_rays_o, rays_d, input_lat_vec)
@@ -538,7 +544,7 @@ class DDF(pl.LightningModule):
         est_invdepth_map[negative_D_mask] = 0.
 
         if return_invdepth:
-            return est_invdepth_map, negative_D_mask, whitch_t_used
+            return est_invdepth_map, negative_D_mask
     
 
 

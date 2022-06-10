@@ -108,9 +108,6 @@ class df_resnet_encoder(pl.LightningModule):
 
         # Get pose diff.
         diff_pos = self.fc_pos(torch.cat([x, pre_pos], dim=-1))
-        diff_x_cim = diff_pos[:, 0]
-        diff_y_cim = diff_pos[:, 1]
-        diff_z_diff = diff_pos[:, 2]
 
         # Get axis diff.
         diff_axis_green = self.fc_axis_green(torch.cat([x, pre_axis_green], dim=-1))
@@ -118,12 +115,12 @@ class df_resnet_encoder(pl.LightningModule):
 
         # Get scale diff.
         x_scale = self.fc_scale(torch.cat([x, pre_scale], dim=-1))
-        diff_scale_diff = x_scale + torch.ones_like(x_scale)
+        diff_scale_cim = x_scale + torch.ones_like(x_scale)
 
         # Get shape code diff.
         diff_shape_code = self.fc_shape_code(torch.cat([x, pre_shape_code], dim=-1))
 
-        return diff_x_cim, diff_y_cim, diff_z_diff, diff_axis_green, diff_axis_red, diff_scale_diff, diff_shape_code, h_1
+        return diff_pos, diff_axis_green, diff_axis_red, diff_scale_cim, diff_shape_code, h_1
 
 
 
@@ -135,13 +132,13 @@ class TaR(pl.LightningModule):
         super().__init__()
 
         # Base configs
-        self.dynamic = args.dynamic
+        self.model_mode = args.model_mode
         self.fov = args.fov
-        self.input_H = 256
-        self.input_W = 256
+        self.input_H = args.input_H
+        self.input_W = args.input_W
         self.x_coord = torch.arange(0, self.input_W)[None, :].expand(self.input_H, -1)
         self.y_coord = torch.arange(0, self.input_H)[:, None].expand(-1, self.input_W)
-        self.image_coord = torch.stack([self.x_coord.T, self.x_coord], dim=-1) # [H, W, (Y and X)]
+        self.image_coord = torch.stack([self.y_coord, self.x_coord], dim=-1) # [H, W, (Y and X)]
         self.ddf_H = 256
         self.lr = args.lr
         self.rays_d_cam = get_ray_direction(self.ddf_H, self.fov)
@@ -153,11 +150,13 @@ class TaR(pl.LightningModule):
         self.save_interval = args.save_interval
         self.model_params_dtype = False
         self.model_device = False
-        self.train_optim_num = args.train_optim_num
         self.use_gru = args.use_gru
         self.frame_num = args.frame_num
         self.use_depth_error = args.use_depth_error
-        self.sampling_interval = 8
+        self.frame_sequence_num = args.frame_sequence_num
+        self.train_optim_num = [args.train_optim_num] * self.frame_sequence_num
+        if self.model_mode == 'sequence':
+            self.train_optim_num = [optim_num - int_clamp(i, 0, 1) for i, optim_num in enumerate(self.train_optim_num)]
 
         # Make model
         self.ddf = ddf
@@ -167,6 +166,9 @@ class TaR(pl.LightningModule):
         # loss func.
         self.l1 = torch.nn.L1Loss()
         self.cossim = nn.CosineSimilarity(dim=-1)
+        self.depth_sampling_type = 'clopping'
+        self.sampling_interval = 8
+        self.clopping_size = 100
 
 
 
@@ -180,33 +182,12 @@ class TaR(pl.LightningModule):
         gt_shape_code = self.ddf.lat_vecs(torch.tensor(instance_idx, device=self.ddf.device)).detach()
 
         # Set frame.
-        frame_idx = random.randint(0, frame_mask.shape[1]-1) # ランダムなフレームを選択
+        if self.model_mode == 'single' or self.model_mode == 'only_init':
+            frame_idx_list = [random.randint(0, frame_mask.shape[1]-1)]
+        elif self.model_mode == 'sequence':
+            start = random.randint(0, frame_mask.shape[1]-self.frame_sequence_num)
+            frame_idx_list = list(range(start, start+self.frame_sequence_num))
         
-        # Preprocess.
-        with torch.no_grad():
-            # Clop distance map.
-            raw_mask = frame_mask[:, frame_idx]
-            raw_distance_map = frame_distance_map[:, frame_idx]
-            clopped_mask, clopped_distance_map, bbox_list = clopping_distance_map(
-                                                                raw_mask, raw_distance_map, self.image_coord, self.input_H, self.input_W, self.ddf_H
-                                                                )
-
-            # Get normalized depth map.
-            rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
-            clopped_depth_map, normalized_depth_map, avg_depth_map = get_normalized_depth_map(
-                                                                        clopped_mask, clopped_distance_map, rays_d_cam
-                                                                        )
-
-            # Get ground truth.
-            o2w = frame_obj_rot[:, frame_idx]
-            w2c = frame_camera_rot[:, frame_idx]
-            o2c = torch.bmm(w2c, o2w) # とりあえずこれを推論する
-            gt_axis_green_cam = o2c[:, :, 1] # Y
-            gt_axis_red_cam = o2c[:, :, 0] # X
-            cam_pos_wrd = frame_camera_pos[:, frame_idx]
-            gt_obj_pos_wrd = frame_obj_pos[:, frame_idx]
-            gt_obj_scale = frame_obj_scale[:, frame_idx][:, None]
-
         # Start optimization.
         loss_pos = []
         loss_scale = []
@@ -215,120 +196,179 @@ class TaR(pl.LightningModule):
         loss_shape_code = []
         if self.use_depth_error:
             depth_simulation_error = []
-
-        for optim_idx in range(self.train_optim_num):
-
-            # Estimating.
-            # est_x_cim, est_y_cim : クロップされた画像座標（[-1, 1]で定義）における物体中心の予測, 
-            # est_z_diff : デプス画像の正則に用いた平均から、物体中心がどれだけズレているか？, 
-            # est_axis_green_cam : カメラ座標系での物体の上方向, 
-            # est_axis_red_cam : カメラ座標系での物体の右方向, 
-            # est_scale_diff : Clopping-BBoxの対角と物体のカノニカルBBoxの対角がどれくらいずれているか, 
-            bbox_info = torch.cat([bbox_list.reshape(-1, 4), bbox_list.mean(1), avg_depth_map.to('cpu')[:, None]], dim=-1)
-            if optim_idx == 0:
-                inp = torch.stack([normalized_depth_map, clopped_mask], 1)
-                est_x_cim, est_y_cim, est_z_diff, est_axis_green_cam, est_axis_red_cam, est_scale_diff, est_shape_code, pre_hidden_state = self.init_net(inp, bbox_info.to(inp))
-                est_obj_pos_cam, est_obj_scale, im2cam_scale = diff2estimation(est_x_cim, est_y_cim, est_z_diff, est_scale_diff, bbox_list, avg_depth_map, self.fov)
-            elif optim_idx > 0:
-                inp = torch.stack([normalized_depth_map, clopped_mask, pre_depth_map, pre_mask, normalized_depth_map - pre_depth_map], 1)
-                diff_x_cim, diff_y_cim, diff_z_diff, diff_axis_green_cam, diff_axis_red_cam, diff_scale_diff, diff_shape_code, pre_hidden_state = self.df_net(
-                                                                                                                                                    inp, 
-                                                                                                                                                    bbox_info.to(inp), 
-                                                                                                                                                    pre_obj_pos_cam, 
-                                                                                                                                                    pre_axis_green_cam, 
-                                                                                                                                                    pre_axis_red_cam, 
-                                                                                                                                                    pre_obj_scale, 
-                                                                                                                                                    pre_shape_code, 
-                                                                                                                                                    pre_hidden_state
-                                                                                                                                                    )
-                est_obj_pos_cam = pre_obj_pos_cam + diffcim2diffcam(diff_x_cim, diff_y_cim, diff_z_diff, bbox_list, avg_depth_map, self.fov)
-                est_obj_scale = pre_obj_scale * diff_scale_diff
-                est_axis_green_cam = F.normalize(pre_axis_green_cam + diff_axis_green_cam, dim=-1)
-                est_axis_red_cam = F.normalize(pre_axis_red_cam + diff_axis_red_cam, dim=-1)
-                est_shape_code = pre_shape_code + diff_shape_code
-            est_obj_pos_wrd = torch.sum(est_obj_pos_cam[..., None, :]*w2c.permute(0, 2, 1), dim=-1) + cam_pos_wrd
-
-            # # Check inp.
-            # check_map = []
-            # for inp_i in inp:
-            #     check_map.append(torch.cat([inp_i_i for inp_i_i in inp_i], dim=-1))
-            #     if len(check_map)>5:
-            #         break
-            # check_map = torch.cat(check_map, dim=0)
-            # check_map_torch(check_map)
-            # import pdb; pdb.set_trace()
-
-            # Cal loss.
-            loss_pos.append(F.mse_loss(est_obj_pos_wrd, gt_obj_pos_wrd.detach()))
-            loss_scale.append(F.mse_loss(est_obj_scale, gt_obj_scale.to(est_obj_scale).detach()))
-            loss_axis_green.append(torch.mean(-self.cossim(est_axis_green_cam, gt_axis_green_cam.detach()) + 1.))
-            loss_axis_red.append(torch.mean(-self.cossim(est_axis_red_cam, gt_axis_red_cam.detach()) + 1.))
-            loss_shape_code.append(F.mse_loss(est_shape_code, gt_shape_code.detach()))
-
-            # Estimating depth map.
-            if optim_idx < self.train_optim_num:
-                with torch.no_grad():
-                    # Estimating.
-                    est_clopped_invdistance_map, est_clopped_mask, est_clopped_distance_map = render_distance_map_from_axis(
-                                                                                                    H = self.ddf_H, 
-                                                                                                    obj_pos_wrd = est_obj_pos_wrd, # gt_obj_pos_wrd, 
-                                                                                                    axis_green = est_axis_green_cam, # gt_axis_green_cam, 
-                                                                                                    axis_red = est_axis_red_cam, # gt_axis_red_cam, 
-                                                                                                    obj_scale = est_obj_scale[:, 0], # gt_obj_scale[:, 0].to(est_obj_scale), 
-                                                                                                    input_lat_vec = est_shape_code, # gt_shape_code, 
-                                                                                                    cam_pos_wrd = cam_pos_wrd, 
-                                                                                                    rays_d_cam = rays_d_cam, 
-                                                                                                    w2c = w2c.detach(), 
-                                                                                                    ddf = self.ddf, 
-                                                                                                    with_invdistance_map = True, 
-                                                                                                    )
-                    est_clopped_depth_map, est_normalized_depth_map, _ = get_normalized_depth_map(
-                                                                            est_clopped_mask, est_clopped_distance_map, rays_d_cam, avg_depth_map, 
-                                                                            )
-
-                # get next inputs
-                pre_obj_pos_cam = est_obj_pos_cam.detach()
-                pre_obj_scale = est_obj_scale.detach()
-                pre_axis_green_cam = est_axis_green_cam.detach()
-                pre_axis_red_cam = est_axis_red_cam.detach()
-                pre_shape_code = est_shape_code.detach()
-                pre_mask = est_clopped_mask.detach()
-                pre_depth_map = est_normalized_depth_map.detach()
         
-            # Cal depth error.
-            if 0 < optim_idx and self.use_depth_error:
-                # Estimating.
-                sampling_start = np.random.randint(0, self.sampling_interval, 2)
-                sampled_rays_d_cam = rays_d_cam[:, sampling_start[0]::self.sampling_interval, sampling_start[1]::self.sampling_interval]
-                gt_mask_for_deptherr = clopped_mask[:, sampling_start[0]::self.sampling_interval, sampling_start[1]::self.sampling_interval]
-                gt_distance_map_for_deptherr = clopped_distance_map[:, sampling_start[0]::self.sampling_interval, sampling_start[1]::self.sampling_interval]
-                gt_invdistance_map_for_deptherr = torch.zeros_like(gt_distance_map_for_deptherr)
-                gt_invdistance_map_for_deptherr[gt_mask_for_deptherr] = 1. / gt_distance_map_for_deptherr[gt_mask_for_deptherr]
-                est_invdistance_map_for_deptherr, _, _ = render_distance_map_from_axis(
-                                                            H = self.ddf_H//self.sampling_interval, 
-                                                            obj_pos_wrd = est_obj_pos_wrd, # gt_obj_pos_wrd, 
-                                                            axis_green = est_axis_green_cam, # gt_axis_green_cam, 
-                                                            axis_red = est_axis_red_cam, # gt_axis_red_cam, 
-                                                            obj_scale = est_obj_scale[:, 0], # gt_obj_scale[:, 0].to(est_obj_scale), 
-                                                            input_lat_vec = est_shape_code, # gt_shape_code, 
-                                                            cam_pos_wrd = cam_pos_wrd, 
-                                                            rays_d_cam = sampled_rays_d_cam, 
-                                                            w2c = w2c.detach(), 
-                                                            ddf = self.ddf, 
-                                                            with_invdistance_map = True, 
-                                                            )
-                depth_simulation_error.append(self.l1(est_invdistance_map_for_deptherr, gt_invdistance_map_for_deptherr.detach()))
+        # ######################################################################
+        # self.init_net.eval(), self.df_net.eval()
+        # ######################################################################
 
-                # # Check map.
+        ###################################
+        #####     Start Inference     #####
+        ###################################
+        for frame_sequence_idx, frame_idx in enumerate(frame_idx_list):
+            optim_num = self.train_optim_num[frame_sequence_idx]
+
+            # Preprocess.
+            with torch.no_grad():
+                # Clop distance map.
+                raw_mask = frame_mask[:, frame_idx]
+                raw_distance_map = frame_distance_map[:, frame_idx]
+                clopped_mask, clopped_distance_map, bbox_list = clopping_distance_map(
+                                                                    raw_mask, raw_distance_map, self.image_coord, self.input_H, self.input_W, self.ddf_H
+                                                                    )
+
+                # Get normalized depth map.
+                rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
+                clopped_depth_map, normalized_depth_map, avg_depth_map = get_normalized_depth_map(
+                                                                            clopped_mask, clopped_distance_map, rays_d_cam
+                                                                            )
+                bbox_info = torch.cat([bbox_list.reshape(-1, 4), bbox_list.mean(1), avg_depth_map.to('cpu')[:, None]], dim=-1).to(raw_distance_map)
+                gt_invdistance_map = torch.zeros_like(clopped_distance_map)
+                gt_invdistance_map[clopped_mask] = 1. / clopped_distance_map[clopped_mask]
+
+                # Get ground truth.
+                o2w = frame_obj_rot[:, frame_idx].to(torch.float)
+                w2c = frame_camera_rot[:, frame_idx].to(torch.float)
+                o2c = torch.bmm(w2c, o2w).to(torch.float) # とりあえずこれを推論する
+                gt_obj_axis_green_cam = o2c[:, :, 1] # Y
+                gt_obj_axis_red_cam = o2c[:, :, 0] # X
+                gt_obj_axis_green_wrd = torch.sum(gt_obj_axis_green_cam[..., None, :]*w2c.permute(0, 2, 1), -1) # Y
+                gt_obj_axis_red_wrd = torch.sum(gt_obj_axis_red_cam[..., None, :]*w2c.permute(0, 2, 1), -1) # X
+                cam_pos_wrd = frame_camera_pos[:, frame_idx].to(torch.float)
+                gt_obj_pos_wrd = frame_obj_pos[:, frame_idx].to(torch.float)
+                gt_obj_scale = frame_obj_scale[:, frame_idx][:, None].to(torch.float)
+
+            ###################################
+            #####    Start Optim Step     #####
+            ###################################
+            for optim_idx in range(optim_num):
+                if self.model_mode == 'single':
+                    perform_init_est = optim_idx == 0
+                elif self.model_mode == 'sequence':
+                    perform_init_est = optim_idx == 0 and frame_sequence_idx==0
+                elif self.model_mode == 'only_init':
+                    perform_init_est = True
+
+                # Estimating.
+                # est_x_cim, est_y_cim : クロップされた画像座標（[-1, 1]で定義）における物体中心の予測, 
+                # est_z_cim : デプス画像の正則に用いた平均から、物体中心がどれだけズレているか？, 
+                # est_obj_axis_green_cam : カメラ座標系での物体の上方向, 
+                # est_obj_axis_red_cam : カメラ座標系での物体の右方向, 
+                # est_scale_cim : Clopping-BBoxの対角と物体のカノニカルBBoxの対角がどれくらいずれているか, 
+                if perform_init_est:
+                    inp = torch.stack([normalized_depth_map, clopped_mask], 1).detach()
+                    est_obj_pos_cim, est_obj_axis_green_cam, est_obj_axis_red_cam, est_scale_cim, est_shape_code, pre_hidden_state = self.init_net(inp, bbox_info)
+                    est_obj_pos_cam, est_obj_scale = diff2estimation(est_obj_pos_cim, est_scale_cim, bbox_list, avg_depth_map, self.fov)
+                    est_obj_pos_wrd = torch.sum(est_obj_pos_cam[..., None, :]*w2c.permute(0, 2, 1), dim=-1) + cam_pos_wrd
+                    est_obj_axis_green_wrd = torch.sum(est_obj_axis_green_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
+                    est_obj_axis_red_wrd = torch.sum(est_obj_axis_red_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
+                elif not perform_init_est:
+                    # Get inputs.
+                    print('nex')
+                    with torch.no_grad():
+                        pre_obj_axis_green_cam = torch.sum(pre_obj_axis_green_wrd[..., None, :]*w2c, -1)
+                        pre_obj_axis_red_cam = torch.sum(pre_obj_axis_red_wrd[..., None, :]*w2c, -1)
+                        est_clopped_invdistance_map, est_clopped_mask, est_clopped_distance_map = render_distance_map_from_axis(
+                                                                                                        H = self.ddf_H, 
+                                                                                                        obj_pos_wrd = pre_obj_pos_wrd, # gt_obj_pos_wrd, 
+                                                                                                        axis_green = pre_obj_axis_green_cam, # gt_obj_axis_green_cam, 
+                                                                                                        axis_red = pre_obj_axis_red_cam, # gt_obj_axis_red_cam, 
+                                                                                                        obj_scale = pre_obj_scale[:, 0], # gt_obj_scale[:, 0].to(pre_obj_scale), 
+                                                                                                        input_lat_vec = pre_shape_code, # gt_shape_code, 
+                                                                                                        cam_pos_wrd = cam_pos_wrd, 
+                                                                                                        rays_d_cam = rays_d_cam, 
+                                                                                                        w2c = w2c.detach(), 
+                                                                                                        ddf = self.ddf, 
+                                                                                                        with_invdistance_map = True, 
+                                                                                                        )
+                        pre_mask = est_clopped_mask.detach()
+                        _, pre_depth_map, _ = get_normalized_depth_map(est_clopped_mask, est_clopped_distance_map, rays_d_cam, avg_depth_map)
+                    # Estimating update values.
+                    inp = torch.stack([normalized_depth_map, clopped_mask, pre_depth_map, pre_mask, normalized_depth_map - pre_depth_map], 1).detach()
+                    diff_pos_cim, diff_obj_axis_green_cam, diff_obj_axis_red_cam, diff_scale_cim, diff_shape_code, pre_hidden_state = self.df_net(
+                                                                                                                                inp = inp, 
+                                                                                                                                bbox_info = bbox_info, 
+                                                                                                                                pre_pos = pre_obj_pos_cim, 
+                                                                                                                                pre_axis_green = pre_obj_axis_green_cam, 
+                                                                                                                                pre_axis_red = pre_obj_axis_red_cam, 
+                                                                                                                                pre_scale = pre_obj_scale_cim, 
+                                                                                                                                pre_shape_code = pre_shape_code, 
+                                                                                                                                h_0 = pre_hidden_state)
+                    # Convert deff2est.
+                    est_obj_pos_cim = pre_obj_pos_cim + diff_pos_cim
+                    est_scale_cim = pre_obj_scale_cim * diff_scale_cim
+                    est_obj_pos_cam, est_obj_scale = diff2estimation(est_obj_pos_cim, est_scale_cim, bbox_list, avg_depth_map, self.fov)
+                    est_obj_pos_wrd = torch.sum(est_obj_pos_cam[..., None, :]*w2c.permute(0, 2, 1), dim=-1) + cam_pos_wrd
+                    est_obj_axis_green_cam = F.normalize(pre_obj_axis_green_cam + diff_obj_axis_green_cam, dim=-1)
+                    est_obj_axis_green_wrd = torch.sum(est_obj_axis_green_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
+                    est_obj_axis_red_cam = F.normalize(pre_obj_axis_red_cam + diff_obj_axis_red_cam, dim=-1)
+                    est_obj_axis_red_wrd = torch.sum(est_obj_axis_red_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
+                    est_shape_code = pre_shape_code + diff_shape_code
+
+                # # Check inp.
                 # check_map = []
-                # for gt, est in zip(gt_invdistance_map_for_deptherr, est_invdistance_map_for_deptherr):
-                #     check_map.append(torch.cat([gt, est, torch.abs(gt-est)], dim=-1))
+                # for inp_i in inp:
+                #     check_map.append(torch.cat([inp_i_i for inp_i_i in inp_i], dim=-1))
                 #     if len(check_map)>5:
                 #         break
                 # check_map = torch.cat(check_map, dim=0)
-                # check_map_torch(check_map)
+                # check_map_torch(check_map, f'sample_images/frame{frame_idx}_optim{optim_idx}.png')
                 # import pdb; pdb.set_trace()
 
+                # Cal loss.
+                loss_pos.append(F.mse_loss(est_obj_pos_wrd, gt_obj_pos_wrd.detach()))
+                loss_scale.append(F.mse_loss(est_obj_scale, gt_obj_scale.detach()))
+                loss_axis_green.append(torch.mean(-self.cossim(est_obj_axis_green_wrd, gt_obj_axis_green_wrd.detach()) + 1.))
+                loss_axis_red.append(torch.mean(-self.cossim(est_obj_axis_red_wrd, gt_obj_axis_red_wrd.detach()) + 1.))
+                loss_shape_code.append(F.mse_loss(est_shape_code, gt_shape_code.detach()))
+
+                # Get next inputs to estimate updates.
+                pre_obj_pos_cim = est_obj_pos_cim.detach()
+                pre_obj_pos_wrd = est_obj_pos_wrd.detach()
+                pre_obj_scale_cim = est_scale_cim.detach()
+                pre_obj_scale = est_obj_scale.detach()
+                pre_obj_axis_green_wrd = est_obj_axis_green_wrd.detach()
+                pre_obj_axis_red_wrd = est_obj_axis_red_wrd.detach()
+                pre_shape_code = est_shape_code.detach()
+
+                if self.model_mode == 'only_init':
+                    break
+
+                # Cal depth error.
+                if 0 < optim_idx and self.use_depth_error:
+                    if self.depth_sampling_type == 'clopping':
+                        clopping_start = np.random.randint(0, self.ddf_H-self.clopping_size, 2)
+                        clopping_end = clopping_start + self.clopping_size
+                        clopped_H = self.clopping_size
+                        sampled_rays_d_cam = rays_d_cam[:, clopping_start[0]:clopping_end[0], clopping_start[1]:clopping_end[1]]
+                        gt_invdistance_map_for_deptherr = gt_invdistance_map[:, clopping_start[0]:clopping_end[0], clopping_start[1]:clopping_end[1]]
+                    elif self.depth_sampling_type == 'sparse':
+                        clopped_H = self.ddf_H//self.sampling_interval, 
+                        sampling_start = np.random.randint(0, self.sampling_interval, 2)
+                        sampled_rays_d_cam = rays_d_cam[:, sampling_start[0]::self.sampling_interval, sampling_start[1]::self.sampling_interval]
+                        gt_invdistance_map_for_deptherr = gt_invdistance_map[:, sampling_start[0]::self.sampling_interval, sampling_start[1]::self.sampling_interval]
+                    est_invdistance_map_for_deptherr, _, _ = render_distance_map_from_axis(
+                                                                H = clopped_H, 
+                                                                obj_pos_wrd = est_obj_pos_wrd, # gt_obj_pos_wrd, 
+                                                                axis_green = est_obj_axis_green_cam, # gt_obj_axis_green_cam, 
+                                                                axis_red = est_obj_axis_red_cam, # gt_obj_axis_red_cam, 
+                                                                obj_scale = est_obj_scale[:, 0], # gt_obj_scale[:, 0].to(est_obj_scale), 
+                                                                input_lat_vec = est_shape_code, # gt_shape_code, 
+                                                                cam_pos_wrd = cam_pos_wrd, 
+                                                                rays_d_cam = sampled_rays_d_cam, 
+                                                                w2c = w2c.detach(), 
+                                                                ddf = self.ddf, 
+                                                                with_invdistance_map = True, 
+                                                                )
+                    depth_simulation_error.append(self.l1(est_invdistance_map_for_deptherr, gt_invdistance_map_for_deptherr.detach()))
+                    # # Check map.
+                    # check_map = []
+                    # for gt, est in zip(gt_invdistance_map_for_deptherr, est_invdistance_map_for_deptherr):
+                    #     check_map.append(torch.cat([gt, est, torch.abs(gt-est)], dim=-1))
+                    #     if len(check_map)>5:
+                    #         break
+                    # check_map = torch.cat(check_map, dim=0)
+                    # check_map_torch(check_map, f'sample_images/tes.png')
+                    # import pdb; pdb.set_trace()
 
         # Cal total loss.
         num_stacked_loss = len(loss_pos)
@@ -350,14 +390,13 @@ class TaR(pl.LightningModule):
             num_stacked_loss = len(depth_simulation_error)
             depth_simulation_error = sum(depth_simulation_error) / num_stacked_loss
             loss_axis = loss_axis_green + loss_axis_red
-            loss = 1e1 * loss_pos + 1e1 * loss_scale + 1e0 * loss_axis + 1e1 * loss_shape_code +  + 1e1 * depth_simulation_error
+            loss = 1e1 * loss_pos + 1e1 * loss_scale + 1e0 * loss_axis + 1e1 * loss_shape_code +  + 1e0 * depth_simulation_error
             return {'loss': loss, 
                     'loss_pos':loss_pos.detach(), 
                     'loss_scale': loss_scale.detach(), 
                     'loss_axis_red': loss_axis_red.detach(), 
                     'loss_shape_code': loss_shape_code.detach(), 
                     'depth_simulation_error': depth_simulation_error.detach()}
-
 
 
     def training_epoch_end(self, outputs):
@@ -481,20 +520,16 @@ if __name__=='__main__':
     ckpt_path_list = sorted(glob.glob(ckpt_dir))
 
     # Load ckpt and start training.
-    # if len(ckpt_path_list) == 0:
     model = TaR(args, ddf)
     # trainer.fit(
     #     model=model, 
     #     train_dataloaders=train_dataloader, 
-    #     # val_dataloaders=val_dataloader, 
-    #     # datamodule=None, 
-    #     # ckpt_path=None
+    #     ckpt_path=None
     #     )
-    
     trainer.fit(
         model=model, 
         train_dataloaders=train_dataloader, 
         val_dataloaders=val_dataloader, 
         datamodule=None, 
-        ckpt_path='./lightning_logs/DeepTaR/chair/dfnet_optN3/checkpoints/0000001180.ckpt'
+        ckpt_path='./lightning_logs/DeepTaR/chair/initnet_first/checkpoints/0000001010.ckpt'
         )

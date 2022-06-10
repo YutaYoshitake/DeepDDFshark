@@ -60,11 +60,8 @@ class TaR_dataset(data.Dataset):
         ):
 
         self.mode = mode
-        self.dynamic = args.dynamic
         self.N_views = N_views
-        self.H = args.H
-        self.fov = args.fov
-
+        self.re_wood = args.re_wood
         self.instance_path_list = []
         with open(instance_list_txt, 'r') as f:
             lines = f.read().splitlines()
@@ -74,15 +71,14 @@ class TaR_dataset(data.Dataset):
                         os.path.join(data_dir, line.rstrip('\n'))
                         )
                 elif self.mode=='val':
-                    for view_ind in range(N_views):
+                    for view_ind in range(self.N_views//3):
                         self.instance_path_list.append(
                             os.path.join(data_dir, line.rstrip('\n'), f'{str(view_ind+1).zfill(5)}.pickle')
                             )
-        
-        # self.rgb_transform = T.Compose([
-        #     T.Resize(self.H),
-        #     T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        # ])
+                    if self.re_wood:
+                        self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/pixellib_pkl/test_image/test.pickle']
+                    # self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/e31c6c24a8d80ac35692a9640d6947fc/00005.pickle']
+                    # self.instance_path_list = self.instance_path_list[:2]
 
     def __getitem__(self, index):
         # Load data
@@ -101,72 +97,36 @@ class TaR_dataset(data.Dataset):
         frame_camera_pos = data_dict['camera_pos']
         frame_camera_rot = data_dict['camera_rot']
         frame_obj_rot = data_dict['obj_rot']
-        if self.dynamic:
-            frame_obj_pos = data_dict['obj_pos']
-            frame_obj_scale = data_dict['obj_scale']
+        frame_obj_pos = data_dict['obj_pos']
+        frame_obj_scale = data_dict['obj_scale']
 
         # Preprocessing.
-        # frame_rgb_map = torch.from_numpy(frame_rgb_map.astype(np.float32)).clone()
         frame_rgb_map = 0 # self.rgb_transform(frame_rgb_map)
         instance_id = self.instance_path_list[index].split('/')[-1]
 
-        if self.dynamic:
+        if self.mode=='val':
+            splitted_path_list = path.split('/')
+            log_path = splitted_path_list[-2]+'/'+splitted_path_list[-1]
+            if not(self.re_wood):
+                canonical_path = '/'.join(splitted_path_list[:-3]) + '/canoncal/' + splitted_path_list[-2] + '.pickle'
+                canonical_data_dict = pickle_load(canonical_path)
+                canonical_distance_map = canonical_data_dict['depth_map']
+                canonical_camera_pos = canonical_data_dict['camera_pos']
+                canonical_camera_rot = canonical_data_dict['camera_rot']
+            else:
+                canonical_path = '/'.join(splitted_path_list[:-3]) + '/canoncal/' + splitted_path_list[-2] + '.pickle'
+                canonical_data_dict = pickle_load(canonical_path)
+                canonical_path = 0
+                canonical_data_dict = 0
+                canonical_distance_map = 0
+                canonical_camera_pos = 0
+                canonical_camera_rot = 0
+        
+        if self.mode=='train':
             return frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_pos, frame_obj_rot, frame_obj_scale, instance_id
-        if not self.dynamic:
-            return frame_rgb_map, frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_rot, instance_id
-
-    def __len__(self):
-        return len(self.instance_path_list)
-
-
-
-
-
-class TaR_testset(data.Dataset):
-    def __init__(
-        self, 
-        args, 
-        instance_list_txt, 
-        data_dir, 
-        N_views
-        ):
-    
-        self.instance_path_list = []
-        with open(instance_list_txt, 'r') as f:
-            lines = f.read().splitlines()
-            for line in lines:
-                for view_ind in range(N_views):
-                    self.instance_path_list.append(
-                        os.path.join(
-                            data_dir, 
-                            line.rstrip('\n'), 
-                            f'{str(view_ind+1).zfill(5)}.pickle'))
-        self.H = args.H
-        self.fov = args.fov
-        self.rgb_transform = T.Compose([
-            T.Resize(self.H),
-            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-
-    def __getitem__(self, index):
-
-        # Load data
-        path = self.instance_path_list[index]
-        data_dict = pickle_load(path)
-
-        frame_rgb_map = data_dict['rgb_map'].transpose(0, 3, 1, 2)
-        frame_mask = data_dict['mask']
-        frame_distance_map = data_dict['depth_map']
-        frame_camera_pos = data_dict['camera_pos']
-        frame_camera_rot = data_dict['camera_rot']
-        frame_obj_rot = data_dict['obj_rot']
-
-        # Preprocessing.
-        frame_rgb_map = torch.from_numpy(frame_rgb_map.astype(np.float32)).clone()
-        frame_rgb_map = self.rgb_transform(frame_rgb_map)
-        instance_id = self.instance_path_list[index].split('/')[-1]
-
-        return frame_rgb_map, frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_rot, instance_id
+        elif self.mode=='val':
+            return frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_pos, frame_obj_rot, frame_obj_scale, \
+            canonical_distance_map, canonical_camera_pos, canonical_camera_rot, instance_id, log_path
 
     def __len__(self):
         return len(self.instance_path_list)

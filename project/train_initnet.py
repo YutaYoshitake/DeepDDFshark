@@ -99,9 +99,6 @@ class resnet_encoder(pl.LightningModule):
 
         # Get pose.
         x_pos = self.fc_pos(x)
-        x_cim = x_pos[:, 0]
-        y_cim = x_pos[:, 1]
-        z_diff = x_pos[:, 2]
 
         # Get axis.
         x_green = self.fc_axis_green(x)
@@ -117,9 +114,9 @@ class resnet_encoder(pl.LightningModule):
         shape_code = self.fc_shape_code(x)
 
         if self.use_gru:
-            return x_cim, y_cim, z_diff, axis_green, axis_red, scale_diff, shape_code, x
+            return x_pos, axis_green, axis_red, scale_diff, shape_code, x
         else:
-            return x_cim, y_cim, z_diff, axis_green, axis_red, scale_diff, shape_code, 0
+            return x_pos, axis_green, axis_red, scale_diff, shape_code, 0
 
 
 
@@ -127,15 +124,16 @@ class resnet_encoder(pl.LightningModule):
 
 def render_distance_map_from_axis(
         H, 
-        obj_pos_wrd, 
         axis_green, 
         axis_red,
         obj_scale, 
-        cam_pos_wrd, 
         rays_d_cam, 
-        w2c, 
         input_lat_vec, 
         ddf, 
+        cam_pos_wrd = 'not_given', 
+        obj_pos_wrd = 'not_given', 
+        w2c = 'not_given', 
+        obj_pos_cam = 'not_given', 
         with_invdistance_map = False, 
     ):
     # Get rotation matrix.
@@ -148,8 +146,9 @@ def render_distance_map_from_axis(
     rays_d_obj = torch.sum(rays_d_cam[..., None, :]*o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
 
     # Get rays origin.
-    o2w = torch.bmm(w2c.to(o2c.dtype).permute(0, 2, 1), o2c)
-    cam_pos_obj = torch.sum((cam_pos_wrd - obj_pos_wrd)[..., None, :] * o2w.permute(0, 2, 1), dim=-1) / obj_scale[:, None]
+    if obj_pos_cam == 'not_given':
+        obj_pos_cam = torch.sum((obj_pos_wrd - cam_pos_wrd)[..., None, :]*w2c, dim=-1)
+    cam_pos_obj = - torch.sum(obj_pos_cam[..., None, :]*o2c.permute(0, 2, 1), dim=-1) / obj_scale[:, None]
     rays_o_obj = cam_pos_obj[:, None, None, :].expand(-1, H, H, -1)
 
     # Get rays inputs.
@@ -157,7 +156,7 @@ def render_distance_map_from_axis(
     rays_o = rays_o_obj
 
     # Estimating.
-    est_invdistance_map_obj_scale, negative_D_mask, whitch_t_used = ddf.forward_from_far(rays_o, rays_d, input_lat_vec)
+    est_invdistance_map_obj_scale, negative_D_mask = ddf.forward_from_far(rays_o, rays_d, input_lat_vec)
     est_invdistance_map = est_invdistance_map_obj_scale / obj_scale[:, None, None]
 
     # Get distance map.
@@ -179,20 +178,26 @@ def render_distance_map_from_axis(
 def clopping_distance_map(mask, distance_map, image_coord, input_H, input_W, ddf_H, bbox_list='not_given'):
     # Get bbox.
     if bbox_list == 'not_given':
-        bbox_list = []
-        for mask_i in mask:
-            max_y, max_x = image_coord[mask_i].max(dim=0).values
-            min_y, min_x = image_coord[mask_i].min(dim=0).values
-            bbox_list.append(torch.tensor([[max_x, max_y], [min_x, min_y]]))
-        bbox_list = torch.stack(bbox_list, dim=0)
+        raw_bbox_list = []
+        for i, mask_i in enumerate(mask):
+            masked_image_coord = image_coord[mask_i]
+            if masked_image_coord.shape[0] != 0:
+                max_y, max_x = masked_image_coord.max(dim=0).values
+                min_y, min_x = masked_image_coord.min(dim=0).values
+            elif masked_image_coord.shape[0] == 0:
+                mask[i] = torch.ones_like(mask_i)
+                max_y, max_x = image_coord.reshape(-1, 2).max(dim=0).values
+                min_y, min_x = image_coord.reshape(-1, 2).min(dim=0).values
+            raw_bbox_list.append(torch.tensor([[max_x, max_y], [min_x, min_y]]))
+        raw_bbox_list = torch.stack(raw_bbox_list, dim=0)
         
         # 正方形でClop.
-        bbox_H_xy = torch.stack([bbox_list[:, 0, 0] - bbox_list[:, 1, 0], # H_x
-                                    bbox_list[:, 0, 1] - bbox_list[:, 1, 1]] # H_y
+        bbox_H_xy = torch.stack([raw_bbox_list[:, 0, 0] - raw_bbox_list[:, 1, 0], # H_x
+                                 raw_bbox_list[:, 0, 1] - raw_bbox_list[:, 1, 1]] # H_y
                                     , dim=-1)
         bbox_H = bbox_H_xy.max(dim=-1).values # BBoxのxy幅の内、大きい方で揃える
         diff_bbox_H = (bbox_H[:, None] - bbox_H_xy) / 2
-        bbox_list = bbox_list + torch.stack([diff_bbox_H, -diff_bbox_H], dim=-2) # maxには足りない分を足し、minからは引く
+        bbox_list = raw_bbox_list + torch.stack([diff_bbox_H, -diff_bbox_H], dim=-2) # maxには足りない分を足し、minからは引く
 
         # BBoxが画像からはみ出た場合、収まるように戻す
         border = torch.tensor([[input_W-1, input_H-1], [0, 0]])[None]
@@ -200,7 +205,26 @@ def clopping_distance_map(mask, distance_map, image_coord, input_H, input_W, ddf
         outside[:, 0][outside[:, 0] > .0] = 0. # 値が負ならMaxがはみ出た -> ずれを引く
         outside[:, 1][outside[:, 1] < .0] = 0. # 値が正ならMinがはみ出た -> ずれを足す
         bbox_list = bbox_list + outside.sum(dim=-2)[:, None, :]
-        bbox_list = bbox_list / 128 - 1 # change range [-1, 1]
+        
+        # 元画像より大きい時
+        for i_, (diff_bbox_H_i, bbox_H_xy_i, bbox_H_i) in enumerate(zip(diff_bbox_H, bbox_H_xy, bbox_H)):
+            if not (bbox_H_i < min(input_H, input_W)):
+                print('unballance bbox!')
+                max_y = raw_bbox_list[i_][0, 1]
+                min_y = raw_bbox_list[i_][1, 1]
+                upper_limitted = max_y <= input_H
+                lower_limitted = min_y >= 0
+                if upper_limitted==lower_limitted:
+                    bbox_list[i_][:, 1] = raw_bbox_list[i_][:, 1] + torch.stack([diff_bbox_H, -diff_bbox_H], dim=-2)[:, 1]
+                elif upper_limitted: # 上が画像の淵からはみ出ている
+                    bbox_list[i_][1, 1] = raw_bbox_list[i_][1, 1] - 2*diff_bbox_H[1]
+                elif lower_limitted: # 下が画像の淵からはみ出ている
+                    bbox_list[i_][0, 1] = raw_bbox_list[i_][0, 1] + 2*diff_bbox_H[1]
+                import pdb; pdb.set_trace()
+        
+        # 範囲をそろえる
+        bbox_list[:, :, 0] = bbox_list[:, :, 0] / (0.5*input_W) - 1 # change range [-1, 1]
+        bbox_list[:, :, 1] = bbox_list[:, :, 1] / (0.5*input_H) - 1 # change range [-1, 1]
 
     # Clop
     mask = mask[:, None] # (N, dummy_C, H, W)
@@ -231,14 +255,14 @@ def get_normalized_depth_map(mask, distance_map, rays_d_cam, avg_depth_map='not_
 
     # Get average.
     if avg_depth_map=='not_given':
-        # avg_depth_map = torch.tensor(
-        #     [depth_map_i[mask_i].mean() for mask_i, depth_map_i in zip(mask, depth_map)]
-        #     , device=depth_map.device) # 物体の存在しているピクセルで平均を取る。
-        top_n = 10 # top_nからtop_n//2までの平均を取る
-        avg_depth_map = torch.stack([
-                            torch.topk(depth_map_i[mask_i], top_n).values[top_n//2:].mean() - torch.topk(-depth_map_i[mask_i], top_n).values[top_n//2:].mean() 
-                            for mask_i, depth_map_i in zip(mask, depth_map)], dim=0)
-        avg_depth_map = avg_depth_map / 2
+        avg_depth_map = torch.tensor(
+            [depth_map_i[mask_i].mean() for mask_i, depth_map_i in zip(mask, depth_map)]
+            , device=depth_map.device) # 物体の存在しているピクセルで平均を取る。
+        # top_n = 10 # top_nからtop_n//2までの平均を取る
+        # avg_depth_map = torch.stack([
+        #                     torch.topk(depth_map_i[mask_i], top_n).values[top_n//2:].mean() - torch.topk(-depth_map_i[mask_i], top_n).values[top_n//2:].mean() 
+        #                     for mask_i, depth_map_i in zip(mask, depth_map)], dim=0)
+        # avg_depth_map = avg_depth_map / 2
 
     # Normalizing.
     normalized_depth_map = depth_map - avg_depth_map[:, None, None]
@@ -249,13 +273,21 @@ def get_normalized_depth_map(mask, distance_map, rays_d_cam, avg_depth_map='not_
 
 
 
-def get_clopped_rays_d_cam(size, fov, bbox_list):
+def get_clopped_rays_d_cam(size, fov_h, bbox_list, input_H='not_given', input_W='not_given', input_F='not_given'):
     bbox_list_ = 0.5 * bbox_list
-    fov = torch.deg2rad(torch.tensor(fov, dtype=torch.float))
-    x_coord = batch_linspace(torch.tan(fov*bbox_list_[:, 1, 0]), torch.tan(fov*bbox_list_[:, 0, 0]), size)
-    x_coord = x_coord[:, None, :].expand(-1, size, -1)
-    y_coord = batch_linspace(torch.tan(fov*bbox_list_[:, 1, 1]), torch.tan(fov*bbox_list_[:, 0, 1]), size)
-    y_coord = y_coord[:, :, None].expand(-1, -1, size)
+    if  input_H == 'not_given':
+        fov = torch.deg2rad(torch.tensor(fov_h, dtype=torch.float))
+        x_coord = batch_linspace(torch.tan(fov*bbox_list_[:, 1, 0]), torch.tan(fov*bbox_list_[:, 0, 0]), size)
+        x_coord = x_coord[:, None, :].expand(-1, size, -1)
+        y_coord = batch_linspace(torch.tan(fov*bbox_list_[:, 1, 1]), torch.tan(fov*bbox_list_[:, 0, 1]), size)
+        y_coord = y_coord[:, :, None].expand(-1, -1, size)
+    else:
+        fov_h = 2*torch.arctan(torch.tensor(0.5*input_H/input_F, dtype=torch.float))
+        fov_w = 2*torch.arctan(torch.tensor(0.5*input_W/input_F, dtype=torch.float))
+        x_coord = batch_linspace(torch.tan(fov_w*bbox_list_[:, 1, 0]), torch.tan(fov_w*bbox_list_[:, 0, 0]), size)
+        x_coord = x_coord[:, None, :].expand(-1, size, -1)
+        y_coord = batch_linspace(torch.tan(fov_h*bbox_list_[:, 1, 1]), torch.tan(fov_h*bbox_list_[:, 0, 1]), size)
+        y_coord = y_coord[:, :, None].expand(-1, -1, size)
     rays_d_cam = torch.stack([x_coord, y_coord, torch.ones_like(x_coord)], dim=-1)
     rays_d_cam = F.normalize(rays_d_cam, dim=-1)
     return rays_d_cam # H, W, 3:xyz
@@ -264,11 +296,11 @@ def get_clopped_rays_d_cam(size, fov, bbox_list):
 
 
 
-def diff2estimation(x_cim, y_cim, z_diff, scale_diff, bbox_list, avg_z_map, fov, canonical_bbox_diagonal=1.0):
+def diff2estimation(obj_pos_cim, scale_diff, bbox_list, avg_z_map, fov, canonical_bbox_diagonal=1.0, with_cim2cam_info=False):
     # Get Bbox info.
-    bbox_list = bbox_list.to(x_cim)
+    bbox_list = bbox_list.to(obj_pos_cim)
     fov = torch.deg2rad(torch.tensor(fov, dtype=torch.float))
-    xy_cim = torch.stack([x_cim, y_cim], dim=-1)
+    xy_cim = obj_pos_cim[:, :2]
     bbox_hight = bbox_list[:, 0, 1] - bbox_list[:, 1, 1]
     bbox_center = bbox_list.mean(1)
 
@@ -279,6 +311,7 @@ def diff2estimation(x_cim, y_cim, z_diff, scale_diff, bbox_list, avg_z_map, fov,
     xy_cam = im2cam_scale[:, None] * xy_im
 
     # 正規化深度画像での物体中心zをカメラ座標系におけるzに変換
+    z_diff = obj_pos_cim[:, 2]
     z_cam = z_diff + avg_z_map
 
     # clopしたBBoxの対角
@@ -286,25 +319,52 @@ def diff2estimation(x_cim, y_cim, z_diff, scale_diff, bbox_list, avg_z_map, fov,
 
     # clopしたBBoxの対角とカノニカルBBoxの対角の比を変換
     scale = scale_diff * im2cam_scale[:, None] * cim2im_scale[:, None] * clopping_bbox_diagonal / canonical_bbox_diagonal
-    return torch.cat([xy_cam, z_cam[..., None]], dim=-1), scale, im2cam_scale
+    if with_cim2cam_info:
+        return torch.cat([xy_cam, z_cam[..., None]], dim=-1), scale, cim2im_scale, im2cam_scale, bbox_center
+    else:
+        return torch.cat([xy_cam, z_cam[..., None]], dim=-1), scale
 
 
 
 
 
-def diffcim2diffcam(diff_x_cim, diff_y_cim, diff_z_diff, bbox_list, avg_z_map, fov):
+def diffcim2diffcam(diff_pos_cim, cim2im_scale, im2cam_scale):
     # Get Bbox info.
-    bbox_list = bbox_list.to(diff_x_cim)
-    fov = torch.deg2rad(torch.tensor(fov, dtype=torch.float))
-    diff_xy_cim = torch.stack([diff_x_cim, diff_y_cim], dim=-1)
-    bbox_hight = bbox_list[:, 0, 1] - bbox_list[:, 1, 1]
+    diff_xy_cim = diff_pos_cim[:, :-1]
+    diff_z_diff = diff_pos_cim[:, -1]
 
     # clopした深度マップでの予測物体中心(x, y)をカメラ座標系における(x, y)に変換
-    cim2im_scale = (bbox_hight) / 2 # clopしたBBoxの高さ÷画像の高さ２
-    im2cam_scale = avg_z_map * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)
     diff_xy_im = cim2im_scale[:, None] * diff_xy_cim # 元画像における物体中心
     diff_xy_cam = im2cam_scale[:, None] * diff_xy_im
     return torch.cat([diff_xy_cam, diff_z_diff[:, None]], dim=-1)
+
+
+
+
+
+def get_canonical_map(
+        H, 
+        cam_pos_wrd, 
+        rays_d_cam, 
+        w2c, 
+        input_lat_vec, 
+        ddf, 
+        with_invdepth_map = False, 
+    ):
+    # Get rays inputs.
+    rays_d = torch.sum(rays_d_cam[..., None, :]*w2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
+    rays_o = cam_pos_wrd[:, None, None, :].expand(-1, H, H, -1)
+
+    # Estimating.
+    est_invdepth_map = ddf.forward(rays_o, rays_d, input_lat_vec)
+    est_mask = est_invdepth_map > .5
+    est_depth_map = torch.zeros_like(est_invdepth_map)
+    est_depth_map[est_mask] = 1. / est_invdepth_map[est_mask]
+
+    if with_invdepth_map:
+        return est_invdepth_map, est_mask, est_depth_map
+    else:
+        return est_mask, est_depth_map
 
 
 

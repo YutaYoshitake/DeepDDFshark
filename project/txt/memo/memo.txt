@@ -1328,3 +1328,27 @@ class df_resnet_encoder_with_gru(pl.LightningModule):
         diff_shape_code = self.fc_shape_code(shape_code_x)
         
         return diff_axis_green, diff_axis_red, diff_shape_code, x, h_1
+
+
+
+
+
+                                # # 現フレームまでの推論結果を平均し、それを元に次フレームを予測。
+                                # if self.use_weighted_average:
+                                #     pre_obj_pos_wrd = get_weighted_average(
+                                #                             target = torch.stack(frame_est_list['pos_wrd'], dim=1).detach(), 
+                                #                             ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                                #     pre_obj_scale = get_weighted_average(
+                                #                             target = torch.stack(frame_est_list['scale'], dim=1).detach(), 
+                                #                             ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                                #     pre_axis_green_wrd = get_weighted_average(
+                                #                             target = torch.stack(frame_est_list['axis_green'], dim=1).detach(), 
+                                #                             ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                                #     pre_axis_green_wrd = F.normalize(pre_axis_green_wrd, dim=1)
+                                #     pre_axis_red_wrd = get_weighted_average(
+                                #                             target = torch.stack(frame_est_list['axis_red'], dim=1).detach(), 
+                                #                             ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+                                #     pre_axis_red_wrd = F.normalize(pre_axis_red_wrd, dim=1)
+                                #     pre_shape_code = get_weighted_average(
+                                #                             target = torch.stack(frame_est_list['shape_code'], dim=1).detach(), 
+                                #                             ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())

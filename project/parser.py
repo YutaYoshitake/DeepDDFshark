@@ -50,10 +50,20 @@ def config_parser():
                         help='')
     parser.add_argument("--use_gru", type=bool, default=False,
                         help='')
+    parser.add_argument("--model_mode", type=str, 
+                        help='')
     parser.add_argument("--xxx", type=str,
+                        help='')
+    parser.add_argument("--re_wood", type=bool, default=False,
                         help='')
 
     # training options
+    parser.add_argument("--input_H", type=int, default=256, 
+                        help='')
+    parser.add_argument("--input_W", type=int, default=256, 
+                        help='')
+    parser.add_argument("--input_F", type=int, default=280, 
+                        help='')
     parser.add_argument("--H", type=int, default=256, 
                         help='')
     parser.add_argument("--W", type=int, default=256, 
@@ -76,7 +86,9 @@ def config_parser():
                         help='')
     parser.add_argument("--use_depth_error", type=bool, default=False,
                         help='')
-    parser.add_argument("--train_optim_num", type=int, default=5,
+    parser.add_argument("--train_optim_num", type=int, default=2,
+                        help='')
+    parser.add_argument("--frame_sequence_num", type=int, default=5,
                         help='')
 
     # ddf config.
