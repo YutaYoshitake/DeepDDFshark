@@ -122,3 +122,15 @@ tensorboard --logdir /home/yyoshitake/shark/works/DeepSDF/project/lightning_logs
 tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs --port 7788
 tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs --port 7788
 tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/ --port 7788
+cd works/DeepSDF/project/
+CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
+cd works/DeepSDF/project/
+CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --ex
+cd works/DeepSDF/project/
+CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
+ls
+nvidia-smi
+CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
+cd works/DeepSDF/project/
+CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
+CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re

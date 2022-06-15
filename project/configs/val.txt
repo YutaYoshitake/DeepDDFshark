@@ -13,14 +13,14 @@ frame_num = 7
 
 save_interval = 10
 N_epoch = 10000
-N_batch = 2
+N_batch = 50
 check_val_every_n_epoch = 10
 lr = 0.001
 
 
 
 
-ddf_model_path = /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/chair/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000004800.ckpt
+ddf_model_path = /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/chair/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000010000.ckpt
 ddf_instance_list_txt = ./instance_lists/instance_list.txt
 
 latent_size = 256

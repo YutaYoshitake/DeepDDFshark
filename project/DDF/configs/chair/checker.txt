@@ -1,0 +1,28 @@
+expname = chair/cat
+train_data_dir = /disks/local/yyoshitake/DeepSDF/train_data/
+N_views = 200
+val_data_dir = ./dataset/dugon/validation_set_multi35/
+N_val_views = 100
+
+N_instances = 3196
+instance_list_txt = ./instance_list.txt
+
+save_interval = 100
+N_epoch = 20000
+N_batch = 1
+
+sample_ratio = .2
+model_lrate = 0.0001
+vec_lrate = 0.0005
+
+latent_size = 256
+use_world_dir = True
+
+use_3d_code = True
+voxel_ch_num = 32
+voxel_sample_num = 32
+only_latent = False
+integrate_sampling_mode = 'CAT'
+
+use_normal_data = True
+use_normal_loss = True

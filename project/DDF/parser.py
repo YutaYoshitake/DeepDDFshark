@@ -172,5 +172,7 @@ def config_parser():
                         help='')
     parser.add_argument("--integrate_TransFormer_mode", type=str, default='tf_sum',
                         help='')
+    parser.add_argument("--same_instances", type=bool, default=False,
+                        help='')
                         
     return parser

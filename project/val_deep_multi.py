@@ -278,6 +278,7 @@ class test_TaR(pl.LightningModule):
                 # for i in range(batch_size*using_frame_num):
                 #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
                 # check_map_torch(torch.cat(check_map, dim=-1), f'tes_{optim_idx}.png')
+                # import pdb; pdb.set_trace()
 
                 # 最初のフレームの初期予測
                 if perform_init_est:
@@ -364,16 +365,16 @@ class test_TaR(pl.LightningModule):
                                             )
             depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1))
         
-            # #############################################
-            # # Check map.
-            # check_map = []
-            # gt = gt_distance_map
-            # est = est_distance_map
-            # for i in range(batch_size):
-            #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
-            # check_map_torch(torch.cat(check_map, dim=-1), f'canonical_map_{shape_i}.png')
-            # import pdb; pdb.set_trace()
-            # #############################################
+            #############################################
+            # Check map.
+            if shape_i == 3:
+                check_map = []
+                gt = gt_distance_map
+                est = est_distance_map
+                for i in range(batch_size):
+                    check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+                check_map_torch(torch.cat(check_map, dim=-1), f'canonical_map_w_d_{batch_idx}.png')
+            #############################################
 
         # Cal err.
         err_pos = torch.abs(est_obj_pos_wrd - gt_obj_pos_wrd[:, 0]).mean(dim=-1)
@@ -517,8 +518,8 @@ if __name__=='__main__':
     model.test_mode = 'average'
     model.start_frame_idx = 0
     model.frame_sequence_num = 5
-    model.half_lambda_max = 8
-    model.test_optim_num = 5
+    model.half_lambda_max = 3
+    model.test_optim_num = 3
     model.use_deep_optimizer = True
     model.use_adam_optimizer = not(model.use_deep_optimizer)
     model.use_weighted_average = False

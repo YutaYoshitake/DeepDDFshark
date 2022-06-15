@@ -54,17 +54,17 @@ if device=='cuda':
 
 
 
-ins = instanceSegmentation()
-pkl_path = 'pixellib_pkl/pointrend_resnet50.pkl'
-ins.load_model(pkl_path)
-image_path = 'pixellib_pkl/test_image/0000001-000000000000.jpg'
-segmentation_results, image = ins.segmentImage(image_path, show_bboxes=False)
-mask_area = [mask_i.sum() for mask_i in segmentation_results['masks'].transpose(2, 0, 1)]
+# ins = instanceSegmentation()
+# pkl_path = 'pixellib_pkl/pointrend_resnet50.pkl'
+# ins.load_model(pkl_path)
+# image_path = 'pixellib_pkl/test_image/0000001-000000000000.jpg'
+# segmentation_results, image = ins.segmentImage(image_path, show_bboxes=False)
+# mask_area = [mask_i.sum() for mask_i in segmentation_results['masks'].transpose(2, 0, 1)]
 
-max_idx = mask_area.index(max(mask_area))
-print(segmentation_results['class_names'][max_idx])
+# max_idx = mask_area.index(max(mask_area))
+# print(segmentation_results['class_names'][max_idx])
 
-import pdb; pdb.set_trace()
+# import pdb; pdb.set_trace()
 
 
 
@@ -96,19 +96,20 @@ import pdb; pdb.set_trace()
 # contours, hierachy = cv2.findContours(edge_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 
-# # check_map_np(edge_image)
-# # #描画
+# check_map_np(edge_image)
+# #描画
 
-# import cv2
-# import numpy as np
-# from often_use import *
+import cv2
+import numpy as np
+from often_use import *
 
-# depth_path = 'pixellib_pkl/test_image/0000001-000000000000.png'
-# org_image = cv2.imread(depth_path, -1)
-# org_image = (255*(org_image/org_image.max())).astype('uint8')
-# edge_image = cv2.Canny(org_image, 50, 150)
-# kernel = np.ones((3, 3), np.uint8)
-# edge_image = cv2.dilate(edge_image, kernel, iterations=2)
+depth_path = 'pixellib_pkl/test_image/0000001-000000000000.png'
+org_image = cv2.imread(depth_path, -1)
+org_image = (255*(org_image/org_image.max())).astype('uint8')
+edge_image = cv2.Canny(org_image, 50, 150)
+kernel = np.ones((3, 3), np.uint8)
+edge_image = cv2.dilate(edge_image, kernel, iterations=2)
+check_map_np(org_image, 'dep.png')
 
 # # 
 # segmentation_mask = segmentation_results['masks'][:, :, max_idx]

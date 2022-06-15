@@ -1,0 +1,18 @@
+time_log : 2022_06_12_15_54_29
+ckpt_path : ./lightning_logs/DeepTaR/chair/dfnet_first/checkpoints/0000001000.ckpt
+
+only_init_net : False
+test_mode : average
+start_frame_idx : 0
+frame_sequence_num : 5
+half_lambda_max : 5
+test_optim_num : 3
+use_deep_optimizer : True
+use_adam_optimizer : False
+use_weighted_average : False
+
+avg_err_pos : 0.01130101177841425
+avg_err_scale : 0.027263984084129333
+avg_err_axis_red : 2.70499324798584
+avg_err_axis_green : 2.0982723236083984
+avg_err_depth : 0.08560416847467422

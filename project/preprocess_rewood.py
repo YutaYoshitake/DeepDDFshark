@@ -74,74 +74,107 @@ ins.load_model(pkl_path)
 #########################
 #####  each frames  #####
 #########################
-depth_path_list = ['pixellib_pkl/test_image/0000001-000000000000.png']
-rgb_path_list = ['pixellib_pkl/test_image/0000001-000000000000.jpg']
-
-rgb_map_list = []
-mask_list = []
-depth_map_list = []
-camera_pos_list = []
-camera_rot_list = []
-obj_pos_list = []
-obj_rot_list = []
-obj_scale_list = []
+depth_path_list = sorted(glob.glob('/home/yyoshitake/works/DeepSDF/project/pixellib_pkl/test_image/*.png'))
+rgb_path_list = sorted(glob.glob('/home/yyoshitake/works/DeepSDF/project/pixellib_pkl/test_image/*.jpg'))
 
 for data_id, (depth_path, rgb_path) in enumerate(zip(depth_path_list, rgb_path_list)):
-    segmentation_results, image = ins.segmentImage(rgb_path, show_bboxes=False)
+    # segmentation_results, image = ins.segmentImage(rgb_path, show_bboxes=True, output_image_name=f"seg_{data_id}.jpg")
+    depth_map = cv2.imread(depth_path, -1)
+    import pdb; pdb.set_trace()
+    
+    
+    # segmentation_results, image = ins.segmentImage(rgb_path, show_bboxes=False)
 
-    # 最も面積の大きいマスクを取得
-    mask_area = [mask_i.sum() for mask_i in segmentation_results['masks'].transpose(2, 0, 1)]
-    max_idx = mask_area.index(max(mask_area))
+    # rgb_map_list = []
+    # mask_list = []
+    # depth_map_list = []
+    # camera_pos_list = []
+    # camera_rot_list = []
+    # obj_pos_list = []
+    # obj_rot_list = []
+    # obj_scale_list = []
 
-    if segmentation_results['class_names'][max_idx] == 'chair':
+    # for frame_id in range(1):
 
-        rgb_map = np.array(Image.open(rgb_path))[:, :, :3]
-        rgb_map_list.append(rgb_map)
-        mask = segmentation_results['masks'][:, :, max_idx]
-        mask_list.append(mask)
-        depth_map = cv2.imread(depth_path, -1)
-        depth_map = depth_map * np.linalg.norm(get_ray_direction_diff_HW(480, 640, 525), axis=-1)
-        depth_map_list.append(depth_map.astype(np.float32))
+    #     # 最も面積の大きいマスクを取得
+    #     mask_area = [mask_i.sum() for mask_i in segmentation_results['masks'].transpose(2, 0, 1)]
+    #     max_idx = mask_area.index(max(mask_area))
+        
+    #     if segmentation_results['class_names'][max_idx] == 'chair':
+    #         print(data_id)
 
-        # # Check Depth.
-        # rays_d = get_ray_direction_diff_HW(480, 640, 525)
-        # rays_d_norm = np.linalg.norm(rays_d, axis=-1)
-        # normalized_rays_d = rays_d / rays_d_norm[..., None]
-        # fig = plt.figure()
-        # ax = Axes3D(fig)
-        # ax.set_xlabel("X")
-        # ax.set_ylabel("Y")
-        # ax.set_zlabel("Z")
-        # point_1 = (depth_map[..., None] * normalized_rays_d).reshape(-1, 3) 
-        # ax.scatter(point_1[::3, 0], point_1[::3, 1], point_1[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
-        # ax.view_init(elev=0, azim=-90)
-        # fig.savefig("tes_1.png")
-        # plt.close()
-        # import pdb; pdb.set_trace()
+    #         rgb_map = np.array(Image.open(rgb_path))[:, :, :3]
+    #         rgb_map_list.append(rgb_map)
+    #         mask = segmentation_results['masks'][:, :, max_idx]
+    #         mask_list.append(mask)
+    #         depth_map = cv2.imread(depth_path, -1)
+    #         depth_map = depth_map * np.linalg.norm(get_ray_direction_diff_HW(480, 640, 525), axis=-1)
+    #         depth_map_list.append(depth_map.astype(np.float32))
+    #         print(depth_map.max(), depth_map.min())
 
-        camera_pos_list.append(0)
-        camera_rot_list.append(0)
-        obj_pos_list.append(0)
-        obj_rot_list.append(0)
-        obj_scale_list.append(0)
+    #         # # Check Depth.
+    #         # rays_d = get_ray_direction_diff_HW(480, 640, 525)
+    #         # rays_d_norm = np.linalg.norm(rays_d, axis=-1)
+    #         # normalized_rays_d = rays_d / rays_d_norm[..., None]
+    #         # fig = plt.figure()
+    #         # ax = Axes3D(fig)
+    #         # ax.set_xlabel("X")
+    #         # ax.set_ylabel("Y")
+    #         # ax.set_zlabel("Z")
+    #         # point_1 = (depth_map[..., None] * normalized_rays_d).reshape(-1, 3) 
+    #         # ax.scatter(point_1[::3, 0], point_1[::3, 1], point_1[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
+    #         # ax.view_init(elev=0, azim=-90)
+    #         # fig.savefig("tes_1.png")
+    #         # plt.close()
+    #         # import pdb; pdb.set_trace()
+    #         check_map_np(depth_map, f'{data_id}.png')
+    #         check_map_np(mask, f'{data_id}_mask.png')
+    #         # check_map()
 
-# Save.
-rgb_map_list = np.array(rgb_map_list)
-mask_list = np.array(mask_list)
-depth_map_list = np.array(depth_map_list)
-camera_pos_list = np.array(camera_pos_list)
-camera_rot_list = np.array(camera_rot_list)
-obj_pos_list = np.array(obj_pos_list)
-obj_rot_list = np.array(obj_rot_list)
-obj_scale_list = np.array(obj_scale_list)
-data_dict = {
-    'rgb_map':rgb_map_list, 
-    'mask':mask_list, 
-    'depth_map':depth_map_list, 
-    'camera_pos':camera_pos_list, 
-    'camera_rot':camera_rot_list, 
-    'obj_pos':obj_pos_list,
-    'obj_rot':obj_rot_list,
-    'obj_scale':obj_scale_list,
-    }
-pickle_dump(data_dict, 'test.pickle')
+    #         camera_pos_list.append(0)
+    #         camera_rot_list.append(0)
+    #         obj_pos_list.append(0)
+    #         obj_rot_list.append(0)
+    #         obj_scale_list.append(0)
+
+    # # Save.
+    # rgb_map_list = np.array(rgb_map_list)
+    # mask_list = np.array(mask_list)
+    # depth_map_list = np.array(depth_map_list)
+    # camera_pos_list = np.array(camera_pos_list)
+    # camera_rot_list = np.array(camera_rot_list)
+    # obj_pos_list = np.array(obj_pos_list)
+    # obj_rot_list = np.array(obj_rot_list)
+    # obj_scale_list = np.array(obj_scale_list)
+    # data_dict = {
+    #     'rgb_map':rgb_map_list, 
+    #     'mask':mask_list, 
+    #     'depth_map':depth_map_list, 
+    #     'camera_pos':camera_pos_list, 
+    #     'camera_rot':camera_rot_list, 
+    #     'obj_pos':obj_pos_list,
+    #     'obj_rot':obj_rot_list,
+    #     'obj_scale':obj_scale_list,
+    #     }
+    # name = depth_path.split('/')[-1].split('-')[0]
+    # pickle_dump(data_dict, f'{name}.pickle')
+
+
+
+# df = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_06_08_23_07_18/log_error.pickle')
+# adam = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_06_07_12_16_00/log_error.pickle')
+# import pdb; pdb.set_trace()
+# np.argmax(adam['red'])
+
+# tmp = adam['red']
+# for key in df.keys():
+#     x = df[key]
+#     y = adam[key]
+
+#     fig = pylab.figure()
+#     ax = fig.add_subplot(1,1,1)
+#     ax.set_title(f'{key}')
+#     ax.hist(x, bins=50)
+#     ax.hist(y, bins=50)
+#     fig.savefig(f"err_{key}.png")
+#     import pdb; pdb.set_trace()

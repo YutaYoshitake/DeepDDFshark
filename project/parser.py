@@ -88,7 +88,7 @@ def config_parser():
                         help='')
     parser.add_argument("--train_optim_num", type=int, default=2,
                         help='')
-    parser.add_argument("--frame_sequence_num", type=int, default=5,
+    parser.add_argument("--frame_sequence_num", type=int, default=3,
                         help='')
 
     # ddf config.

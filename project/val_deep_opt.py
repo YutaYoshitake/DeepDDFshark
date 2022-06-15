@@ -347,47 +347,52 @@ class test_TaR(pl.LightningModule):
 
 
 
-        ###########################################################################
-        #########################       check shape       #########################
-        ###########################################################################
 
-        # with torch.no_grad():
-        depth_error = []
-        for shape_i, (gt_distance_map, cam_pos_wrd, w2c) in enumerate(zip(canonical_distance_map.permute(1, 0, 2, 3), 
-                                                                            canonical_camera_pos.permute(1, 0, 2), 
-                                                                            canonical_camera_rot.permute(1, 0, 2, 3))):
-            # Get inp.
-            rays_d_cam = get_ray_direction(self.ddf_H, self.fov).expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
-            est_obj_axis_green_cam = torch.sum(est_axis_green_wrd[..., None, :]*w2c, -1)
-            est_obj_axis_red_cam = torch.sum(est_axis_red_wrd[..., None, :]*w2c, -1)
+        # ###########################################################################
+        # #########################       check shape       #########################
+        # ###########################################################################
 
-            # Get simulation results.
-            est_mask, est_distance_map = get_canonical_map(
-                                            H = self.ddf_H, 
-                                            cam_pos_wrd = cam_pos_wrd, 
-                                            rays_d_cam = rays_d_cam, 
-                                            w2c = w2c, 
-                                            input_lat_vec = est_shape_code, 
-                                            ddf = self.ddf, 
-                                            )
-            depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1))
+        # # with torch.no_grad():
+        # depth_error = []
+        # for shape_i, (gt_distance_map, cam_pos_wrd, w2c) in enumerate(zip(canonical_distance_map.permute(1, 0, 2, 3), 
+        #                                                                     canonical_camera_pos.permute(1, 0, 2), 
+        #                                                                     canonical_camera_rot.permute(1, 0, 2, 3))):
+        #     # Get inp.
+        #     rays_d_cam = get_ray_direction(self.ddf_H, self.fov).expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
+        #     est_obj_axis_green_cam = torch.sum(est_axis_green_wrd[..., None, :]*w2c, -1)
+        #     est_obj_axis_red_cam = torch.sum(est_axis_red_wrd[..., None, :]*w2c, -1)
+
+        #     # Get simulation results.
+        #     est_mask, est_distance_map = get_canonical_map(
+        #                                     H = self.ddf_H, 
+        #                                     cam_pos_wrd = cam_pos_wrd, 
+        #                                     rays_d_cam = rays_d_cam, 
+        #                                     w2c = w2c, 
+        #                                     input_lat_vec = est_shape_code, 
+        #                                     ddf = self.ddf, 
+        #                                     )
+        #     depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1))
             
-            # #############################################
-            # # Check map.
-            # check_map = []
-            # gt = gt_distance_map
-            # est = est_distance_map
-            # for i in range(batch_size):
-            #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
-            # check_map_torch(torch.cat(check_map, dim=-1), f'canonical_map_{shape_i}.png')
-            # #############################################
+        #     # #############################################
+        #     # # Check map.
+        #     # check_map = []
+        #     # gt = gt_distance_map
+        #     # est = est_distance_map
+        #     # for i in range(batch_size):
+        #     #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+        #     # check_map_torch(torch.cat(check_map, dim=-1), f'canonical_map_{shape_i}.png')
+        #     # #############################################
 
         # Cal err.
         err_pos = torch.abs(est_obj_pos_wrd - gt_obj_pos_wrd).mean(dim=-1)
         err_scale = torch.abs(1 - est_obj_scale[:, 0] / gt_obj_scale[:, 0])
         err_axis_red = torch.acos(self.cossim(est_axis_red_wrd, gt_obj_axis_red_wrd)) * 180 / torch.pi
         err_axis_green = torch.acos(self.cossim(est_axis_green_wrd, gt_obj_axis_green_wrd)) * 180 / torch.pi
-        depth_error = torch.stack(depth_error, dim=-1).mean(dim=-1)
+        # depth_error = torch.stack(depth_error, dim=-1).mean(dim=-1)
+
+        #############################################
+        depth_error = torch.stack(frame_est_list['error'], dim=1).mean(dim=-1)
+        #############################################
 
         return {'err_pos':err_pos.detach(), 
                 'err_scale': err_scale.detach(), 
@@ -476,9 +481,9 @@ if __name__=='__main__':
     # if args.xxx=='a':
     args.use_gru = False
     df_net = TaR(args, ddf)
-    checkpoint_path = './lightning_logs/DeepTaR/chair/dfnet_first/checkpoints/0000001000.ckpt'
+    # checkpoint_path = './lightning_logs/DeepTaR/chair/dfnet_first/checkpoints/0000001000.ckpt'
     # checkpoint_path = './lightning_logs/DeepTaR/chair/initnet_first/checkpoints/0000000960.ckpt'
-    # checkpoint_path = './lightning_logs/DeepTaR/chair/dfnet_wodepth_first/checkpoints/0000001000.ckpt'
+    checkpoint_path = './lightning_logs/DeepTaR/chair/dfnet_wodepth_first/checkpoints/0000001000.ckpt'
     df_net = df_net.load_from_checkpoint(
         checkpoint_path=checkpoint_path, 
         args=args, 
@@ -504,7 +509,7 @@ if __name__=='__main__':
     model.frame_sequence_num = 5
     model.half_lambda_max = 3
     if model.test_mode == 'average':
-        model.test_optim_num = [5, 5, 5, 5, 5] # [3, 3, 3, 3, 3]
+        model.test_optim_num = [3, 3, 3, 3, 3] # [5, 5, 5, 5, 5]
     if model.test_mode == 'sequence':
         model.test_optim_num = [3, 3, 3, 3, 3]
     if model.only_init_net:
@@ -512,7 +517,7 @@ if __name__=='__main__':
         model.test_optim_num = [1, 1, 1, 1, 1]
     model.use_deep_optimizer = True
     model.use_adam_optimizer = not(model.use_deep_optimizer)
-    model.use_weighted_average = False
+    model.use_weighted_average = True
 
     # Save logs.
     import datetime

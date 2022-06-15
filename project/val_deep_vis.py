@@ -237,12 +237,13 @@ class test_TaR(pl.LightningModule):
                                                         )
                     error = torch.abs(est_normalized_depth_map - normalized_depth_map).mean(dim=-1).mean(dim=-1)
 
-                    # check_map = []
-                    # gt = normalized_depth_map
-                    # est = est_normalized_depth_map
-                    # for i in range(batch_size):
-                    #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
-                    # check_map_torch(torch.cat(check_map, dim=-1), f'tes_frame{frame_sequence_idx}_opt{optim_idx}.png')
+                    check_map = []
+                    gt = normalized_depth_map
+                    est = est_normalized_depth_map
+                    for i in range(batch_size):
+                        check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+                    check_map_torch(torch.cat(check_map, dim=-1), f'tes_frame{frame_sequence_idx}_opt{optim_idx}.png')
+                    import pdb; pdb.set_trace()
 
                     # 最初のフレームの初期予測
                     if perform_init_est:

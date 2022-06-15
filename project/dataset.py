@@ -71,13 +71,27 @@ class TaR_dataset(data.Dataset):
                         os.path.join(data_dir, line.rstrip('\n'))
                         )
                 elif self.mode=='val':
-                    for view_ind in range(self.N_views//3):
+                    for view_ind in range(self.N_views):
                         self.instance_path_list.append(
                             os.path.join(data_dir, line.rstrip('\n'), f'{str(view_ind+1).zfill(5)}.pickle')
                             )
-                    if self.re_wood:
-                        self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/pixellib_pkl/test_image/test.pickle']
-                    # self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/e31c6c24a8d80ac35692a9640d6947fc/00005.pickle']
+                    # self.instance_path_list = [
+                    #     '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/d2c465e85d2e8f1fcea003eff0268278/00001.pickle', 
+                    #     '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/e84b5bbe91e0636cb21bc3cf138f79e/00003.pickle', 
+                    #     '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/cc811f0c28012f493c528a26a44a30b6/00003.pickle', 
+                    #     '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/fc818d6fe03f098fd6f4cef762589739/00005.pickle', 
+                    #     '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/e6b77b99ea085896c862eec8232fff1e/00001.pickle', 
+                    #     ]
+                    # if self.re_wood:
+                    #     self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/0000001.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0000053.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0000150.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0000172.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0000271.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0000338.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0001785.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0002228.pickle', ]
+                    # # self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/e31c6c24a8d80ac35692a9640d6947fc/00005.pickle']
                     # self.instance_path_list = self.instance_path_list[:2]
 
     def __getitem__(self, index):
@@ -114,13 +128,11 @@ class TaR_dataset(data.Dataset):
                 canonical_camera_pos = canonical_data_dict['camera_pos']
                 canonical_camera_rot = canonical_data_dict['camera_rot']
             else:
-                canonical_path = '/'.join(splitted_path_list[:-3]) + '/canoncal/' + splitted_path_list[-2] + '.pickle'
+                canonical_path = '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/canoncal/cbc47018135fc1b1462977c6d3c24550.pickle'
                 canonical_data_dict = pickle_load(canonical_path)
-                canonical_path = 0
-                canonical_data_dict = 0
                 canonical_distance_map = 0
-                canonical_camera_pos = 0
-                canonical_camera_rot = 0
+                canonical_camera_pos = canonical_data_dict['camera_pos']
+                canonical_camera_rot = canonical_data_dict['camera_rot']
         
         if self.mode=='train':
             return frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_pos, frame_obj_rot, frame_obj_scale, instance_id

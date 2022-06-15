@@ -119,8 +119,8 @@ class test_TaR(pl.LightningModule):
             clopped_mask, clopped_distance_map, bbox_list = clopping_distance_map(
                                                                 raw_mask, raw_distance_map, self.image_coord, self.input_H, self.input_W, self.ddf_H
                                                                 )
-            gt_invdistance_map = torch.zeros_like(clopped_distance_map)
-            gt_invdistance_map[clopped_mask] = 1. / clopped_distance_map[clopped_mask]
+            raw_invdistance_map = torch.zeros_like(raw_distance_map)
+            raw_invdistance_map[raw_mask] = 1. / raw_distance_map[raw_mask]
 
             # Get normalized depth map.
             rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot.device)
@@ -165,14 +165,6 @@ class test_TaR(pl.LightningModule):
                 shape_code_optim.requires_grad = True
                 params = [obj_pos_wrd_optim, obj_scale_optim, axis_green_optim, axis_red_optim, shape_code_optim]
                 optimizer = torch.optim.Adam(params, self.adam_step_ratio)
-                # #########################
-                # check_map = []
-                # gt = normalized_depth_map
-                # est = est_normalized_depth_map
-                # for i in range(batch_size):
-                #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
-                # check_map_torch(torch.cat(check_map, dim=-1), f'tes_frame{frame_sequence_idx}_optstart.png')
-                # #########################
 
                 for grad_optim_idx in range(self.grad_optim_max):
                     optimizer.zero_grad()
@@ -191,16 +183,17 @@ class test_TaR(pl.LightningModule):
                                                                             ddf = self.ddf, 
                                                                             with_invdistance_map = True, 
                                                                             )
-                    energy = self.l1(est_invdistance_map, gt_invdistance_map.detach())
+                    energy = self.l1(est_invdistance_map, raw_invdistance_map.detach())
                     energy.backward()
                     optimizer.step()
 
                     # check_map = []
-                    # gt = normalized_depth_map
-                    # est = est_normalized_depth_map
+                    # gt = raw_invdistance_map
+                    # est = est_invdistance_map
                     # for i in range(batch_size):
                     #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
                     # check_map_torch(torch.cat(check_map, dim=-1), f'tes_frame{frame_sequence_idx}_optend.png')
+                    # import pdb; pdb.set_trace()
                     # # if grad_optim_idx%10==0:
                     # #     print(f'{grad_optim_idx} : {energy.item()}')
 
@@ -412,7 +405,7 @@ if __name__=='__main__':
     model.use_deep_optimizer = False
     model.use_adam_optimizer = True
     model.use_weighted_average = False
-    model.grad_optim_max = 80
+    model.grad_optim_max = 100
 
     # Save logs.
     import datetime

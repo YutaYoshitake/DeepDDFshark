@@ -21,7 +21,7 @@ model_mode = only_init
 
 
 
-ddf_model_path = /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/chair/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000004800.ckpt
+ddf_model_path = /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/chair/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000010000.ckpt
 ddf_instance_list_txt = ./instance_lists/instance_list.txt
 
 latent_size = 256
