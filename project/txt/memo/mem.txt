@@ -1,0 +1,136 @@
+
+                    ##################################################
+                    ##################################################
+                    ##################################################
+                    H = clopped_H
+                    obj_pos_wrd = est_obj_pos_wrd
+                    axis_green = est_obj_axis_green_cam
+                    axis_red = est_obj_axis_red_cam
+                    obj_scale = est_obj_scale[:, 0]
+                    input_lat_vec = est_shape_code
+                    cam_pos_wrd = cam_pos_wrd
+                    rays_d_cam = sampled_rays_d_cam
+                    w2c = w2c.detach()
+                    obj_pos_cam = 'not_given'
+                    ddf = self.ddf
+                    with_invdistance_map = True
+
+                    # Get rotation matrix.
+                    axis_blue = torch.cross(axis_red, axis_green, dim=-1)
+                    axis_blue = F.normalize(axis_blue, dim=-1)
+                    orthogonal_axis_red = torch.cross(axis_green, axis_blue, dim=-1)
+                    o2c = torch.stack([orthogonal_axis_red, axis_green, axis_blue], dim=-1)
+
+                    # Get rays direction.
+                    rays_d_obj = torch.sum(rays_d_cam[..., None, :]*o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
+
+                    # Get rays origin.
+                    if obj_pos_cam == 'not_given':
+                        obj_pos_cam = torch.sum((obj_pos_wrd - cam_pos_wrd)[..., None, :]*w2c, dim=-1)
+                    cam_pos_obj = - torch.sum(obj_pos_cam[..., None, :]*o2c.permute(0, 2, 1), dim=-1) / obj_scale[:, None]
+                    rays_o_obj = cam_pos_obj[:, None, None, :].expand(-1, H, H, -1)
+
+                    # Get rays inputs.
+                    rays_d = rays_d_obj
+                    rays_o = rays_o_obj
+
+                    # Estimating.
+                    # est_invdistance_map_obj_scale, _ = ddf.forward_from_far(rays_o, rays_d, input_lat_vec)
+                    ##################################################
+                    ##################################################
+                    ##################################################
+                    origin = self.ddf.origin.to(rays_o)
+                    radius = self.ddf.radius
+                    D = torch.sum(rays_d * (rays_o - origin), dim=-1)**2 - (torch.sum((rays_o - origin)**2, dim=-1) - radius**2)
+                    negative_D_mask = D < 1e-12
+                    d_dot_o = torch.sum(rays_d * (rays_o - origin), dim=-1)
+                    D[negative_D_mask] = 1e-12
+                    sqrt_D = torch.sqrt(D)
+                    t_minus = - d_dot_o - sqrt_D
+                    t_plus = - d_dot_o + sqrt_D
+                    t_mask = torch.abs(t_plus) > torch.abs(t_minus)
+                    t = t_plus
+                    t[t_mask] = t_minus[t_mask]
+                    intersect_rays_o = rays_o + t_plus[..., None] * rays_d
+                    intersect_rays_o[t_mask] = (rays_o + t_minus[..., None] * rays_d)[t_mask]
+                    est_invdepth_rawmap = self.ddf.forward(intersect_rays_o, rays_d, input_lat_vec)
+                    est_invdistance_map_obj_scale = est_invdepth_rawmap / (1. + est_invdepth_rawmap * t.to(est_invdepth_rawmap))
+                    est_invdistance_map_obj_scale[negative_D_mask] = 0
+                    est_invdistance_map_for_deptherr = est_invdistance_map_obj_scale / obj_scale[:, None, None]
+                    ##################################################
+                    ##################################################
+                    ##################################################
+
+
+
+
+
+
+
+                with torch.no_grad():
+                    rays_d_cam = self.rays_d_cam.expand(2, -1, -1, -1).to(frame_camera_rot.device)
+                    est_mask, est_distance_map = render_distance_map_from_axis(
+                                                    H = self.ddf_H, 
+                                                    cam_pos_wrd = cam_pos_wrd[:2], 
+                                                    obj_pos_wrd = est_obj_pos_wrd[:2], 
+                                                    axis_green = est_obj_axis_green_cam[:2], 
+                                                    axis_red = est_obj_axis_red_cam[:2], 
+                                                    obj_scale = est_obj_scale[:2][:, 0], 
+                                                    input_lat_vec = gt_shape_code[:2], 
+                                                    rays_d_cam = rays_d_cam,  
+                                                    w2c = w2c[:2].detach(), 
+                                                    ddf = self.ddf, 
+                                                    with_invdistance_map = False, 
+                                                    )
+                    clopped_est_mask, clopped_est_distance_map, _ = clopping_distance_map(
+                                                                        est_mask, est_distance_map, self.image_coord, self.input_H, self.input_W, self.ddf_H, bbox_list[:2]
+                                                                        )
+
+                    # Plotを作成
+                    gt_obj_pos_cam = torch.sum((gt_obj_pos_wrd-cam_pos_wrd)[..., None, :]*w2c, dim=-1)
+                    fig = pylab.figure(figsize=(20, 8))
+                    # BBoxをピクセル座標へ
+                    bbox_list = 128 * (bbox_list.to('cpu').detach().numpy().copy() + 1)
+                    bbox_center = bbox_list.mean(1)
+                    obj_pos_cam = 128 * (gt_obj_pos_cam / im2cam_scale[:, None] + 1).to('cpu').detach().numpy().copy()
+                    obj_pos_cam_ = 128 * (est_obj_pos_cam / im2cam_scale[:, None] + 1).to('cpu').detach().numpy().copy()
+                    # bbox_center = 128 * (bbox_center.to('cpu').detach().numpy().copy() + 1)
+                    bbox = np.concatenate([bbox_list, bbox_center[:, None, :], obj_pos_cam[:, None, :2], obj_pos_cam_[:, None, :2]], axis=1)
+                    # bbox = np.concatenate([bbox_list, obj_pos_cam[:, None, :2]], axis=1)
+                    bbox_1 = bbox[0]
+                    bbox_2 = bbox[1]
+                    # 元画像
+                    ax_1 = fig.add_subplot(2, 5, 1)
+                    ax_1.scatter(bbox_1[:, 0], bbox_1[:, 1], c='red', s=20)
+                    ax_1.imshow(raw_distance_map[0].to('cpu').detach().numpy().copy())
+                    ax_2 = fig.add_subplot(2, 5, 6)
+                    ax_2.scatter(bbox_2[:, 0], bbox_2[:, 1], c='red', s=20)
+                    ax_2.imshow(raw_distance_map[1].to('cpu').detach().numpy().copy())
+                    # クロップした観測画像
+                    ax_3 = fig.add_subplot(2, 5, 2)
+                    ax_3.imshow(clopped_distance_map[0].to('cpu').detach().numpy().copy())
+                    ax_4 = fig.add_subplot(2, 5, 7)
+                    ax_4.imshow(clopped_distance_map[1].to('cpu').detach().numpy().copy())
+                    # 元画像の予測
+                    ax_5 = fig.add_subplot(2, 5, 3)
+                    ax_5.scatter(bbox_1[:, 0], bbox_1[:, 1], c='red', s=20)
+                    ax_5.imshow(est_distance_map[0].to('cpu').detach().numpy().copy())
+                    ax_6 = fig.add_subplot(2, 5, 8)
+                    ax_6.scatter(bbox_2[:, 0], bbox_2[:, 1], c='red', s=20)
+                    ax_6.imshow(est_distance_map[1].to('cpu').detach().numpy().copy())
+                    # クロップした画像の予測
+                    ax_7 = fig.add_subplot(2, 5, 4)
+                    ax_7.imshow(clopped_est_distance_map[0].to('cpu').detach().numpy().copy())
+                    ax_8 = fig.add_subplot(2, 5, 9)
+                    ax_8.imshow(clopped_est_distance_map[1].to('cpu').detach().numpy().copy())
+                    # 誤差
+                    clopped_error = torch.abs(clopped_distance_map[:2] - clopped_est_distance_map)
+                    ax_9 = fig.add_subplot(2, 5, 5)
+                    ax_9.imshow(clopped_error[0].to('cpu').detach().numpy().copy())
+                    ax_10 = fig.add_subplot(2, 5, 10)
+                    ax_10.imshow(clopped_error[1].to('cpu').detach().numpy().copy())
+                    # 画像を保存
+                    fig.savefig(f"tes.png", dpi=300)
+                    # fig.savefig(f"tes.png", dpi=300)
+                    pylab.close()
+                    import pdb; pdb.set_trace()

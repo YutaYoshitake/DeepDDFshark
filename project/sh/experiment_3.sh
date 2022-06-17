@@ -1,3 +1,1 @@
-CUDA_VISIBLE_DEVICES=4 python val_deep_opt_copy_6.py --config=configs/val.txt
-CUDA_VISIBLE_DEVICES=4 python val_deep_opt_copy_7.py --config=configs/val.txt
-CUDA_VISIBLE_DEVICES=4 python val_deep_opt_copy_8.py --config=configs/val.txt
+CUDA_VISIBLE_DEVICES=0 python val_adam_multi.py --config=configs/initnet.txt --N_batch=2 --val_instance_list_txt=instance_lists/kmean/top_256_kmeans_list_1.txt --expname=DeepTaR/chair/val --model_ckpt_path=lightning_logs/DeepTaR/chair/initnet_list0_date0616/checkpoints/0000001500.ckpt

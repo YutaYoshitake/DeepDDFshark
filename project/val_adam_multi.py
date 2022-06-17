@@ -29,7 +29,6 @@ from ResNet import *
 from parser import *
 from dataset import *
 from often_use import *
-from train_initnet import *
 from train_dfnet import *
 from DDF.train_pl import DDF
 
@@ -66,24 +65,13 @@ class test_TaR(pl.LightningModule):
         self.ddf_H = target_model.ddf_H
         self.lr = target_model.lr
         self.rays_d_cam = target_model.rays_d_cam
-        self.save_interval = target_model.save_interval
         self.model_params_dtype = target_model.model_params_dtype
         self.model_device = target_model.model_device
-        self.train_optim_num = target_model.train_optim_num
-        self.use_gru = target_model.use_gru
-        self.frame_num = target_model.frame_num
         self.use_depth_error = target_model.use_depth_error
-        self.use_weighted_average = target_model.use_weighted_average
         self.start_frame_idx = target_model.start_frame_idx
         self.frame_sequence_num = target_model.frame_sequence_num
-        self.half_lambda_max = target_model.half_lambda_max
-        self.test_optim_num = target_model.test_optim_num
-        self.test_mode = target_model.test_mode
         self.test_log_path = target_model.test_log_path
-        self.only_init_net = target_model.only_init_net
-        self.use_deep_optimizer = target_model.use_deep_optimizer
-        self.use_adam_optimizer = target_model.use_adam_optimizer
-        self.adam_step_ratio = 0.01
+        self.adam_step_ratio = target_model.adam_step_ratio
         self.grad_optim_max = target_model.grad_optim_max
         self.shape_code_reg = target_model.shape_code_reg
 
@@ -113,8 +101,6 @@ class test_TaR(pl.LightningModule):
         ###########################################################################
         #########################           EST           #########################
         ###########################################################################
-        frame_est_list = {'pos_wrd':[], 'axis_green':[], 'axis_red':[], 'scale':[], 'shape_code':[]}
-        # with torch.no_grad():
         # Set frame.
         start_frame_idx = self.start_frame_idx
         end_frame_idx = self.start_frame_idx + self.frame_sequence_num
@@ -147,7 +133,7 @@ class test_TaR(pl.LightningModule):
         gt_obj_pos_wrd = frame_obj_pos[:, start_frame_idx:end_frame_idx]
         gt_obj_scale = frame_obj_scale[:, start_frame_idx:end_frame_idx][:, :, None]
 
-        # initial estimation..
+        # initial estimation.
         bbox_info = torch.cat([bbox_list.reshape(-1, 4), bbox_list.mean(1), avg_depth_map.to('cpu')[:, None]], dim=-1)
         inp = torch.stack([normalized_depth_map, clopped_mask], 1)
         est_obj_pos_cim, est_obj_axis_green_cam, est_obj_axis_red_cam, est_scale_cim, est_shape_code, pre_hidden_state = self.init_net(inp, bbox_info.to(inp))
@@ -185,34 +171,35 @@ class test_TaR(pl.LightningModule):
             shape_code_frame = shape_code_optim[:, None, :].expand(-1, using_frame_num, self.ddf.latent_size).reshape(-1, self.ddf.latent_size)
             
             rays_d_cam = self.rays_d_cam.expand(batch_size*using_frame_num, -1, -1, -1).to(frame_camera_rot.device)
-            est_invdistance_map, est_mask, est_distance_map = render_distance_map_from_axis(
-                                                                    H = self.ddf_H, 
-                                                                    obj_pos_wrd = pos_wrd_frame, 
-                                                                    obj_scale = scale_frame[:, 0], 
-                                                                    axis_green = axis_green_frame, 
-                                                                    axis_red = axis_red_frame, 
-                                                                    cam_pos_wrd = cam_pos_wrd.detach(), 
-                                                                    rays_d_cam = rays_d_cam.detach(),  
-                                                                    w2c = w2c.detach(), 
-                                                                    input_lat_vec = shape_code_frame, 
-                                                                    ddf = self.ddf, 
-                                                                    with_invdistance_map = True, 
-                                                                    )
+            est_invdistance_map, est_mask = render_distance_map_from_axis(
+                                                    H = self.ddf_H, 
+                                                    obj_pos_wrd = pos_wrd_frame, 
+                                                    obj_scale = scale_frame[:, 0], 
+                                                    axis_green = axis_green_frame, 
+                                                    axis_red = axis_red_frame, 
+                                                    cam_pos_wrd = cam_pos_wrd.detach(), 
+                                                    rays_d_cam = rays_d_cam.detach(),  
+                                                    w2c = w2c.detach(), 
+                                                    input_lat_vec = shape_code_frame, 
+                                                    ddf = self.ddf, 
+                                                    with_invdistance_map = True, 
+                                                    )
             energy = self.l1(est_invdistance_map, raw_invdistance_map.detach()) # + self.shape_code_reg * torch.norm(shape_code_optim) # 0.5?
             energy.backward()
             optimizer.step()
 
-            # # if grad_optim_idx%10==0:
-            # check_map = []
-            # gt = raw_invdistance_map
-            # est = est_invdistance_map
-            # for i in range(batch_size*using_frame_num):
-            #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
-            # # check_map_torch(torch.cat(check_map, dim=-1), f'opt_{grad_optim_idx}.png')
-            # check_map_torch(torch.cat(check_map, dim=-1), f'tes.png')
-            # import pdb; pdb.set_trace()
-            # # # if grad_optim_idx%10==0:
             # ###################################
+            # # # if grad_optim_idx%10==0:
+            # # check_map = []
+            # # gt = raw_invdistance_map
+            # # est = est_invdistance_map
+            # # for i in range(batch_size*using_frame_num):
+            # #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+            # # # check_map_torch(torch.cat(check_map, dim=-1), f'opt_{grad_optim_idx}.png')
+            # # check_map_torch(torch.cat(check_map, dim=-1), f'tes.png')
+            # # import pdb; pdb.set_trace()
+            # ###################################
+            # # f grad_optim_idx%10==0:
             # if grad_optim_idx in [0, 10, 30, 60, 100]:
             #     if grad_optim_idx == 0:
             #         check_map = []
@@ -227,26 +214,14 @@ class test_TaR(pl.LightningModule):
             #     check_map = torch.cat(check_map, dim=0)
             #     list_for_vis.append(check_map)
             # ###################################
-            print(f'optim_idx : {grad_optim_idx}, energy : {energy.item()}')
+            # print(f'optim_idx : {grad_optim_idx}, energy : {energy.item()}')
 
         torch.set_grad_enabled(False)
-        pre_obj_pos_wrd = obj_pos_wrd_optim.detach()
-        pre_obj_scale = obj_scale_optim.detach()
-        pre_obj_axis_green_wrd = F.normalize(obj_axis_green_wrd_optim, dim=1).detach()
-        pre_obj_axis_red_wrd = F.normalize(obj_axis_red_wrd_optim, dim=1).detach()
-        pre_shape_code = shape_code_optim.detach()
-
-        frame_est_list['pos_wrd'].append(pre_obj_pos_wrd.clone())
-        frame_est_list['scale'].append(pre_obj_scale.clone())
-        frame_est_list['axis_green'].append(pre_obj_axis_green_wrd.clone())
-        frame_est_list['axis_red'].append(pre_obj_axis_red_wrd.clone())
-        frame_est_list['shape_code'].append(pre_shape_code.clone())
-
-        est_obj_pos_wrd = frame_est_list['pos_wrd'][0]
-        est_obj_scale = frame_est_list['scale'][0]
-        est_obj_axis_green_wrd = frame_est_list['axis_green'][0]
-        est_obj_axis_red_wrd = frame_est_list['axis_red'][0]
-        est_shape_code = frame_est_list['shape_code'][0]
+        est_obj_pos_wrd = obj_pos_wrd_optim.detach().clone()
+        est_obj_scale = obj_scale_optim.detach().clone()
+        est_obj_axis_green_wrd = F.normalize(obj_axis_green_wrd_optim, dim=1).detach().clone()
+        est_obj_axis_red_wrd = F.normalize(obj_axis_red_wrd_optim, dim=1).detach().clone()
+        est_shape_code = shape_code_optim.detach().clone()
 
         ###########################################################################
         #########################       check shape       #########################
@@ -255,9 +230,7 @@ class test_TaR(pl.LightningModule):
         for shape_i, (gt_distance_map, cam_pos_wrd, w2c) in enumerate(zip(canonical_distance_map.permute(1, 0, 2, 3), 
                                                                             canonical_camera_pos.permute(1, 0, 2), 
                                                                             canonical_camera_rot.permute(1, 0, 2, 3))):
-            
-            # if shape_i==3:
-            
+
             # Get inp.
             rays_d_cam = get_ray_direction(self.ddf_H, self.fov).expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
             est_obj_axis_green_cam = torch.sum(est_obj_axis_green_wrd[..., None, :]*w2c, -1)
@@ -275,19 +248,24 @@ class test_TaR(pl.LightningModule):
             depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1))
         
             # #############################################
-            # check_map = []
-            # check_map_tensor = torch.abs(gt_distance_map-est_distance_map)
-            # for i in range(batch_size*using_frame_num):
-            #     if i == 0:
-            #         check_map.append(check_map_tensor[0])
-            #     else:
-            #         check_map.append(torch.zeros_like(check_map_tensor[0]))
-            # check_map = torch.cat(check_map, dim=0)
-            # list_for_vis.append(check_map)
-            # list_for_vis = torch.cat(list_for_vis, dim=-1)
-            # name = path[0].split('/')[0]
-            # check_map_torch(list_for_vis, f'sample_images/{name}.png')
-            # # #############################################
+            # if shape_i==3:
+            #     check_map = []
+            #     # check_map_tensor = torch.abs(gt_distance_map-est_distance_map)
+            #     for i in range(batch_size*using_frame_num):
+            #         if i == 0:
+            #             check_map.append(gt_distance_map[0])
+            #         elif i == 1:
+            #             check_map.append(est_distance_map[0])
+            #         else:
+            #             check_map.append(torch.zeros_like(check_map_tensor[0]))
+            #     check_map = torch.cat(check_map, dim=0)
+            #     list_for_vis.append(check_map)
+            #     list_for_vis = torch.cat(list_for_vis, dim=-1)
+            #     name = path[0].split('/')[0]
+            #     check_map_torch(list_for_vis, f'{name}.png')
+            #     # check_map_torch(list_for_vis, f'sample_images/{name}.png')
+            #     import pdb; pdb.set_trace()
+            # #############################################
             # # # Check map.
             # # check_map = []
             # # gt = gt_distance_map
@@ -368,7 +346,6 @@ class test_TaR(pl.LightningModule):
 
 
 
-
     def configure_optimizers(self):
         optimizer = torch.optim.Adam([
             {"params": self.init_net.parameters()},
@@ -385,6 +362,9 @@ if __name__=='__main__':
     # Get args
     args = get_args()
     args.gpu_num = torch.cuda.device_count() # log used gpu num.
+    args.val_data_dir='/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64'
+    args.val_N_views = 32
+    args.use_gru = False
 
     # Create dataloader.
     val_dataset = TaR_dataset(
@@ -408,30 +388,24 @@ if __name__=='__main__':
     ddf.eval()
 
     # Create dfnet.
-    args.use_gru = False
     df_net = TaR(args, ddf)
-    # checkpoint_path = './lightning_logs/DeepTaR/chair/initnet_first/checkpoints/0000000960.ckpt'
-    checkpoint_path = './lightning_logs/DeepTaR/chair/dfnet_first/checkpoints/0000001000.ckpt'
     df_net = df_net.load_from_checkpoint(
-        checkpoint_path=checkpoint_path, 
+        checkpoint_path=args.model_ckpt_path, 
         args=args, 
         ddf=ddf
         )
     df_net.eval()
-    df_net.only_init_net = False
 
     # Setting model.
     model = df_net
     model.test_mode = 'average'
+    model.only_init_net = False
     model.start_frame_idx = 0
-    model.frame_sequence_num = 5
-    model.half_lambda_max = 3
-    model.test_optim_num = [2, 2, 2, 2, 2] # [3, 3, 3, 3, 3]
-    model.use_deep_optimizer = False
-    model.use_adam_optimizer = True
-    model.use_weighted_average = False
-    model.grad_optim_max = 100
+    model.frame_sequence_num = 3
+    model.test_optim_num = 2
+    model.grad_optim_max = 50
     model.shape_code_reg = 0.0
+    model.adam_step_ratio = 0.01
 
     # Save logs.
     import datetime
@@ -441,20 +415,19 @@ if __name__=='__main__':
     os.mkdir('./txt/experiments/log/' + time_log)
     file_name = './txt/experiments/log/' + time_log + '/log.txt'
     model.test_log_path = file_name
-    ckpt_path = checkpoint_path
+    ckpt_path = args.model_ckpt_path
     with open(file_name, 'a') as file:
+        file.write('script_name : ' + 'val adam multi' + '\n')
         file.write('time_log : ' + time_log + '\n')
         file.write('ckpt_path : ' + ckpt_path + '\n')
+        file.write('val_N_views : ' + str(args.val_N_views) + '\n')
+        file.write('val_instance_list_txt : ' + str(args.val_instance_list_txt) + '\n')
         file.write('\n')
-        file.write('only_init_net : ' + str(model.only_init_net) + '\n')
-        file.write('test_mode : ' + str(model.test_mode) + '\n')
         file.write('start_frame_idx : ' + str(model.start_frame_idx) + '\n')
         file.write('frame_sequence_num : ' + str(model.frame_sequence_num) + '\n')
-        file.write('half_lambda_max : ' + str(model.half_lambda_max) + '\n')
-        file.write('test_optim_num : ' + str(model.test_optim_num) + '\n')
-        file.write('use_deep_optimizer : ' + str(model.use_deep_optimizer) + '\n')
-        file.write('use_adam_optimizer : ' + str(model.use_adam_optimizer) + '\n')
-        file.write('use_weighted_average : ' + str(model.use_weighted_average) + '\n')
+        file.write('grad_optim_max : ' + str(model.grad_optim_max) + '\n')
+        file.write('shape_code_reg : ' + str(model.shape_code_reg) + '\n')
+        file.write('adam_step_ratio : ' + str(model.adam_step_ratio) + '\n')
         file.write('\n')
 
     # Test model.

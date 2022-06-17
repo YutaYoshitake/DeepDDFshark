@@ -45,6 +45,8 @@ DEBUG = False
 
 
 if __name__=='__main__':
+    TOP = 256
+
     # Get args
     args = get_args()
     args.gpu_num = torch.cuda.device_count() # log used gpu num.
@@ -62,39 +64,31 @@ if __name__=='__main__':
     lat_vecs = torch.cat(lat_vecs, dim=0)
     lat_vecs = lat_vecs.to('cpu').detach().numpy().copy()
 
-    #########################
-    instance_list = pickle_load('instance_list.pickle')
-    outliers_list = pickle_load('outliers_list.pickle')
-    refined_instance_mask = np.array([not ins in outliers_list for ins in instance_list])
-    lat_vecs = lat_vecs[refined_instance_mask]
-    instance_list = instance_list[refined_instance_mask]
-    #########################
+    instance_list = pickle_load('instance_list/instance_list.pickle').tolist()
+    kmean_lists = [
+                            '/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/kmean/kmeans_list_0.txt', 
+                            '/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/kmean/kmeans_list_1.txt', 
+                            '/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/kmean/kmeans_list_2.txt', 
+                            '/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/kmean/kmeans_list_3.txt', 
+                            '/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/kmean/kmeans_list_4.txt', 
+                        ]
 
-    n_clusters = 5
-    random_state = None
-    pca = PCA()
-    pca.fit(lat_vecs)
-    feature = pca.transform(lat_vecs)
+    for label, kmean_list_path in enumerate(kmean_lists):
 
-    scaler = StandardScaler()
-    data = scaler.fit_transform(feature)[:, :2]
-    kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init=10, max_iter=300,
-                    tol=0.0001, verbose=0,
-                    random_state=random_state, copy_x=True).fit(data)
-
-    fig = plt.figure()
-    cmap = plt.get_cmap("hsv")
-    point = feature
-    for label in range(n_clusters):
-        cls = np.where(kmeans.labels_==label)
-        plt.scatter(point[cls, 0], point[cls, 1], marker='o', color=cmap(float(label)/n_clusters), label='class_' + str(label))
-        instance_list[cls]
-        ########################################
-        path = f'kmeans_list_{label}.txt'
+        kmean_list = []
+        with open(kmean_list_path, 'r') as f:
+            lines = f.read().splitlines()
+            for line in lines:
+                kmean_list.append(line.rstrip('\n'))
+        
+        idx = [instance_list.index(kmean_ins) for kmean_ins in  kmean_list]
+        kmean_lat_vecs = lat_vecs[np.array(idx)]
+        mean_vec = kmean_lat_vecs.mean(0)
+        norms = np.linalg.norm(kmean_lat_vecs-mean_vec[None, :], axis=-1)
+        top_kmean = np.array(kmean_list)[np.argsort(norms)[:TOP]]
+        
+        path = f'top_256_kmeans_list_{label}.txt'
         with open(path, 'a') as f:
-            for instance_id in instance_list[cls]:
+            for instance_id in top_kmean:
                 f.write(instance_id+'\n')
-        ########################################
-    plt.legend()
-    fig.savefig("img.png")
-    import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()

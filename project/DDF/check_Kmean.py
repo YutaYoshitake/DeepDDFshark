@@ -152,11 +152,11 @@ if __name__=='__main__':
     if not os.path.isdir(split_dir_path):
         os.mkdir(split_dir_path)
     result_list = [
-                            'kmeans_list_0.txt', 
-                            'kmeans_list_1.txt', 
-                            'kmeans_list_2.txt', 
-                            'kmeans_list_3.txt', 
-                            'kmeans_list_4.txt', 
+                            'top_256_kmeans_list_0.txt', 
+                            'top_256_kmeans_list_1.txt', 
+                            'top_256_kmeans_list_2.txt', 
+                            'top_256_kmeans_list_3.txt', 
+                            'top_256_kmeans_list_4.txt', 
                         ]
     for instance_path in result_list:
                 

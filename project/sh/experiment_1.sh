@@ -1,2 +1,3 @@
-CUDA_VISIBLE_DEVICES=7 python val_adam_multi01.py --config=configs/val.txt
-CUDA_VISIBLE_DEVICES=7 python val_adam_multi02.py --config=configs/val.txt
+CUDA_VISIBLE_DEVICES=7 python val_deep_multi.py --config=configs/initnet.txt --N_batch=10 --val_instance_list_txt=instance_lists/kmean/top_256_kmeans_list_2.txt --expname=DeepTaR/chair/val --model_ckpt_path=lightning_logs/DeepTaR/chair/initnet_list0_date0616/checkpoints/0000001000.ckpt
+CUDA_VISIBLE_DEVICES=7 python val_deep_multi.py --config=configs/initnet.txt --N_batch=10 --val_instance_list_txt=instance_lists/kmean/top_256_kmeans_list_2.txt --expname=DeepTaR/chair/val --model_ckpt_path=lightning_logs/DeepTaR/chair/initnet_list0_date0616/checkpoints/0000001500.ckpt
+CUDA_VISIBLE_DEVICES=7 python val_deep_multi.py --config=configs/initnet.txt --N_batch=10 --val_instance_list_txt=instance_lists/kmean/top_256_kmeans_list_2.txt --expname=DeepTaR/chair/val --model_ckpt_path=lightning_logs/DeepTaR/chair/initnet_list0_date0616/checkpoints/0000000500.ckpt

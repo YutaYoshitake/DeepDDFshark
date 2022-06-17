@@ -54,7 +54,11 @@ def config_parser():
                         help='')
     parser.add_argument("--xxx", type=str,
                         help='')
+    parser.add_argument("--automatic_optimization", type=str,default='manual', 
+                        help='')
     parser.add_argument("--re_wood", type=bool, default=False,
+                        help='')
+    parser.add_argument("--model_ckpt_path", type=str, 
                         help='')
 
     # training options
@@ -89,6 +93,8 @@ def config_parser():
     parser.add_argument("--train_optim_num", type=int, default=2,
                         help='')
     parser.add_argument("--frame_sequence_num", type=int, default=3,
+                        help='')
+    parser.add_argument("--depth_sampling_type", type=str,
                         help='')
 
     # ddf config.

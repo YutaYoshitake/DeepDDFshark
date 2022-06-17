@@ -105,10 +105,6 @@ class test_TaR(pl.LightningModule):
             = batch
         batch_size = len(instance_id)
 
-        ######################################################################
-        self.init_net.eval(), self.df_net.eval()
-        ######################################################################
-
         ###################################
         #####     Start Inference     #####
         ###################################
@@ -116,8 +112,11 @@ class test_TaR(pl.LightningModule):
 
         for frame_sequence_idx in range(self.frame_sequence_num):
             frame_idx = self.start_frame_idx + frame_sequence_idx
-            check_optim_steps = []
             optim_num = self.test_optim_num[frame_sequence_idx]
+
+            ###################################
+            check_optim_steps = []
+            ###################################
 
             # Preprocess.
             with torch.no_grad():
@@ -179,19 +178,19 @@ class test_TaR(pl.LightningModule):
                         with torch.no_grad():
                             pre_obj_axis_green_cam = torch.sum(pre_obj_axis_green_wrd[..., None, :]*w2c, -1)
                             pre_obj_axis_red_cam = torch.sum(pre_obj_axis_red_wrd[..., None, :]*w2c, -1)
-                            est_clopped_invdistance_map, pre_mask, est_clopped_distance_map = render_distance_map_from_axis(
-                                                                                                            H = self.ddf_H, 
-                                                                                                            obj_pos_wrd = pre_obj_pos_wrd, # gt_obj_pos_wrd, 
-                                                                                                            axis_green = pre_obj_axis_green_cam, # gt_obj_axis_green_cam, 
-                                                                                                            axis_red = pre_obj_axis_red_cam, # gt_obj_axis_red_cam, 
-                                                                                                            obj_scale = pre_obj_scale[:, 0], # gt_obj_scale[:, 0].to(pre_obj_scale), 
-                                                                                                            input_lat_vec = pre_shape_code, # gt_shape_code, 
-                                                                                                            cam_pos_wrd = cam_pos_wrd, 
-                                                                                                            rays_d_cam = rays_d_cam, 
-                                                                                                            w2c = w2c.detach(), 
-                                                                                                            ddf = self.ddf, 
-                                                                                                            with_invdistance_map = True, 
-                                                                                                            )
+                            pre_mask, est_clopped_distance_map = render_distance_map_from_axis(
+                                                                        H = self.ddf_H, 
+                                                                        obj_pos_wrd = pre_obj_pos_wrd, 
+                                                                        axis_green = pre_obj_axis_green_cam, 
+                                                                        axis_red = pre_obj_axis_red_cam, 
+                                                                        obj_scale = pre_obj_scale[:, 0], 
+                                                                        input_lat_vec = pre_shape_code, 
+                                                                        cam_pos_wrd = cam_pos_wrd, 
+                                                                        rays_d_cam = rays_d_cam, 
+                                                                        w2c = w2c.detach(), 
+                                                                        ddf = self.ddf, 
+                                                                        with_invdistance_map = False, 
+                                                                        )
                             _, pre_depth_map, _ = get_normalized_depth_map(pre_mask, est_clopped_distance_map, rays_d_cam, avg_depth_map)
                             pre_error = torch.abs(pre_depth_map - normalized_depth_map).mean(dim=-1).mean(dim=-1).detach()
                         # Estimating update values.
@@ -222,30 +221,36 @@ class test_TaR(pl.LightningModule):
                 for half_lambda_idx in range(self.half_lambda_max):
                     # Get simulation results.
                     # with torch.no_grad():
-                    est_invdistance_map, est_mask, est_distance_map = render_distance_map_from_axis(
-                                                                            H = self.ddf_H, 
-                                                                            obj_pos_wrd = est_obj_pos_wrd, # gt_obj_pos_wrd, 
-                                                                            axis_green = est_obj_axis_green_cam, # gt_obj_axis_green_cam, 
-                                                                            axis_red = est_obj_axis_red_cam, # gt_obj_axis_red_cam, 
-                                                                            obj_scale = est_obj_scale[:, 0], # gt_obj_scale[:, 0].to(est_obj_scale), 
-                                                                            input_lat_vec = est_shape_code, # gt_shape_code, 
-                                                                            cam_pos_wrd = cam_pos_wrd, 
-                                                                            rays_d_cam = rays_d_cam, 
-                                                                            w2c = w2c.detach(), 
-                                                                            ddf = self.ddf, 
-                                                                            with_invdistance_map = True, 
-                                                                            )
+                    est_mask, est_distance_map = render_distance_map_from_axis(
+                                                                H = self.ddf_H, 
+                                                                obj_pos_wrd = est_obj_pos_wrd, 
+                                                                axis_green = est_obj_axis_green_cam, 
+                                                                axis_red = est_obj_axis_red_cam, 
+                                                                obj_scale = est_obj_scale[:, 0], 
+                                                                input_lat_vec = est_shape_code, 
+                                                                # obj_pos_wrd = gt_obj_pos_wrd, 
+                                                                # axis_green = gt_obj_axis_green_cam, 
+                                                                # axis_red = gt_obj_axis_red_cam, 
+                                                                # obj_scale = gt_obj_scale[:, 0].to(est_obj_scale), 
+                                                                # input_lat_vec = gt_shape_code, 
+                                                                cam_pos_wrd = cam_pos_wrd, 
+                                                                rays_d_cam = rays_d_cam, 
+                                                                w2c = w2c.detach(), 
+                                                                ddf = self.ddf, 
+                                                                with_invdistance_map = False, 
+                                                                )
                     _, est_normalized_depth_map, _ = get_normalized_depth_map(
                                                         est_mask, est_distance_map, rays_d_cam, avg_depth_map, 
                                                         )
                     error = torch.abs(est_normalized_depth_map - normalized_depth_map).mean(dim=-1).mean(dim=-1)
 
-                    # check_map = []
-                    # gt = normalized_depth_map
-                    # est = est_normalized_depth_map
-                    # for i in range(batch_size):
-                    #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
-                    # check_map_torch(torch.cat(check_map, dim=-1), f'tes_frame{frame_sequence_idx}_opt{optim_idx}.png')
+                    check_map = []
+                    gt = normalized_depth_map
+                    est = est_normalized_depth_map
+                    for i in range(batch_size):
+                        check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+                    check_map_torch(torch.cat(check_map, dim=-1), f'tes_frame{frame_sequence_idx}_opt{optim_idx}.png')
+                    import pdb; pdb.set_trace()
 
                     # 最初のフレームの初期予測
                     if perform_init_est:
@@ -348,51 +353,47 @@ class test_TaR(pl.LightningModule):
 
 
 
-        # ###########################################################################
-        # #########################       check shape       #########################
-        # ###########################################################################
+        ###########################################################################
+        #########################       check shape       #########################
+        ###########################################################################
 
-        # # with torch.no_grad():
-        # depth_error = []
-        # for shape_i, (gt_distance_map, cam_pos_wrd, w2c) in enumerate(zip(canonical_distance_map.permute(1, 0, 2, 3), 
-        #                                                                     canonical_camera_pos.permute(1, 0, 2), 
-        #                                                                     canonical_camera_rot.permute(1, 0, 2, 3))):
-        #     # Get inp.
-        #     rays_d_cam = get_ray_direction(self.ddf_H, self.fov).expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
-        #     est_obj_axis_green_cam = torch.sum(est_axis_green_wrd[..., None, :]*w2c, -1)
-        #     est_obj_axis_red_cam = torch.sum(est_axis_red_wrd[..., None, :]*w2c, -1)
+        # with torch.no_grad():
+        depth_error = []
+        for shape_i, (gt_distance_map, cam_pos_wrd, w2c) in enumerate(zip(canonical_distance_map.permute(1, 0, 2, 3), 
+                                                                            canonical_camera_pos.permute(1, 0, 2), 
+                                                                            canonical_camera_rot.permute(1, 0, 2, 3))):
+            # Get inp.
+            rays_d_cam = get_ray_direction(self.ddf_H, self.fov).expand(batch_size, -1, -1, -1).to(frame_camera_rot.device)
+            est_obj_axis_green_cam = torch.sum(est_axis_green_wrd[..., None, :]*w2c, -1)
+            est_obj_axis_red_cam = torch.sum(est_axis_red_wrd[..., None, :]*w2c, -1)
 
-        #     # Get simulation results.
-        #     est_mask, est_distance_map = get_canonical_map(
-        #                                     H = self.ddf_H, 
-        #                                     cam_pos_wrd = cam_pos_wrd, 
-        #                                     rays_d_cam = rays_d_cam, 
-        #                                     w2c = w2c, 
-        #                                     input_lat_vec = est_shape_code, 
-        #                                     ddf = self.ddf, 
-        #                                     )
-        #     depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1))
+            # Get simulation results.
+            est_mask, est_distance_map = get_canonical_map(
+                                            H = self.ddf_H, 
+                                            cam_pos_wrd = cam_pos_wrd, 
+                                            rays_d_cam = rays_d_cam, 
+                                            w2c = w2c, 
+                                            input_lat_vec = est_shape_code, 
+                                            ddf = self.ddf, 
+                                            )
+            depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1))
             
-        #     # #############################################
-        #     # # Check map.
-        #     # check_map = []
-        #     # gt = gt_distance_map
-        #     # est = est_distance_map
-        #     # for i in range(batch_size):
-        #     #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
-        #     # check_map_torch(torch.cat(check_map, dim=-1), f'canonical_map_{shape_i}.png')
-        #     # #############################################
+            #############################################
+            # Check map.
+            check_map = []
+            gt = gt_distance_map
+            est = est_distance_map
+            for i in range(batch_size):
+                check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+            check_map_torch(torch.cat(check_map, dim=-1), f'canonical_map_{shape_i}.png')
+            #############################################
 
         # Cal err.
         err_pos = torch.abs(est_obj_pos_wrd - gt_obj_pos_wrd).mean(dim=-1)
         err_scale = torch.abs(1 - est_obj_scale[:, 0] / gt_obj_scale[:, 0])
         err_axis_red = torch.acos(self.cossim(est_axis_red_wrd, gt_obj_axis_red_wrd)) * 180 / torch.pi
         err_axis_green = torch.acos(self.cossim(est_axis_green_wrd, gt_obj_axis_green_wrd)) * 180 / torch.pi
-        # depth_error = torch.stack(depth_error, dim=-1).mean(dim=-1)
-
-        #############################################
-        depth_error = torch.stack(frame_est_list['error'], dim=1).mean(dim=-1)
-        #############################################
+        depth_error = torch.stack(depth_error, dim=-1).mean(dim=-1)
 
         return {'err_pos':err_pos.detach(), 
                 'err_scale': err_scale.detach(), 
@@ -424,7 +425,6 @@ class test_TaR(pl.LightningModule):
             file.write('avg_err_axis_green : ' + str(avg_err_axis_green.item()) + '\n')
             file.write('avg_err_depth : ' + str(avg_err_depth.item()) + '\n')
 
-
         err_pos_list = err_pos_list.to('cpu').detach().numpy().copy()
         err_scale_list = err_scale_list.to('cpu').detach().numpy().copy()
         err_axis_red_list = err_axis_red_list.to('cpu').detach().numpy().copy()
@@ -455,6 +455,9 @@ if __name__=='__main__':
     # Get args
     args = get_args()
     args.gpu_num = torch.cuda.device_count() # log used gpu num.
+    args.val_data_dir='/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64'
+    args.val_N_views = 32
+    args.use_gru = False
 
     # Create dataloader.
     val_dataset = TaR_dataset(
@@ -478,42 +481,23 @@ if __name__=='__main__':
     ddf.eval()
 
     # Create dfnet.
-    # if args.xxx=='a':
-    args.use_gru = False
     df_net = TaR(args, ddf)
-    # checkpoint_path = './lightning_logs/DeepTaR/chair/dfnet_first/checkpoints/0000001000.ckpt'
-    # checkpoint_path = './lightning_logs/DeepTaR/chair/initnet_first/checkpoints/0000000960.ckpt'
-    checkpoint_path = './lightning_logs/DeepTaR/chair/dfnet_wodepth_first/checkpoints/0000001000.ckpt'
     df_net = df_net.load_from_checkpoint(
-        checkpoint_path=checkpoint_path, 
+        checkpoint_path=args.model_ckpt_path, 
         args=args, 
         ddf=ddf
         )
     df_net.eval()
 
-    # # Create init net.
-    # init_net = TaR_init_only(args, ddf)
-    # checkpoint_path='./lightning_logs/DeepTaR/chair/initnet_first/checkpoints/0000001000.ckpt'
-    # init_net = init_net.load_from_checkpoint(
-    #     checkpoint_path=checkpoint_path, 
-    #     args=args, 
-    #     ddf=ddf
-    #     ).model
-    # df_net.init_net = init_net
-    df_net.only_init_net = False
-
     # Setting model.
     model = df_net
     model.test_mode = 'average'
     model.start_frame_idx = 0
-    model.frame_sequence_num = 5
+    model.frame_sequence_num = 3
     model.half_lambda_max = 3
-    if model.test_mode == 'average':
-        model.test_optim_num = [3, 3, 3, 3, 3] # [5, 5, 5, 5, 5]
-    if model.test_mode == 'sequence':
-        model.test_optim_num = [3, 3, 3, 3, 3]
-    if model.only_init_net:
-        model.test_mode = 'average'
+    model.test_optim_num = [3, 3, 3, 3, 3] # [5, 5, 5, 5, 5]
+    if model.model_mode == 'only_init':
+        model.only_init_net = True
         model.test_optim_num = [1, 1, 1, 1, 1]
     model.use_deep_optimizer = True
     model.use_adam_optimizer = not(model.use_deep_optimizer)

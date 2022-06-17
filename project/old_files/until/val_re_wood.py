@@ -1,3 +1,30 @@
+        # self.re_wood = args.re_wood
+
+                    # if self.re_wood:
+                    #     self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/0000001.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0000053.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0000150.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0000172.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0000271.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0000338.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0001785.pickle', 
+                    #                                '/home/yyoshitake/works/DeepSDF/project/0002228.pickle', ]
+                    # # self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/e31c6c24a8d80ac35692a9640d6947fc/00005.pickle']
+
+            # if not(self.re_wood):
+            #     canonical_path = '/'.join(splitted_path_list[:-3]) + '/canoncal/' + splitted_path_list[-2] + '.pickle'
+            #     canonical_data_dict = pickle_load(canonical_path)
+            #     canonical_distance_map = canonical_data_dict['depth_map'].astype(np.float32)
+            #     canonical_camera_pos = canonical_data_dict['camera_pos'].astype(np.float32)
+            #     canonical_camera_rot = canonical_data_dict['camera_rot'].astype(np.float32)
+            # else:
+            #     canonical_path = '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/canoncal/cbc47018135fc1b1462977c6d3c24550.pickle'
+            #     canonical_data_dict = pickle_load(canonical_path)
+            #     canonical_distance_map = 0
+            #     canonical_camera_pos = canonical_data_dict['camera_pos'].astype(np.float32)
+            #     canonical_camera_rot = canonical_data_dict['camera_rot'].astype(np.float32)
+
+
 import os
 import pdb
 import sys

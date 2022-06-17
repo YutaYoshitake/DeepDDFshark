@@ -510,10 +510,10 @@ class DDF(pl.LightningModule):
             print('Can use only world dir.')
 
         D = torch.sum(rays_d * (rays_o - origin), dim=-1)**2 - (torch.sum((rays_o - origin)**2, dim=-1) - radius**2)
-        negative_D_mask = D < 0
+        negative_D_mask = D < 1e-12
 
         d_dot_o = torch.sum(rays_d * (rays_o - origin), dim=-1)
-        D[negative_D_mask] = 0.
+        D[negative_D_mask] = 1e-12
         sqrt_D = torch.sqrt(D)
         t_minus = - d_dot_o - sqrt_D
         t_plus = - d_dot_o + sqrt_D
@@ -523,20 +523,6 @@ class DDF(pl.LightningModule):
         t[t_mask] = t_minus[t_mask]
         intersect_rays_o = rays_o + t_plus[..., None] * rays_d
         intersect_rays_o[t_mask] = (rays_o + t_minus[..., None] * rays_d)[t_mask]
-
-        # t_mask = (torch.abs(t_plus) > torch.abs(t_minus))[torch.logical_not(negative_D_mask)]
-        # if t_mask.all():
-        #     t_ = t_minus
-        #     whitch_t_used = 't_minus'
-        #     intersect_rays_o_ = rays_o + t_minus[..., None] * rays_d
-        # elif torch.logical_not(t_mask).all():
-        #     t_ = t_plus
-        #     whitch_t_used = 't_plus'
-        #     intersect_rays_o_ = rays_o + t_plus[..., None] * rays_d
-        # else:
-        #     print('t sign err!')
-        #     import pdb; pdb.set_trace()
-        #     sys.exit()
 
         # Estimate inverced depth
         est_invdepth_rawmap = self.forward(intersect_rays_o, rays_d, input_lat_vec)
