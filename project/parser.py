@@ -96,6 +96,16 @@ def config_parser():
                         help='')
     parser.add_argument("--depth_sampling_type", type=str,
                         help='')
+    parser.add_argument("--L_p", type=float, default=1e1, 
+                        help='')
+    parser.add_argument("--L_s", type=float, default=1e1, 
+                        help='')
+    parser.add_argument("--L_a", type=float, default=1e0, 
+                        help='')
+    parser.add_argument("--L_c", type=float, default=1e1, 
+                        help='')
+    parser.add_argument("--L_d", type=float, default=1e0, 
+                        help='')
 
     # ddf config.
     parser.add_argument("--ddf_model_path", type=str, 

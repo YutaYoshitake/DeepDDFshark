@@ -70,7 +70,7 @@ class TaR_dataset(data.Dataset):
                         os.path.join(data_dir, line.rstrip('\n'))
                         )
                 elif self.mode=='val':
-                    for view_ind in range(self.N_views):
+                    for view_ind in range(1):
                         self.instance_path_list.append(
                             os.path.join(data_dir, line.rstrip('\n'), f'{str(view_ind+1).zfill(5)}.pickle')
                             )

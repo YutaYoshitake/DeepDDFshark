@@ -1,0 +1,12 @@
+script_name : val deep multi
+time_log : 2022_06_19_19_33_38
+ckpt_path : lightning_logs/DeepTaR/chair/dfnet_list0_date0616/checkpoints/0000001200.ckpt
+val_N_views : 32
+val_instance_list_txt : instance_lists/kmean/top_256_kmeans_list_3.txt
+
+only_init_net : False
+start_frame_idx : 0
+frame_sequence_num : 3
+half_lambda_max : 3
+test_optim_num : 5
+

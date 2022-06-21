@@ -1,0 +1,2 @@
+# CUDA_VISIBLE_DEVICES=6 python val_deep_multi.py --config=configs/dfnet_wfd.txt --N_batch=15 --val_instance_list_txt=instance_lists/kmean/top_256_kmeans_list_2.txt --expname=DeepTaR/chair/val --model_ckpt_path=lightning_logs/DeepTaR/chair/dfnetwfd_list0_date0616/checkpoints/0000001500.ckpt
+CUDA_VISIBLE_DEVICES=6 python val_deep_multi.py --config=configs/dfnet.txt --N_batch=15 --val_instance_list_txt=instance_lists/kmean/top_256_kmeans_list_2.txt --expname=DeepTaR/chair/val --model_ckpt_path=lightning_logs/DeepTaR/chair/dfnet_list0_date0616/checkpoints/0000001500.ckpt

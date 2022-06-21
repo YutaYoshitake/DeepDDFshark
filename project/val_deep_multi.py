@@ -140,6 +140,7 @@ class test_TaR(pl.LightningModule):
         ###################################
         #####    Start Optim Step     #####
         ###################################
+        check_optim_steps = []
         for optim_idx in range(self.test_optim_num):
             perform_init_est = optim_idx == 0
 
@@ -255,15 +256,16 @@ class test_TaR(pl.LightningModule):
                 error = error.reshape(batch_size, using_frame_num, self.ddf_H, self.ddf_H).mean(dim=-1).mean(dim=-1)
                 error = error.mean(dim=-1)
 
-                ############################################
-                check_map = []
-                gt = normalized_depth_map
-                est = est_normalized_depth_map
-                for i in range(batch_size*using_frame_num):
-                    check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
-                check_map_torch(torch.cat(check_map, dim=-1), f'tes_{optim_idx}.png')
-                import pdb; pdb.set_trace()
-                ############################################
+                #############################################
+                if optim_idx==4:
+                    check_map = []
+                    gt = normalized_depth_map
+                    est = est_normalized_depth_map
+                    for i in range(batch_size):
+                        check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+                    check_map_torch(torch.cat(check_map, dim=-1), f'tes_{optim_idx}.png')
+                    import pdb; pdb.set_trace()
+                #############################################
 
                 # 最初のフレームの初期予測
                 if perform_init_est:
@@ -275,6 +277,12 @@ class test_TaR(pl.LightningModule):
                     pre_obj_axis_green_wrd = ave_est_obj_axis_green_wrd_frame.detach()
                     pre_obj_axis_red_wrd = ave_est_obj_axis_red_wrd_frame.detach()
                     pre_shape_code = ave_est_shape_code_frame.detach()
+                    # #########################
+                    # gt = normalized_depth_map
+                    # est = est_normalized_depth_map
+                    # check_optim_steps.append(gt)
+                    # check_optim_steps.append(torch.abs(gt-est))
+                    # #########################
                     # 初期化ネットだけの性能を評価する場合
                     if self.only_init_net:
                         pre_mask = est_mask.detach()
@@ -347,7 +355,7 @@ class test_TaR(pl.LightningModule):
                                                 )
             depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1))
         
-            #############################################
+            # ############################################
             # # Check map.
             # if shape_i == 3:
             #     check_map = []
@@ -356,8 +364,7 @@ class test_TaR(pl.LightningModule):
             #     for i in range(batch_size):
             #         check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
             #     check_map_torch(torch.cat(check_map, dim=-1), f'canonical_{batch_idx}.png')
-            #     import pdb; pdb.set_trace()
-            #############################################
+            # ############################################
 
         # Cal err.
         err_pos = torch.abs(est_obj_pos_wrd - gt_obj_pos_wrd[:, 0]).mean(dim=-1)
@@ -506,9 +513,11 @@ if __name__=='__main__':
     model.test_log_path = file_name
     ckpt_path = args.model_ckpt_path
     with open(file_name, 'a') as file:
-        file.write('val deep multi' + '\n')
+        file.write('script_name : ' + 'val deep multi' + '\n')
         file.write('time_log : ' + time_log + '\n')
         file.write('ckpt_path : ' + ckpt_path + '\n')
+        file.write('val_N_views : ' + str(args.val_N_views) + '\n')
+        file.write('val_instance_list_txt : ' + str(args.val_instance_list_txt) + '\n')
         file.write('\n')
         file.write('only_init_net : ' + str(model.only_init_net) + '\n')
         file.write('start_frame_idx : ' + str(model.start_frame_idx) + '\n')

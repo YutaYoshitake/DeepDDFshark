@@ -1,0 +1,17 @@
+script_name : val deep multi
+time_log : 2022_06_19_19_28_38
+ckpt_path : lightning_logs/DeepTaR/chair/dfnet_list0_date0616/checkpoints/0000001600.ckpt
+val_N_views : 32
+val_instance_list_txt : instance_lists/kmean/top_256_kmeans_list_1.txt
+
+only_init_net : False
+start_frame_idx : 0
+frame_sequence_num : 3
+half_lambda_max : 3
+test_optim_num : 5
+
+avg_err_pos : 0.02485274150967598
+avg_err_scale : 0.13804951310157776
+avg_err_axis_red : 36.26011657714844
+avg_err_axis_green : 9.994468688964844
+avg_err_depth : 0.22783084213733673

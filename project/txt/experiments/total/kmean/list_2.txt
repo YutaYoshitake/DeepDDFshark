@@ -1,0 +1,17 @@
+time_log : 2022_06_20_00_04_59
+ckpt_path : lightning_logs/DeepTaR/chair/dfnetwfd_list0_later/checkpoints/0000001000.ckpt
+val_instance_list_txt : instance_lists/kmean/top_256_kmeans_list_2.txt
+avg_err_pos : 0.01978430338203907
+avg_err_scale : 0.06271949410438538
+avg_err_axis_red : 7.422698974609375
+avg_err_axis_green : 9.051780700683594
+avg_err_depth : 0.14225512742996216
+
+time_log : 2022_06_20_00_15_06
+ckpt_path : lightning_logs/DeepTaR/chair/dfnetwfd_list0_later_wfd2AC/checkpoints/0000001000.ckpt
+val_instance_list_txt : instance_lists/kmean/top_256_kmeans_list_2.txt
+avg_err_pos : 0.020852811634540558
+avg_err_scale : 0.07643480598926544
+avg_err_axis_red : 6.180238723754883
+avg_err_axis_green : 8.180288314819336
+avg_err_depth : 0.13829486072063446

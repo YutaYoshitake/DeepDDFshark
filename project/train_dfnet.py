@@ -230,6 +230,11 @@ class TaR(pl.LightningModule):
         self.sampling_interval = 8
         self.clopping_size = 100
         # self.automatic_optimization = args.automatic_optimization == 'manual'
+        self.L_p = args.L_p
+        self.L_s = args.L_s
+        self.L_a = args.L_a
+        self.L_c = args.L_c
+        self.L_d = args.L_d
 
 
 
@@ -392,17 +397,17 @@ class TaR(pl.LightningModule):
                         gt_invdistance_map_for_deptherr = raw_invdistance_map
                     est_invdistance_map_for_deptherr, _ = render_distance_map_from_axis(
                                                                 H = clopped_H, 
-                                                                obj_pos_wrd = est_obj_pos_wrd, 
-                                                                axis_green = est_obj_axis_green_cam, 
-                                                                axis_red = est_obj_axis_red_cam, 
-                                                                obj_scale = est_obj_scale[:, 0], 
-                                                                input_lat_vec = est_shape_code, 
-                                                                ###########################################
-                                                                # obj_pos_wrd = est_obj_pos_wrd.detach(), 
+                                                                # obj_pos_wrd = est_obj_pos_wrd, 
                                                                 # axis_green = est_obj_axis_green_cam, 
                                                                 # axis_red = est_obj_axis_red_cam, 
-                                                                # obj_scale = est_obj_scale[:, 0].detach(), 
+                                                                # obj_scale = est_obj_scale[:, 0], 
                                                                 # input_lat_vec = est_shape_code, 
+                                                                ###########################################
+                                                                obj_pos_wrd = est_obj_pos_wrd.detach(), 
+                                                                axis_green = est_obj_axis_green_cam, 
+                                                                axis_red = est_obj_axis_red_cam, 
+                                                                obj_scale = est_obj_scale[:, 0].detach(), 
+                                                                input_lat_vec = est_shape_code, 
                                                                 ###########################################
                                                                 # obj_pos_wrd = gt_obj_pos_wrd, 
                                                                 # axis_green = gt_obj_axis_green_cam, 
@@ -464,7 +469,8 @@ class TaR(pl.LightningModule):
 
         # Cal total loss.
         loss_axis = loss_axis_green + loss_axis_red
-        loss = 1e1 * loss_pos + 1e1 * loss_scale + 1e0 * loss_axis + 1e1 * loss_shape_code + 1e0 * depth_simulation_error
+        loss = self.L_p * loss_pos + self.L_s * loss_scale + self.L_a * loss_axis + self.L_c * loss_shape_code + self.L_d * depth_simulation_error
+        # loss = 1e1 * loss_pos + 1e1 * loss_scale + 1e0 * loss_axis + 1e1 * loss_shape_code + 1e0 * depth_simulation_error
         # if not self.automatic_optimization: # .requires_grad
         #     opt = self.optimizers()
         #     self.manual_backward(loss)
@@ -582,7 +588,7 @@ if __name__=='__main__':
     ddf = DDF(args)
     ddf = ddf.load_from_checkpoint(checkpoint_path=args.ddf_model_path, args=args)
     ddf.eval()
-    # model = TaR(args, ddf)
+    model = TaR(args, ddf)
     # trainer.fit(
     #     model=model, 
     #     train_dataloaders=train_dataloader, 
@@ -591,7 +597,7 @@ if __name__=='__main__':
 
 
     ##################################################
-    ini_ckpt_path = '/home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair/dfnet_list0_date0616/checkpoints/0000000500.ckpt'
+    ini_ckpt_path = '/home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair/dfnetwfd_list0_date0616/checkpoints/0000001000.ckpt'
     ini_model = TaR(args, ddf)
     ini_model = ini_model.load_from_checkpoint(checkpoint_path=ini_ckpt_path, args=args, ddf=ddf)
 
@@ -607,11 +613,11 @@ if __name__=='__main__':
     ##################################################
 
 
-    # ckpt_path = './lightning_logs/DeepTaR/chair/dfnet_first/checkpoints/0000001000.ckpt'
+    # ckpt_path = '/home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair/dfnetwfd_list0_later_onlyD/checkpoints/0000000600.ckpt'
     # trainer.fit(
     #     model=model, 
     #     train_dataloaders=train_dataloader, 
-    #     val_dataloaders=val_dataloader, 
-    #     datamodule=None, 
+    #     # val_dataloaders=val_dataloader, 
+    #     # datamodule=None, 
     #     ckpt_path=ckpt_path, 
     #     )

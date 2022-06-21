@@ -189,15 +189,16 @@ class test_TaR(pl.LightningModule):
             optimizer.step()
 
             # ###################################
-            # # # if grad_optim_idx%10==0:
-            # # check_map = []
-            # # gt = raw_invdistance_map
-            # # est = est_invdistance_map
-            # # for i in range(batch_size*using_frame_num):
-            # #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
-            # # # check_map_torch(torch.cat(check_map, dim=-1), f'opt_{grad_optim_idx}.png')
-            # # check_map_torch(torch.cat(check_map, dim=-1), f'tes.png')
-            # # import pdb; pdb.set_trace()
+            # if grad_optim_idx%10==0:
+            if grad_optim_idx==30:
+                check_map = []
+                gt = raw_invdistance_map
+                est = est_invdistance_map
+                for i in range(batch_size*using_frame_num):
+                    check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+                # check_map_torch(torch.cat(check_map, dim=-1), f'opt_{grad_optim_idx}.png')
+                check_map_torch(torch.cat(check_map, dim=-1), f'tes.png')
+                import pdb; pdb.set_trace()
             # ###################################
             # # f grad_optim_idx%10==0:
             # if grad_optim_idx in [0, 10, 30, 60, 100]:
