@@ -88,11 +88,6 @@ class initializer(pl.LightningModule):
                 nn.Linear(256, 256), nn.LeakyReLU(0.2),
                 nn.Linear(256, 1), nn.Softplus(beta=.7), 
                 )
-        self.fc_weight = nn.Sequential(
-                nn.Linear(512, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 256), nn.LeakyReLU(0.2),
-                nn.Linear(256, 1), nn.Sigmoid(), 
-                )
 
     
     def forward(self, inp, bbox_info):
@@ -116,10 +111,7 @@ class initializer(pl.LightningModule):
         # Get shape code.
         shape_code = self.fc_shape_code(x)
 
-        # Get weight.
-        frame_weight = self.fc_weight(x)
-
-        return x_pos, axis_green, axis_red, scale_diff, shape_code, frame_weight
+        return x_pos, axis_green, axis_red, scale_diff, shape_code, 0
 
 
 
@@ -188,13 +180,7 @@ class deep_optimizer(pl.LightningModule):
 
 
 
-
-
-
-
-
-
-class progressive_optimizer(pl.LightningModule):
+class original_optimizer(pl.LightningModule):
 
     def __init__(self, args, ddf):
         super().__init__()
@@ -217,6 +203,7 @@ class progressive_optimizer(pl.LightningModule):
                 self.ddf_instance_list.append(line.rstrip('\n'))
         self.save_interval = args.save_interval
         self.frame_sequence_num = args.frame_sequence_num
+        self.optim_num = args.frame_sequence_num
         self.itr_frame_num = 3
 
         # Make model
@@ -332,14 +319,38 @@ class progressive_optimizer(pl.LightningModule):
         ###################################
         #####     Start training      #####
         ###################################
-        for new_frame_idx in range(self.frame_sequence_num):
-            if new_frame_idx == 0: first_iterartion = True
+        # Preprocessing
+        with torch.no_grad():
+            # Set frames
+            frame_idx_list = random.sample(list(range(self.frame_sequence_num)), 1) # Frameは一つ選択
+        
+            # Get current maps.
+            raw_invdistance_map = frame_raw_invdistance_map[:, frame_idx_list].reshape(-1, self.input_H, self.input_W).detach()
+            clopped_mask = frame_clopped_mask[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
+            clopped_distance_map = frame_clopped_distance_map[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
+            bbox_list = frame_bbox_list[:, frame_idx_list].reshape(-1, 2, 2).detach()
+            rays_d_cam = frame_rays_d_cam[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H, 3).detach()
+            clopped_depth_map = frame_clopped_depth_map[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
+            normalized_depth_map = frame_normalized_depth_map[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
+            avg_depth_map = frame_avg_depth_map[:, frame_idx_list].reshape(-1).detach()
+            bbox_info = frame_bbox_info[:, frame_idx_list].reshape(-1, 7).detach()
+
+            # Get current GT.
+            w2c = frame_w2c[:, frame_idx_list].reshape(-1, 3, 3).detach()
+            gt_obj_axis_green_wrd = frame_gt_obj_axis_green_wrd[:, frame_idx_list].detach()
+            gt_obj_axis_red_wrd = frame_gt_obj_axis_red_wrd[:, frame_idx_list].detach()
+            cam_pos_wrd = frame_camera_pos[:, frame_idx_list].reshape(-1, 3).detach()
+            gt_obj_pos_wrd = frame_obj_pos[:, frame_idx_list].detach()
+            gt_obj_scale = frame_obj_scale[:, frame_idx_list][..., None].detach()
+
+        for optim_idx in range(self.optim_num):
+            if optim_idx == 0: first_iterartion = True
             else: first_iterartion = False
 
             # Set optimizers
             opt = self.optimizers()
             opt.zero_grad()
-        
+
             # Get loss lists.
             loss_pos = []
             loss_scale = []
@@ -348,40 +359,13 @@ class progressive_optimizer(pl.LightningModule):
             loss_shape_code = []
             loss_depth_sim = []
 
-            # Preprocessing
-            with torch.no_grad():
-                # Set frames
-                if new_frame_idx < self.itr_frame_num:
-                    frame_idx_list = list(range(new_frame_idx+1)) # フレームの長さが短いときは、全てのフレームを使用
-                else:
-                    frame_idx_list = random.sample(list(range(new_frame_idx)), self.itr_frame_num-1) # それ以外ではランダムに抽出
-                    frame_idx_list += [new_frame_idx] # 新しいフレームは必ず使用
-
-                # Get current maps.
-                raw_invdistance_map = frame_raw_invdistance_map[:, frame_idx_list].reshape(-1, self.input_H, self.input_W).detach()
-                clopped_mask = frame_clopped_mask[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
-                clopped_distance_map = frame_clopped_distance_map[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
-                bbox_list = frame_bbox_list[:, frame_idx_list].reshape(-1, 2, 2).detach()
-                rays_d_cam = frame_rays_d_cam[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H, 3).detach()
-                clopped_depth_map = frame_clopped_depth_map[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
-                normalized_depth_map = frame_normalized_depth_map[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
-                avg_depth_map = frame_avg_depth_map[:, frame_idx_list].reshape(-1).detach()
-                bbox_info = frame_bbox_info[:, frame_idx_list].reshape(-1, 7).detach()
-
-                # Get current GT.
-                w2c = frame_w2c[:, frame_idx_list].reshape(-1, 3, 3).detach()
-                gt_obj_axis_green_wrd = frame_gt_obj_axis_green_wrd[:, frame_idx_list].detach()
-                gt_obj_axis_red_wrd = frame_gt_obj_axis_red_wrd[:, frame_idx_list].detach()
-                cam_pos_wrd = frame_camera_pos[:, frame_idx_list].reshape(-1, 3).detach()
-                gt_obj_pos_wrd = frame_obj_pos[:, frame_idx_list].detach()
-                gt_obj_scale = frame_obj_scale[:, frame_idx_list][..., None].detach()
-
-
             ###################################
             #####     Perform initnet.    #####
             ###################################
+            # if first_iterartion:
+            # Est.
             inp = torch.stack([normalized_depth_map, clopped_mask], 1).detach()
-            est_obj_pos_cim, est_obj_axis_green_cam, est_obj_axis_red_cam, est_scale_cim, est_shape_code, est_frame_weight = self.init_net(inp, bbox_info)
+            est_obj_pos_cim, est_obj_axis_green_cam, est_obj_axis_red_cam, est_scale_cim, est_shape_code, _ = self.init_net(inp, bbox_info)
             est_obj_pos_cam, est_obj_scale, cim2im_scale, im2cam_scale, bbox_center = diff2estimation(
                                                                                         est_obj_pos_cim, 
                                                                                         est_scale_cim, 
@@ -389,17 +373,9 @@ class progressive_optimizer(pl.LightningModule):
                                                                                         avg_depth_map, 
                                                                                         self.fov, 
                                                                                         with_cim2cam_info=True)
-
             est_obj_pos_wrd = torch.sum(est_obj_pos_cam[..., None, :]*w2c.permute(0, 2, 1), dim=-1) + cam_pos_wrd
             est_obj_axis_green_wrd = torch.sum(est_obj_axis_green_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
             est_obj_axis_red_wrd = torch.sum(est_obj_axis_red_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
-
-            # Cal loss for init net.
-            est_obj_pos_wrd = est_obj_pos_wrd.reshape(batch_size, -1, 3)[:, -1]
-            est_obj_scale = est_obj_scale.reshape(batch_size, -1, 1)[:, -1]
-            est_obj_axis_green_wrd = est_obj_axis_green_wrd.reshape(batch_size, -1, 3)[:, -1]
-            est_obj_axis_red_wrd = est_obj_axis_red_wrd.reshape(batch_size, -1, 3)[:, -1]
-            est_shape_code = est_shape_code.reshape(batch_size, -1, self.ddf.latent_size)[:, -1]
 
             # Cal loss.
             loss_pos_ini = F.mse_loss(est_obj_pos_wrd, gt_obj_pos_wrd[:, -1].detach())
@@ -425,11 +401,11 @@ class progressive_optimizer(pl.LightningModule):
                 with torch.no_grad():
                     # Reshape to (batch, frame, ?)
                     opt_frame_num = len(frame_idx_list)
-                    inp_pre_obj_pos_wrd = pre_obj_pos_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
-                    inp_pre_obj_scale = pre_obj_scale[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 1)
-                    inp_pre_obj_axis_green_wrd = pre_obj_axis_green_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
-                    inp_pre_obj_axis_red_wrd = pre_obj_axis_red_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
-                    inp_pre_shape_code = pre_shape_code[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, self.ddf.latent_size)
+                    inp_pre_obj_pos_wrd = pre_obj_pos_wrd
+                    inp_pre_obj_scale = pre_obj_scale
+                    inp_pre_obj_axis_green_wrd = pre_obj_axis_green_wrd
+                    inp_pre_obj_axis_red_wrd = pre_obj_axis_red_wrd
+                    inp_pre_shape_code = pre_shape_code
                     inp_pre_obj_pos_cam = torch.sum((inp_pre_obj_pos_wrd - cam_pos_wrd)[..., None, :]*w2c, dim=-1)
                     inp_pre_obj_pos_cim = torch.cat([
                                             (inp_pre_obj_pos_cam[:, :-1] / im2cam_scale[:, None] - bbox_center) / cim2im_scale[:, None], 
@@ -475,16 +451,12 @@ class progressive_optimizer(pl.LightningModule):
                 diff_obj_axis_green_wrd = torch.sum(diff_obj_axis_green_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
                 diff_obj_axis_red_wrd = torch.sum(diff_obj_axis_red_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
                 
-                # Get weight.
-                est_frame_weight = est_frame_weight.reshape(batch_size, opt_frame_num)
-                est_frame_weight = est_frame_weight / torch.sum(est_frame_weight, dim=-1)[:, None]
-                
                 # Get integrated_update.
-                diff_pos_wrd = torch.sum(est_frame_weight[..., None]*diff_pos_wrd.reshape(batch_size, -1, 3), dim=1)
-                diff_scale = torch.sum(est_frame_weight[..., None]*diff_scale.reshape(batch_size, -1, 1), dim=1)
-                diff_obj_axis_green_wrd = torch.sum(est_frame_weight[..., None]*diff_obj_axis_green_wrd.reshape(batch_size, -1, 3), dim=1)
-                diff_obj_axis_red_wrd = torch.sum(est_frame_weight[..., None]*diff_obj_axis_red_wrd.reshape(batch_size, -1, 3), dim=1)
-                diff_shape_code = torch.sum(est_frame_weight[..., None]*diff_shape_code.reshape(batch_size, -1, self.ddf.latent_size), dim=1)
+                diff_pos_wrd = diff_pos_wrd.reshape(batch_size, -1, 3).mean(1)
+                diff_scale = diff_scale.reshape(batch_size, -1, 1).mean(1)
+                diff_obj_axis_green_wrd = diff_obj_axis_green_wrd.reshape(batch_size, -1, 3).mean(1)
+                diff_obj_axis_red_wrd = diff_obj_axis_red_wrd.reshape(batch_size, -1, 3).mean(1)
+                diff_shape_code = diff_shape_code.reshape(batch_size, -1, self.ddf.latent_size).mean(1)
 
                 # Update estimations.
                 est_obj_pos_wrd = pre_obj_pos_wrd + diff_pos_wrd
@@ -501,46 +473,7 @@ class progressive_optimizer(pl.LightningModule):
                 loss_shape_df = F.mse_loss(est_shape_code, gt_shape_code.detach())
 
                 # Get depth loss.
-                # self.use_depth_error = True
-                # with torch.no_grad():
-                if self.use_depth_error:
-                    clopped_H = self.ddf_H
-                    sampled_rays_d_cam = self.rays_d_cam.expand(batch_size*opt_frame_num, -1, -1, -1).to(w2c)
-                    est_obj_axis_green_cam = torch.sum(est_obj_axis_green_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)[..., None, :]*w2c, -1)
-                    est_obj_axis_red_cam = torch.sum(est_obj_axis_red_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)[..., None, :]*w2c, -1)
-                    gt_invdistance_map = raw_invdistance_map
-                    est_invdistance_map, _ = render_distance_map_from_axis(
-                                                H = clopped_H, 
-                                                ###########################################
-                                                obj_pos_wrd = est_obj_pos_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3), 
-                                                axis_green = est_obj_axis_green_cam, 
-                                                axis_red = est_obj_axis_red_cam, 
-                                                obj_scale = est_obj_scale[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1), 
-                                                input_lat_vec = est_shape_code[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, self.ddf.latent_size), 
-                                                ###########################################
-                                                # obj_pos_wrd = gt_obj_pos_wrd.reshape(-1, 3), 
-                                                # axis_green = gt_obj_axis_green_cam.reshape(batch_size, -1, 3)[:, frame_idx_list].reshape(-1, 3), 
-                                                # axis_red = gt_obj_axis_red_cam.reshape(batch_size, -1, 3)[:, frame_idx_list].reshape(-1, 3), 
-                                                # obj_scale = gt_obj_scale.reshape(-1), 
-                                                # input_lat_vec = gt_shape_code[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, self.ddf.latent_size), 
-                                                # ###########################################
-                                                cam_pos_wrd = cam_pos_wrd, 
-                                                rays_d_cam = sampled_rays_d_cam, 
-                                                w2c = w2c.detach(), 
-                                                ddf = self.ddf, 
-                                                with_invdistance_map = True)
-                    depth_err_df = self.l1(est_invdistance_map, gt_invdistance_map.detach())
-                    # ##################################################
-                    # # Check map.
-                    # check_map = []
-                    # for gt, est in zip(gt_invdistance_map.detach(), est_invdistance_map):
-                    #     check_map.append(torch.cat([gt, est, torch.abs(gt-est)], dim=-1))
-                    # check_map = torch.cat(check_map, dim=0)
-                    # check_map_torch(check_map, f'{batch_idx}_{new_frame_idx}.png')
-                    # import pdb; pdb.set_trace()
-                    # ##################################################
-                else:
-                    depth_err_df = torch.zeros_like(loss_pos_df).detach() # Dummy
+                depth_err_df = torch.zeros_like(loss_pos_df).detach() # Dummy
 
                 # Append loss.
                 loss_pos.append(loss_pos_df)
@@ -558,7 +491,7 @@ class progressive_optimizer(pl.LightningModule):
             #     # if len(check_map)>5:
             #     #     break
             # check_map = torch.cat(check_map, dim=0)
-            # check_map_torch(check_map, f'tes.png')
+            # check_map_torch(check_map, f'tes{optim_idx}.png')
             # import pdb; pdb.set_trace()
             # ##################################################
 
@@ -584,7 +517,6 @@ class progressive_optimizer(pl.LightningModule):
                 pre_obj_axis_green_wrd = est_obj_axis_green_wrd.clone().detach()
                 pre_obj_axis_red_wrd = est_obj_axis_red_wrd.clone().detach()
                 pre_shape_code = est_shape_code.clone().detach()
-
 
         return {'loss': loss.detach(), 
                 'loss_pos':loss_pos.detach(), 
@@ -624,13 +556,13 @@ class progressive_optimizer(pl.LightningModule):
 
     
     def test_step(self, batch, batch_idx):
-        # with torch.no_grad():
         batch_size, frame_raw_invdistance_map, frame_clopped_mask, \
         frame_clopped_distance_map, frame_bbox_list, frame_rays_d_cam, \
         frame_clopped_depth_map, frame_normalized_depth_map, frame_avg_depth_map, frame_bbox_info, \
         frame_w2c, frame_gt_obj_axis_green_wrd, frame_gt_obj_axis_red_wrd, \
         frame_camera_pos, frame_obj_pos, frame_obj_scale, \
         canonical_distance_map, canonical_camera_pos, canonical_camera_rot, instance_id, path = self.preprocess(batch, mode='val')
+
 
         ###################################
         #####     Start training      #####
@@ -640,11 +572,10 @@ class progressive_optimizer(pl.LightningModule):
             else: first_iterartion = False
 
             # Set frames
-            if new_frame_idx < self.itr_frame_num:
-                frame_idx_list = list(range(new_frame_idx+1)) # フレームの長さが短いときは、全てのフレームを使用
+            if first_iterartion:
+                frame_idx_list = list(range(self.frame_sequence_num)) # 初期化は全フレームに対する結果から行う
             else:
-                frame_idx_list = random.sample(list(range(new_frame_idx)), self.itr_frame_num-1) # それ以外ではランダムに抽出
-                frame_idx_list += [new_frame_idx] # 新しいフレームは必ず使用
+                frame_idx_list = random.sample(list(range(self.frame_sequence_num)), self.itr_frame_num) # それ以外ではランダムに抽出
             opt_frame_num = len(frame_idx_list)
 
             # Get current maps.
@@ -670,50 +601,35 @@ class progressive_optimizer(pl.LightningModule):
             ###################################
             #####     Perform initnet.    #####
             ###################################
-            # print('ini')
-            # Get new frame.
-            inp = torch.stack([normalized_depth_map.reshape(batch_size, opt_frame_num, self.ddf_H, self.ddf_H)[:, -1], 
-                               clopped_mask.reshape(batch_size, opt_frame_num, self.ddf_H, self.ddf_H)[:, -1]]
-                               , 1).detach()
-            latest_bbox_info = bbox_info.reshape(batch_size, opt_frame_num, 7)[:, -1]
-            latest_bbox_list = bbox_list.reshape(batch_size, opt_frame_num, 2, 2)[:, -1]
-            latest_avg_depth = avg_depth_map.reshape(batch_size, opt_frame_num)[:, -1]
-            est_obj_pos_cim, est_obj_axis_green_cam, est_obj_axis_red_cam, est_scale_cim, est_shape_code, frame_weight_i = self.init_net(inp, latest_bbox_info)
-            est_obj_pos_cam, est_obj_scale, cim2im_scale_i, im2cam_scale_i, bbox_center_i = diff2estimation(
-                                                                                                est_obj_pos_cim, 
-                                                                                                est_scale_cim, 
-                                                                                                latest_bbox_list, 
-                                                                                                latest_avg_depth, 
-                                                                                                self.fov, 
-                                                                                                with_cim2cam_info=True)
-
-            # Save results.
             if first_iterartion:
+                # print('ini')
+                inp = torch.stack([normalized_depth_map, clopped_mask], 1).detach()
+                est_obj_pos_cim, est_obj_axis_green_cam, est_obj_axis_red_cam, est_scale_cim, est_shape_code, _ = self.init_net(inp, bbox_info)
+                est_obj_pos_cam, est_obj_scale, cim2im_scale, im2cam_scale, bbox_center = diff2estimation(
+                                                                                            est_obj_pos_cim, 
+                                                                                            est_scale_cim, 
+                                                                                            bbox_list, 
+                                                                                            avg_depth_map, 
+                                                                                            self.fov, 
+                                                                                            with_cim2cam_info=True)
                 est_obj_pos_wrd = torch.sum(est_obj_pos_cam[..., None, :]*w2c.permute(0, 2, 1), dim=-1) + cam_pos_wrd
                 est_obj_axis_green_wrd = torch.sum(est_obj_axis_green_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
                 est_obj_axis_red_wrd = torch.sum(est_obj_axis_red_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
 
-                est_obj_pos_wrd = est_obj_pos_wrd.reshape(batch_size, -1, 3)[:, -1]
-                est_obj_scale = est_obj_scale.reshape(batch_size, -1, 1)[:, -1]
-                est_obj_axis_green_wrd = est_obj_axis_green_wrd.reshape(batch_size, -1, 3)[:, -1]
-                est_obj_axis_red_wrd = est_obj_axis_red_wrd.reshape(batch_size, -1, 3)[:, -1]
-                est_shape_code = est_shape_code.reshape(batch_size, -1, self.ddf.latent_size)[:, -1]
+                # Get average of init estimations.
+                est_obj_pos_wrd = est_obj_pos_wrd.reshape(batch_size, -1, 3).mean(1)
+                est_obj_scale = est_obj_scale.reshape(batch_size, -1, 1).mean(1)
+                est_obj_axis_green_wrd = est_obj_axis_green_wrd.reshape(batch_size, -1, 3).mean(1)
+                est_obj_axis_red_wrd = est_obj_axis_red_wrd.reshape(batch_size, -1, 3).mean(1)
+                est_shape_code = est_shape_code.reshape(batch_size, -1, self.ddf.latent_size).mean(1)
 
-                frame_weight_list = frame_weight_i
-                cim2im_scale_list = cim2im_scale_i.unsqueeze(1)
-                im2cam_scale_list = im2cam_scale_i.unsqueeze(1)
-                bbox_center_list = bbox_center_i.unsqueeze(1)
-
-            else:
-                frame_weight_list = torch.cat([frame_weight_list, frame_weight_i], dim=1)
-                cim2im_scale_list = torch.cat([cim2im_scale_list, cim2im_scale_i.unsqueeze(1)], dim=1)
-                im2cam_scale_list = torch.cat([im2cam_scale_list, im2cam_scale_i.unsqueeze(1)], dim=1)
-                bbox_center_list = torch.cat([bbox_center_list, bbox_center_i.unsqueeze(1)], dim=1)
-
-            frame_weight = frame_weight_list[:, frame_idx_list]
-            cim2im_scale = cim2im_scale_list[:, frame_idx_list].reshape(-1)
-            im2cam_scale = im2cam_scale_list[:, frame_idx_list].reshape(-1)
-            bbox_center = bbox_center_list[:, frame_idx_list].reshape(-1, 2)
+                # Get scale lists.
+                cim2im_scale_list = cim2im_scale.reshape(batch_size, self.frame_sequence_num)
+                im2cam_scale_list = im2cam_scale.reshape(batch_size, self.frame_sequence_num)
+                bbox_center_list = bbox_center.reshape(batch_size, self.frame_sequence_num, 2)
+            
+            if self.only_init_net:
+                break
 
 
             ###################################
@@ -722,6 +638,9 @@ class progressive_optimizer(pl.LightningModule):
             if not first_iterartion:
                 # print('df')
                 # Reshape to (batch, frame, ?)
+                cim2im_scale = cim2im_scale_list[:, frame_idx_list].reshape(-1)
+                im2cam_scale = im2cam_scale_list[:, frame_idx_list].reshape(-1)
+                bbox_center = bbox_center_list[:, frame_idx_list].reshape(-1, 2)
                 inp_pre_obj_pos_wrd = pre_obj_pos_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
                 inp_pre_obj_scale = pre_obj_scale[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 1)
                 inp_pre_obj_axis_green_wrd = pre_obj_axis_green_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
@@ -753,23 +672,40 @@ class progressive_optimizer(pl.LightningModule):
                 pre_error = torch.abs(inp_pre_depth_map - normalized_depth_map)
                 pre_error = pre_error.reshape(batch_size, opt_frame_num, self.ddf_H, self.ddf_H).mean(dim=-1).mean(dim=-1)
                 pre_error = pre_error.mean(dim=-1)
-
+                
                 # Get update.
                 inp = torch.stack([normalized_depth_map, 
                                    clopped_mask, 
                                    inp_pre_depth_map, 
                                    inp_pre_mask, 
                                    normalized_depth_map - inp_pre_depth_map], 1).detach()
-                ##################################################
-                # Check inp.
-                check_map = []
-                for inp_i in inp:
-                    check_map.append(torch.cat([inp_i_i for inp_i_i in inp_i], dim=-1))
-                    # if len(check_map)>5:
-                    #     break
-                check_map = torch.cat(check_map, dim=0)
-                check_map_torch(check_map, f'tes_{batch_idx}_{new_frame_idx}.png')
-                ##################################################
+                diff_pos_cim, diff_obj_axis_green_cam, diff_obj_axis_red_cam, diff_scale, diff_shape_code = self.df_net(
+                                                                                                                    inp = inp, 
+                                                                                                                    bbox_info = bbox_info, 
+                                                                                                                    pre_pos = inp_pre_obj_pos_cim, 
+                                                                                                                    pre_axis_green = inp_pre_obj_axis_green_cam, 
+                                                                                                                    pre_axis_red = inp_pre_obj_axis_red_cam, 
+                                                                                                                    pre_scale = inp_pre_obj_scale_cim, 
+                                                                                                                    pre_shape_code = inp_pre_shape_code)
+                
+                # ##################################################
+                # # Check inp.
+                # check_map = []
+                # for inp_i in inp:
+                #     check_map.append(torch.cat([inp_i_i for inp_i_i in inp_i], dim=-1))
+                #     # if len(check_map)>5:
+                #     #     break
+                # check_map = torch.cat(check_map, dim=0)
+                # check_map_torch(check_map, f'tes.png')
+                # import pdb; pdb.set_trace()
+                # ##################################################
+                
+                # Get update.
+                inp = torch.stack([normalized_depth_map, 
+                                   clopped_mask, 
+                                   inp_pre_depth_map, 
+                                   inp_pre_mask, 
+                                   normalized_depth_map - inp_pre_depth_map], 1).detach()
                 diff_pos_cim, diff_obj_axis_green_cam, diff_obj_axis_red_cam, diff_scale, diff_shape_code = self.df_net(
                                                                                                                     inp = inp, 
                                                                                                                     bbox_info = bbox_info, 
@@ -784,16 +720,13 @@ class progressive_optimizer(pl.LightningModule):
                 diff_pos_wrd = torch.sum(diff_pos_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
                 diff_obj_axis_green_wrd = torch.sum(diff_obj_axis_green_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
                 diff_obj_axis_red_wrd = torch.sum(diff_obj_axis_red_cam[..., None, :]*w2c.permute(0, 2, 1), -1)
-
-                # Get weight.
-                frame_weight = frame_weight / torch.sum(frame_weight, dim=-1)[:, None]
-
+                
                 # Get integrated_update.
-                diff_pos_wrd = torch.sum(frame_weight[..., None]*diff_pos_wrd.reshape(batch_size, -1, 3), dim=1)
-                diff_scale = torch.sum(frame_weight[..., None]*diff_scale.reshape(batch_size, -1, 1), dim=1)
-                diff_obj_axis_green_wrd = torch.sum(frame_weight[..., None]*diff_obj_axis_green_wrd.reshape(batch_size, -1, 3), dim=1)
-                diff_obj_axis_red_wrd = torch.sum(frame_weight[..., None]*diff_obj_axis_red_wrd.reshape(batch_size, -1, 3), dim=1)
-                diff_shape_code = torch.sum(frame_weight[..., None]*diff_shape_code.reshape(batch_size, -1, self.ddf.latent_size), dim=1)
+                diff_pos_wrd = diff_pos_wrd.reshape(batch_size, -1, 3).mean(1)
+                diff_scale = diff_scale.reshape(batch_size, -1, 1).mean(1)
+                diff_obj_axis_green_wrd = diff_obj_axis_green_wrd.reshape(batch_size, -1, 3).mean(1)
+                diff_obj_axis_red_wrd = diff_obj_axis_red_wrd.reshape(batch_size, -1, 3).mean(1)
+                diff_shape_code = diff_shape_code.reshape(batch_size, -1, self.ddf.latent_size).mean(1)
 
                 # Update estimations.
                 est_obj_pos_wrd = pre_obj_pos_wrd + diff_pos_wrd
@@ -808,7 +741,7 @@ class progressive_optimizer(pl.LightningModule):
                 ###################################
                 for half_lambda_idx in range(self.half_lambda_max):
                     # print(f'lamda{half_lambda_idx}')
-                    
+
                     # Reshape to (batch, frame, ?)
                     inp_est_obj_pos_wrd = est_obj_pos_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
                     inp_est_obj_scale = est_obj_scale[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 1)
@@ -870,7 +803,6 @@ class progressive_optimizer(pl.LightningModule):
                         est_obj_axis_red_wrd[un_update_mask] = F.normalize(pre_obj_axis_red_wrd[un_update_mask] + lamda_i * diff_obj_axis_red_wrd[un_update_mask], dim=-1)
                         est_shape_code[un_update_mask] = pre_shape_code[un_update_mask] + lamda_i * diff_shape_code[un_update_mask]
 
-
             # Save pre estimation.
             with torch.no_grad():
                 pre_obj_pos_wrd = est_obj_pos_wrd.clone().detach()
@@ -878,15 +810,6 @@ class progressive_optimizer(pl.LightningModule):
                 pre_obj_axis_red_wrd = est_obj_axis_red_wrd.clone().detach()
                 pre_obj_axis_green_wrd = est_obj_axis_green_wrd.clone().detach()
                 pre_shape_code = est_shape_code.clone().detach()
-
-        # # Check attention.
-        # total_check_map = []
-        # for b_i in range(batch_size):
-        #     check_map_list = frame_clopped_distance_map[b_i][torch.argsort(frame_weight_list[b_i])]
-        #     check_map = torch.cat([check_map_i for check_map_i in check_map_list], dim=-1)
-        #     total_check_map.append(check_map)
-        # check_map_torch(torch.cat(total_check_map, dim=0), 'tes.png')
-        # import pdb; pdb.set_trace()
 
 
         ###################################
@@ -1002,138 +925,138 @@ class progressive_optimizer(pl.LightningModule):
 
 
 if __name__=='__main__':
-    # # Get args
-    # args = get_args()
-    # args.gpu_num = torch.cuda.device_count() # log used gpu num.
-
-    # # Set trainer.
-    # logger = pl.loggers.TensorBoardLogger(
-    #         save_dir=os.getcwd(),
-    #         version=f'{args.expname}_{args.exp_version}',
-    #         name='lightning_logs'
-    #     )
-    # trainer = pl.Trainer(
-    #     gpus=args.gpu_num, 
-    #     strategy=DDPPlugin(find_unused_parameters=True), #=False), 
-    #     logger=logger,
-    #     max_epochs=args.N_epoch, 
-    #     enable_checkpointing = False,
-    #     check_val_every_n_epoch=args.check_val_every_n_epoch,
-    #     )
-
-    # # Save config files.
-    # os.makedirs(os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}'), exist_ok=True)
-    # f = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'args.txt')
-    # with open(f, 'w') as file:
-    #     for arg in sorted(vars(args)):
-    #         attr = getattr(args, arg)
-    #         file.write('{} = {}\n'.format(arg, attr))
-    # if args.config is not None:
-    #     f = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'config.txt')
-    #     with open(f, 'w') as file:
-    #         file.write(open(args.config, 'r').read())
-
-    # # Create dataloader
-    # train_dataset = TaR_dataset(
-    #     args, 
-    #     'train', 
-    #     args.train_instance_list_txt, 
-    #     args.train_data_dir, 
-    #     args.train_N_views, 
-    #     )
-    # train_dataloader = data_utils.DataLoader(
-    #     train_dataset, 
-    #     batch_size=args.N_batch, 
-    #     num_workers=args.num_workers, 
-    #     drop_last=False, 
-    #     shuffle=True, 
-    #     )
-
-    # # Set models and Start training.
-    # ddf = DDF(args)
-    # ddf = ddf.load_from_checkpoint(checkpoint_path=args.ddf_model_path, args=args)
-    # ddf.eval()
-    # # ckpt_path = '/home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair/dfnetwfd_list0_date0616/checkpoints/0000001500.ckpt'
-    # ckpt_path = None
-    # model = progressive_optimizer(args, ddf)
-    # trainer.fit(
-    #     model=model, 
-    #     train_dataloaders=train_dataloader, 
-    #     ckpt_path=ckpt_path
-    #     )
-
-
-
     # Get args
     args = get_args()
     args.gpu_num = torch.cuda.device_count() # log used gpu num.
-    args.val_data_dir='/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64'
-    args.val_N_views = 32
-    args.use_gru = False
 
-    # Create dataloader.
-    val_dataset = TaR_dataset(
-        args, 
-        'val', 
-        args.val_instance_list_txt, 
-        args.val_data_dir, 
-        args.val_N_views, 
+    # Set trainer.
+    logger = pl.loggers.TensorBoardLogger(
+            save_dir=os.getcwd(),
+            version=f'{args.expname}_{args.exp_version}',
+            name='lightning_logs'
         )
-    val_dataloader = data_utils.DataLoader(
-        val_dataset, 
+    trainer = pl.Trainer(
+        gpus=args.gpu_num, 
+        strategy=DDPPlugin(find_unused_parameters=True), #=False), 
+        logger=logger,
+        max_epochs=args.N_epoch, 
+        enable_checkpointing = False,
+        check_val_every_n_epoch=args.check_val_every_n_epoch,
+        )
+
+    # Save config files.
+    os.makedirs(os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}'), exist_ok=True)
+    f = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'args.txt')
+    with open(f, 'w') as file:
+        for arg in sorted(vars(args)):
+            attr = getattr(args, arg)
+            file.write('{} = {}\n'.format(arg, attr))
+    if args.config is not None:
+        f = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'config.txt')
+        with open(f, 'w') as file:
+            file.write(open(args.config, 'r').read())
+
+    # Create dataloader
+    train_dataset = TaR_dataset(
+        args, 
+        'train', 
+        args.train_instance_list_txt, 
+        args.train_data_dir, 
+        args.train_N_views, 
+        )
+    train_dataloader = data_utils.DataLoader(
+        train_dataset, 
         batch_size=args.N_batch, 
         num_workers=args.num_workers, 
         drop_last=False, 
-        shuffle=False, 
+        shuffle=True, 
         )
 
     # Set models and Start training.
     ddf = DDF(args)
     ddf = ddf.load_from_checkpoint(checkpoint_path=args.ddf_model_path, args=args)
     ddf.eval()
-    model = progressive_optimizer(args, ddf)
-    model = model.load_from_checkpoint(checkpoint_path=args.model_ckpt_path, args=args, ddf=ddf)
-
-    # Setting model.
-    model.start_frame_idx = 0
-    model.half_lambda_max = 3
-    if model.model_mode == 'only_init':
-        model.only_init_net = True
-        model.test_optim_num = 1
-    else:
-        model.only_init_net = False
-    model.use_deep_optimizer = True
-    model.use_adam_optimizer = not(model.use_deep_optimizer)
-
-    # Save logs.
-    import datetime
-    dt_now = datetime.datetime.now()
-    time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
-
-    os.mkdir('./txt/experiments/log/' + time_log)
-    file_name = './txt/experiments/log/' + time_log + '/log.txt'
-    model.test_log_path = file_name
-    ckpt_path = args.model_ckpt_path
-    with open(file_name, 'a') as file:
-        file.write('script_name : ' + 'val adam multi' + '\n')
-        file.write('time_log : ' + time_log + '\n')
-        file.write('ckpt_path : ' + ckpt_path + '\n')
-        file.write('val_N_views : ' + str(args.val_N_views) + '\n')
-        file.write('val_instance_list_txt : ' + str(args.val_instance_list_txt) + '\n')
-        file.write('\n')
-        file.write('only_init_net : ' + str(model.only_init_net) + '\n')
-        file.write('start_frame_idx : ' + str(model.start_frame_idx) + '\n')
-        file.write('frame_sequence_num : ' + str(model.frame_sequence_num) + '\n')
-        file.write('half_lambda_max : ' + str(model.half_lambda_max) + '\n')
-        file.write('itr_frame_num : ' + str(model.itr_frame_num) + '\n')
-        file.write('\n')
-
-    # Test model.
-    trainer = pl.Trainer(
-        gpus=args.gpu_num, 
-        strategy=DDPPlugin(find_unused_parameters=True), #=False), 
-        enable_checkpointing = False,
-        check_val_every_n_epoch = args.check_val_every_n_epoch,
-        logger = pl.loggers.TensorBoardLogger(save_dir=os.getcwd(), version=f'val_trash', name='lightning_logs')
+    # ckpt_path = '/home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair/dfnetwfd_list0_date0616/checkpoints/0000001500.ckpt'
+    ckpt_path = None
+    model = original_optimizer(args, ddf)
+    trainer.fit(
+        model=model, 
+        train_dataloaders=train_dataloader, 
+        ckpt_path=ckpt_path
         )
-    trainer.test(model, val_dataloader)
+
+
+    # # Get args
+    # args = get_args()
+    # args.gpu_num = torch.cuda.device_count() # log used gpu num.
+    # args.val_data_dir='/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64'
+    # args.val_N_views = 32
+    # args.use_gru = False
+
+    # # Create dataloader.
+    # val_dataset = TaR_dataset(
+    #     args, 
+    #     'val', 
+    #     args.val_instance_list_txt, 
+    #     args.val_data_dir, 
+    #     args.val_N_views, 
+    #     )
+    # val_dataloader = data_utils.DataLoader(
+    #     val_dataset, 
+    #     batch_size=args.N_batch, 
+    #     num_workers=args.num_workers, 
+    #     drop_last=False, 
+    #     shuffle=False, 
+    #     )
+
+    # # Set models and Start training.
+    # ddf = DDF(args)
+    # ddf = ddf.load_from_checkpoint(checkpoint_path=args.ddf_model_path, args=args)
+    # ddf.eval()
+    # model = original_optimizer(args, ddf)
+    # model = model.load_from_checkpoint(checkpoint_path=args.model_ckpt_path, args=args, ddf=ddf)
+
+    # # Setting model.
+    # model.start_frame_idx = 0
+    # model.half_lambda_max = 3
+    # if model.model_mode == 'only_init':
+    #     model.only_init_net = True
+    #     model.test_optim_num = 1
+    # else:
+    #     model.only_init_net = False
+    # model.use_deep_optimizer = True
+    # model.use_adam_optimizer = not(model.use_deep_optimizer)
+
+    # # Save logs.
+    # import datetime
+    # dt_now = datetime.datetime.now()
+    # time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
+
+    # os.mkdir('./txt/experiments/log/' + time_log)
+    # file_name = './txt/experiments/log/' + time_log + '/log.txt'
+    # model.test_log_path = file_name
+    # ckpt_path = args.model_ckpt_path
+    # with open(file_name, 'a') as file:
+    #     file.write('script_name : ' + 'val adam multi' + '\n')
+    #     file.write('time_log : ' + time_log + '\n')
+    #     file.write('ckpt_path : ' + ckpt_path + '\n')
+    #     file.write('val_N_views : ' + str(args.val_N_views) + '\n')
+    #     file.write('val_instance_list_txt : ' + str(args.val_instance_list_txt) + '\n')
+    #     file.write('\n')
+    #     file.write('only_init_net : ' + str(model.only_init_net) + '\n')
+    #     file.write('start_frame_idx : ' + str(model.start_frame_idx) + '\n')
+    #     file.write('frame_sequence_num : ' + str(model.frame_sequence_num) + '\n')
+    #     file.write('half_lambda_max : ' + str(model.half_lambda_max) + '\n')
+    #     file.write('itr_frame_num : ' + str(model.itr_frame_num) + '\n')
+    #     file.write('\n')
+
+    # # Test model.
+    # trainer = pl.Trainer(
+    #     gpus=args.gpu_num, 
+    #     strategy=DDPPlugin(find_unused_parameters=True), #=False), 
+    #     enable_checkpointing = False,
+    #     check_val_every_n_epoch = args.check_val_every_n_epoch,
+    #     logger = pl.loggers.TensorBoardLogger(save_dir=os.getcwd(), version=f'val_trash', name='lightning_logs')
+    #     )
+    # trainer.test(model, val_dataloader)
+    

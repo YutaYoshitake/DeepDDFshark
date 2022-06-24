@@ -1,1 +1,2 @@
-CUDA_VISIBLE_DEVICES=0 python train_pro.py --config=configs/dfnet.txt --frame_sequence_num=35 --N_batch=3 --exp_version=0621 --expname = DeepTaR/chair/progressive_list0
+# CUDA_VISIBLE_DEVICES=0 python train_pro.py --config=configs/dfnet.txt --frame_sequence_num=5 --N_batch=15 --exp_version=0621 --expname=DeepTaR/chair/progressive_list0
+CUDA_VISIBLE_DEVICES=6 python train_ori.py --config=configs/dfnet.txt --frame_sequence_num=5 --N_batch=15 --exp_version=0621 --expname=DeepTaR/chair/original_list0
