@@ -215,3 +215,20 @@ CUDA_VISIBLE_DEVICES=4 python train_dfnet.py --config=configs/dfnet_fulldep.txt 
 nvidia-sm
 nvidia-smi
 htop
+cd works/DeepSDF/project/
+sh sh/experiment_5.sh 
+sh sh/experiment_5.sh 
+sh sh/experiment_5.sh 
+sh sh/experiment_5.sh 
+sh sh/experiment_5.sh 
+sh sh/experiment_5.sh 
+cd works/DeepSDF/project/
+sh sh/experiment_4.sh 
+nvidia-smi
+sh sh/experiment_4.sh 
+sh sh/experiment_4.sh 
+sh sh/experiment_2.sh 
+cd works/DeepSDF/project/
+sh sh/experiment_8.sh 
+sh sh/experiment_8.sh 
+sh sh/experiment_1.sh 

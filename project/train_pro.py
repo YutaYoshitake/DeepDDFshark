@@ -670,7 +670,7 @@ class progressive_optimizer(pl.LightningModule):
             ###################################
             #####     Perform initnet.    #####
             ###################################
-            # print('ini')
+            print('ini')
             # Get new frame.
             inp = torch.stack([normalized_depth_map.reshape(batch_size, opt_frame_num, self.ddf_H, self.ddf_H)[:, -1], 
                                clopped_mask.reshape(batch_size, opt_frame_num, self.ddf_H, self.ddf_H)[:, -1]]
@@ -720,7 +720,7 @@ class progressive_optimizer(pl.LightningModule):
             #####      Perform dfnet.     #####
             ###################################
             if not first_iterartion:
-                # print('df')
+                print('df')
                 # Reshape to (batch, frame, ?)
                 inp_pre_obj_pos_wrd = pre_obj_pos_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
                 inp_pre_obj_scale = pre_obj_scale[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 1)
@@ -768,7 +768,8 @@ class progressive_optimizer(pl.LightningModule):
                     # if len(check_map)>5:
                     #     break
                 check_map = torch.cat(check_map, dim=0)
-                check_map_torch(check_map, f'tes_{batch_idx}_{new_frame_idx}.png')
+                check_map_torch(check_map, f'pro_{batch_idx}_{new_frame_idx}.png')
+                # import pdb; pdb.set_trace()
                 ##################################################
                 diff_pos_cim, diff_obj_axis_green_cam, diff_obj_axis_red_cam, diff_scale, diff_shape_code = self.df_net(
                                                                                                                     inp = inp, 
@@ -807,7 +808,7 @@ class progressive_optimizer(pl.LightningModule):
                 #####    Start Lamda Step     #####
                 ###################################
                 for half_lambda_idx in range(self.half_lambda_max):
-                    # print(f'lamda{half_lambda_idx}')
+                    print(f'lamda{half_lambda_idx}')
                     
                     # Reshape to (batch, frame, ?)
                     inp_est_obj_pos_wrd = est_obj_pos_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
@@ -886,6 +887,16 @@ class progressive_optimizer(pl.LightningModule):
         #     check_map = torch.cat([check_map_i for check_map_i in check_map_list], dim=-1)
         #     total_check_map.append(check_map)
         # check_map_torch(torch.cat(total_check_map, dim=0), 'tes.png')
+        # import pdb; pdb.set_trace()
+
+        # Check final outputs.
+        total_check_map = []
+        for b_i in range(batch_size):
+            check_map = torch.cat([normalized_depth_map[::3][b_i], 
+                                   est_normalized_depth_map[::3][b_i], 
+                                   torch.abs(normalized_depth_map[::3][b_i]-est_normalized_depth_map[::3][b_i])], dim=-1)
+            total_check_map.append(check_map)
+        check_map_torch(torch.cat(total_check_map, dim=0), f'pro_{batch_idx}.png')
         # import pdb; pdb.set_trace()
 
 
@@ -1093,6 +1104,13 @@ if __name__=='__main__':
     ddf.eval()
     model = progressive_optimizer(args, ddf)
     model = model.load_from_checkpoint(checkpoint_path=args.model_ckpt_path, args=args, ddf=ddf)
+    ###########################################################################
+    model_ = progressive_optimizer(args, ddf)
+    init_net_skpt = 'lightning_logs/DeepTaR/chair/progressive_list0_0621/checkpoints/0000000500.ckpt'
+    # init_net_skpt = 'lightning_logs/DeepTaR/chair/progressivewfd_list0_0621/checkpoints/0000000500.ckpt'
+    model_ = model_.load_from_checkpoint(checkpoint_path=init_net_skpt, args=args, ddf=ddf)
+    model.init_net = model_.init_net
+    ###########################################################################
 
     # Setting model.
     model.start_frame_idx = 0

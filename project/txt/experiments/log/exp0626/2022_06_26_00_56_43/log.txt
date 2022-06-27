@@ -1,0 +1,17 @@
+script_name : val adam multi
+time_log : 2022_06_26_00_56_43
+ckpt_path : lightning_logs/DeepTaR/chair/original_list0_0621/checkpoints/0000000500.ckpt
+val_N_views : 32
+val_instance_list_txt : instance_lists/kmean/top_256_kmeans_list_0.txt
+
+only_init_net : True
+start_frame_idx : 0
+frame_sequence_num : 5
+half_lambda_max : 3
+itr_frame_num : 3
+
+avg_err_pos   : 0.008256493136286736 : 0.00757827702909708
+avg_err_scale : 0.02076992392539978 : 0.01703011989593506
+avg_err_red   : 1.905535101890564 : 1.680511474609375
+avg_err_green : 1.904632568359375 : 1.7503302097320557
+avg_err_depth : 0.06536772102117538 : 0.06468643248081207

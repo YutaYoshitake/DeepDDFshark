@@ -88,6 +88,11 @@ class initializer(pl.LightningModule):
                 nn.Linear(256, 256), nn.LeakyReLU(0.2),
                 nn.Linear(256, 1), nn.Softplus(beta=.7), 
                 )
+        # self.fc_weight = nn.Sequential(
+        #         nn.Linear(512, 256), nn.LeakyReLU(0.2),
+        #         nn.Linear(256, 256), nn.LeakyReLU(0.2),
+        #         nn.Linear(256, 1), nn.Sigmoid(), 
+        #         )
 
     
     def forward(self, inp, bbox_info):
@@ -362,6 +367,7 @@ class original_optimizer(pl.LightningModule):
             ###################################
             #####     Perform initnet.    #####
             ###################################
+            print('ini')
             # if first_iterartion:
             # Est.
             inp = torch.stack([normalized_depth_map, clopped_mask], 1).detach()
@@ -397,6 +403,7 @@ class original_optimizer(pl.LightningModule):
             ###################################
             #####      Perform dfnet.     #####
             ###################################
+            print('df')
             if not first_iterartion:
                 with torch.no_grad():
                     # Reshape to (batch, frame, ?)
@@ -554,7 +561,7 @@ class original_optimizer(pl.LightningModule):
             ckpt_path = os.path.join(self.trainer.log_dir, 'checkpoints', ckpt_name)
             trainer.save_checkpoint(ckpt_path)
 
-    
+
     def test_step(self, batch, batch_idx):
         batch_size, frame_raw_invdistance_map, frame_clopped_mask, \
         frame_clopped_distance_map, frame_bbox_list, frame_rays_d_cam, \
@@ -602,7 +609,7 @@ class original_optimizer(pl.LightningModule):
             #####     Perform initnet.    #####
             ###################################
             if first_iterartion:
-                # print('ini')
+                print('ini')
                 inp = torch.stack([normalized_depth_map, clopped_mask], 1).detach()
                 est_obj_pos_cim, est_obj_axis_green_cam, est_obj_axis_red_cam, est_scale_cim, est_shape_code, _ = self.init_net(inp, bbox_info)
                 est_obj_pos_cam, est_obj_scale, cim2im_scale, im2cam_scale, bbox_center = diff2estimation(
@@ -629,6 +636,13 @@ class original_optimizer(pl.LightningModule):
                 bbox_center_list = bbox_center.reshape(batch_size, self.frame_sequence_num, 2)
             
             if self.only_init_net:
+                # Save pre estimation.
+                with torch.no_grad():
+                    pre_obj_pos_wrd = est_obj_pos_wrd.clone().detach()
+                    pre_obj_scale = est_obj_scale.clone().detach()
+                    pre_obj_axis_red_wrd = est_obj_axis_red_wrd.clone().detach()
+                    pre_obj_axis_green_wrd = est_obj_axis_green_wrd.clone().detach()
+                    pre_shape_code = est_shape_code.clone().detach()
                 break
 
 
@@ -636,7 +650,7 @@ class original_optimizer(pl.LightningModule):
             #####      Perform dfnet.     #####
             ###################################
             if not first_iterartion:
-                # print('df')
+                print('df')
                 # Reshape to (batch, frame, ?)
                 cim2im_scale = cim2im_scale_list[:, frame_idx_list].reshape(-1)
                 im2cam_scale = im2cam_scale_list[:, frame_idx_list].reshape(-1)
@@ -679,6 +693,17 @@ class original_optimizer(pl.LightningModule):
                                    inp_pre_depth_map, 
                                    inp_pre_mask, 
                                    normalized_depth_map - inp_pre_depth_map], 1).detach()
+                ##################################################
+                # Check inp.
+                check_map = []
+                for inp_i in inp:
+                    check_map.append(torch.cat([inp_i_i for inp_i_i in inp_i], dim=-1))
+                    # if len(check_map)>5:
+                    #     break
+                check_map = torch.cat(check_map, dim=0)
+                check_map_torch(check_map, f'ori_{batch_idx}_{new_frame_idx}.png')
+                # import pdb; pdb.set_trace()
+                ##################################################
                 diff_pos_cim, diff_obj_axis_green_cam, diff_obj_axis_red_cam, diff_scale, diff_shape_code = self.df_net(
                                                                                                                     inp = inp, 
                                                                                                                     bbox_info = bbox_info, 
@@ -687,18 +712,6 @@ class original_optimizer(pl.LightningModule):
                                                                                                                     pre_axis_red = inp_pre_obj_axis_red_cam, 
                                                                                                                     pre_scale = inp_pre_obj_scale_cim, 
                                                                                                                     pre_shape_code = inp_pre_shape_code)
-                
-                # ##################################################
-                # # Check inp.
-                # check_map = []
-                # for inp_i in inp:
-                #     check_map.append(torch.cat([inp_i_i for inp_i_i in inp_i], dim=-1))
-                #     # if len(check_map)>5:
-                #     #     break
-                # check_map = torch.cat(check_map, dim=0)
-                # check_map_torch(check_map, f'tes.png')
-                # import pdb; pdb.set_trace()
-                # ##################################################
                 
                 # Get update.
                 inp = torch.stack([normalized_depth_map, 
@@ -740,8 +753,7 @@ class original_optimizer(pl.LightningModule):
                 #####    Start Lamda Step     #####
                 ###################################
                 for half_lambda_idx in range(self.half_lambda_max):
-                    # print(f'lamda{half_lambda_idx}')
-
+                    print(f'lamda_{half_lambda_idx}')
                     # Reshape to (batch, frame, ?)
                     inp_est_obj_pos_wrd = est_obj_pos_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
                     inp_est_obj_scale = est_obj_scale[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 1)
@@ -810,6 +822,16 @@ class original_optimizer(pl.LightningModule):
                 pre_obj_axis_red_wrd = est_obj_axis_red_wrd.clone().detach()
                 pre_obj_axis_green_wrd = est_obj_axis_green_wrd.clone().detach()
                 pre_shape_code = est_shape_code.clone().detach()
+
+        # Check final outputs.
+        total_check_map = []
+        for b_i in range(batch_size):
+            check_map = torch.cat([normalized_depth_map[::3][b_i], 
+                                   est_normalized_depth_map[::3][b_i], 
+                                   torch.abs(normalized_depth_map[::3][b_i]-est_normalized_depth_map[::3][b_i])], dim=-1)
+            total_check_map.append(check_map)
+        check_map_torch(torch.cat(total_check_map, dim=0), f'ori_{batch_idx}.png')
+        # import pdb; pdb.set_trace()
 
 
         ###################################
@@ -925,138 +947,147 @@ class original_optimizer(pl.LightningModule):
 
 
 if __name__=='__main__':
-    # Get args
-    args = get_args()
-    args.gpu_num = torch.cuda.device_count() # log used gpu num.
-
-    # Set trainer.
-    logger = pl.loggers.TensorBoardLogger(
-            save_dir=os.getcwd(),
-            version=f'{args.expname}_{args.exp_version}',
-            name='lightning_logs'
-        )
-    trainer = pl.Trainer(
-        gpus=args.gpu_num, 
-        strategy=DDPPlugin(find_unused_parameters=True), #=False), 
-        logger=logger,
-        max_epochs=args.N_epoch, 
-        enable_checkpointing = False,
-        check_val_every_n_epoch=args.check_val_every_n_epoch,
-        )
-
-    # Save config files.
-    os.makedirs(os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}'), exist_ok=True)
-    f = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'args.txt')
-    with open(f, 'w') as file:
-        for arg in sorted(vars(args)):
-            attr = getattr(args, arg)
-            file.write('{} = {}\n'.format(arg, attr))
-    if args.config is not None:
-        f = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'config.txt')
-        with open(f, 'w') as file:
-            file.write(open(args.config, 'r').read())
-
-    # Create dataloader
-    train_dataset = TaR_dataset(
-        args, 
-        'train', 
-        args.train_instance_list_txt, 
-        args.train_data_dir, 
-        args.train_N_views, 
-        )
-    train_dataloader = data_utils.DataLoader(
-        train_dataset, 
-        batch_size=args.N_batch, 
-        num_workers=args.num_workers, 
-        drop_last=False, 
-        shuffle=True, 
-        )
-
-    # Set models and Start training.
-    ddf = DDF(args)
-    ddf = ddf.load_from_checkpoint(checkpoint_path=args.ddf_model_path, args=args)
-    ddf.eval()
-    # ckpt_path = '/home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair/dfnetwfd_list0_date0616/checkpoints/0000001500.ckpt'
-    ckpt_path = None
-    model = original_optimizer(args, ddf)
-    trainer.fit(
-        model=model, 
-        train_dataloaders=train_dataloader, 
-        ckpt_path=ckpt_path
-        )
-
-
     # # Get args
     # args = get_args()
     # args.gpu_num = torch.cuda.device_count() # log used gpu num.
-    # args.val_data_dir='/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64'
-    # args.val_N_views = 32
-    # args.use_gru = False
 
-    # # Create dataloader.
-    # val_dataset = TaR_dataset(
-    #     args, 
-    #     'val', 
-    #     args.val_instance_list_txt, 
-    #     args.val_data_dir, 
-    #     args.val_N_views, 
+    # # Set trainer.
+    # logger = pl.loggers.TensorBoardLogger(
+    #         save_dir=os.getcwd(),
+    #         version=f'{args.expname}_{args.exp_version}',
+    #         name='lightning_logs'
     #     )
-    # val_dataloader = data_utils.DataLoader(
-    #     val_dataset, 
+    # trainer = pl.Trainer(
+    #     gpus=args.gpu_num, 
+    #     strategy=DDPPlugin(find_unused_parameters=True), #=False), 
+    #     logger=logger,
+    #     max_epochs=args.N_epoch, 
+    #     enable_checkpointing = False,
+    #     check_val_every_n_epoch=args.check_val_every_n_epoch,
+    #     )
+
+    # # Save config files.
+    # os.makedirs(os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}'), exist_ok=True)
+    # f = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'args.txt')
+    # with open(f, 'w') as file:
+    #     for arg in sorted(vars(args)):
+    #         attr = getattr(args, arg)
+    #         file.write('{} = {}\n'.format(arg, attr))
+    # if args.config is not None:
+    #     f = os.path.join('lightning_logs', f'{args.expname}_{args.exp_version}', 'config.txt')
+    #     with open(f, 'w') as file:
+    #         file.write(open(args.config, 'r').read())
+
+    # # Create dataloader
+    # train_dataset = TaR_dataset(
+    #     args, 
+    #     'train', 
+    #     args.train_instance_list_txt, 
+    #     args.train_data_dir, 
+    #     args.train_N_views, 
+    #     )
+    # train_dataloader = data_utils.DataLoader(
+    #     train_dataset, 
     #     batch_size=args.N_batch, 
     #     num_workers=args.num_workers, 
     #     drop_last=False, 
-    #     shuffle=False, 
+    #     shuffle=True, 
     #     )
 
     # # Set models and Start training.
     # ddf = DDF(args)
     # ddf = ddf.load_from_checkpoint(checkpoint_path=args.ddf_model_path, args=args)
     # ddf.eval()
+    # # ckpt_path = '/home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair/dfnetwfd_list0_date0616/checkpoints/0000001500.ckpt'
+    # ckpt_path = None
     # model = original_optimizer(args, ddf)
-    # model = model.load_from_checkpoint(checkpoint_path=args.model_ckpt_path, args=args, ddf=ddf)
-
-    # # Setting model.
-    # model.start_frame_idx = 0
-    # model.half_lambda_max = 3
-    # if model.model_mode == 'only_init':
-    #     model.only_init_net = True
-    #     model.test_optim_num = 1
-    # else:
-    #     model.only_init_net = False
-    # model.use_deep_optimizer = True
-    # model.use_adam_optimizer = not(model.use_deep_optimizer)
-
-    # # Save logs.
-    # import datetime
-    # dt_now = datetime.datetime.now()
-    # time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
-
-    # os.mkdir('./txt/experiments/log/' + time_log)
-    # file_name = './txt/experiments/log/' + time_log + '/log.txt'
-    # model.test_log_path = file_name
-    # ckpt_path = args.model_ckpt_path
-    # with open(file_name, 'a') as file:
-    #     file.write('script_name : ' + 'val adam multi' + '\n')
-    #     file.write('time_log : ' + time_log + '\n')
-    #     file.write('ckpt_path : ' + ckpt_path + '\n')
-    #     file.write('val_N_views : ' + str(args.val_N_views) + '\n')
-    #     file.write('val_instance_list_txt : ' + str(args.val_instance_list_txt) + '\n')
-    #     file.write('\n')
-    #     file.write('only_init_net : ' + str(model.only_init_net) + '\n')
-    #     file.write('start_frame_idx : ' + str(model.start_frame_idx) + '\n')
-    #     file.write('frame_sequence_num : ' + str(model.frame_sequence_num) + '\n')
-    #     file.write('half_lambda_max : ' + str(model.half_lambda_max) + '\n')
-    #     file.write('itr_frame_num : ' + str(model.itr_frame_num) + '\n')
-    #     file.write('\n')
-
-    # # Test model.
-    # trainer = pl.Trainer(
-    #     gpus=args.gpu_num, 
-    #     strategy=DDPPlugin(find_unused_parameters=True), #=False), 
-    #     enable_checkpointing = False,
-    #     check_val_every_n_epoch = args.check_val_every_n_epoch,
-    #     logger = pl.loggers.TensorBoardLogger(save_dir=os.getcwd(), version=f'val_trash', name='lightning_logs')
+    # trainer.fit(
+    #     model=model, 
+    #     train_dataloaders=train_dataloader, 
+    #     ckpt_path=ckpt_path
     #     )
-    # trainer.test(model, val_dataloader)
+
+
+    # Get args
+    args = get_args()
+    args.gpu_num = torch.cuda.device_count() # log used gpu num.
+    args.val_data_dir='/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64'
+    args.val_N_views = 32
+    args.use_gru = False
+
+    # Create dataloader.
+    val_dataset = TaR_dataset(
+        args, 
+        'val', 
+        args.val_instance_list_txt, 
+        args.val_data_dir, 
+        args.val_N_views, 
+        )
+    val_dataloader = data_utils.DataLoader(
+        val_dataset, 
+        batch_size=args.N_batch, 
+        num_workers=args.num_workers, 
+        drop_last=False, 
+        shuffle=False, 
+        )
+
+    # Set models and Start training.
+    ddf = DDF(args)
+    ddf = ddf.load_from_checkpoint(checkpoint_path=args.ddf_model_path, args=args)
+    ddf.eval()
+    model = original_optimizer(args, ddf)
+    model = model.load_from_checkpoint(checkpoint_path=args.model_ckpt_path, args=args, ddf=ddf)
+    ###########################################################################
+    from train_pro import progressive_optimizer
+    model_ = progressive_optimizer(args, ddf)
+    init_net_skpt = 'lightning_logs/DeepTaR/chair/progressive_list0_0621/checkpoints/0000000500.ckpt'
+    model_ = model_.load_from_checkpoint(checkpoint_path=init_net_skpt, args=args, ddf=ddf)
+    model.init_net = model_.init_net
+    del model_
+    ###########################################################################
+
+    # Setting model.
+    model.start_frame_idx = 0
+    model.half_lambda_max = 3
+    model.model_mode = args.model_mode
+    if model.model_mode == 'only_init':
+        model.only_init_net = True
+        model.test_optim_num = 1
+    else:
+        model.only_init_net = False
+    model.use_deep_optimizer = True
+    model.use_adam_optimizer = not(model.use_deep_optimizer)
+
+    # Save logs.
+    import datetime
+    dt_now = datetime.datetime.now()
+    time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
+
+    os.mkdir('./txt/experiments/log/' + time_log)
+    file_name = './txt/experiments/log/' + time_log + '/log.txt'
+    model.test_log_path = file_name
+    ckpt_path = args.model_ckpt_path
+    with open(file_name, 'a') as file:
+        file.write('script_name : ' + 'val adam multi' + '\n')
+        file.write('time_log : ' + time_log + '\n')
+        file.write('ckpt_path : ' + ckpt_path + '\n')
+        file.write('val_N_views : ' + str(args.val_N_views) + '\n')
+        file.write('val_instance_list_txt : ' + str(args.val_instance_list_txt) + '\n')
+        file.write('\n')
+        file.write('only_init_net : ' + str(model.only_init_net) + '\n')
+        file.write('start_frame_idx : ' + str(model.start_frame_idx) + '\n')
+        file.write('frame_sequence_num : ' + str(model.frame_sequence_num) + '\n')
+        file.write('half_lambda_max : ' + str(model.half_lambda_max) + '\n')
+        file.write('itr_frame_num : ' + str(model.itr_frame_num) + '\n')
+        file.write('\n')
+
+    # Test model.
+    trainer = pl.Trainer(
+        gpus=args.gpu_num, 
+        strategy=DDPPlugin(find_unused_parameters=True), #=False), 
+        enable_checkpointing = False,
+        check_val_every_n_epoch = args.check_val_every_n_epoch,
+        logger = pl.loggers.TensorBoardLogger(save_dir=os.getcwd(), version=f'val_trash', name='lightning_logs')
+        )
+    trainer.test(model, val_dataloader)
     

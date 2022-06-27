@@ -35,38 +35,65 @@ np.random.seed(0)
 DEBUG = False
 
 
-aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_06_23_15_15_37/log_error.pickle')
-bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_06_23_19_51_16/log_error.pickle')
+
+label_a = "progressive"
+label_b = "original"
+pickle_name = 'list0.pickle'
+aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_56_45/log_error.pickle')
+bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_14_15/log_error.pickle')
+pickle_name = 'list1.pickle'
+aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_05_45/log_error.pickle')
+bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_24_32/log_error.pickle')
+pickle_name = 'list2.pickle'
+aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_40/log_error.pickle')
+bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_56/log_error.pickle')
+# pickle_name = 'list3.pickle'
+# aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_37_40/log_error.pickle')
+# bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_53_36/log_error.pickle')
+# pickle_name = 'list4.pickle'
+# aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_47_02/log_error.pickle')
+# bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_04_12/log_error.pickle')
 
 # for key in aaa.keys():
-    
 #     fig = pylab.figure()
 #     ax = fig.add_subplot(1,1,1)
-#     ax.hist(aaa[key], bins=50, alpha = 0.5, color= 'c', label="progressivewfd")
-#     ax.hist(bbb[key], bins=50, alpha = 0.5, color= 'm', label="progressive")
+#     ax.hist([aaa[key], bbb[key]], bins=50, label=[label_a, label_b])
 #     if key == 'path':
 #         break
 #     ax.legend()
 #     fig.savefig(f"err_{key}.png")
 
-origin = bbb
-target = aaa
+origin = aaa
+target = bbb
 result_path_list = []
-target_value_list = []
 original_value_list = []
-target_key = 'red'
-target_idx_list = np.argsort(origin[target_key])[-256:]
-threshold = 3
-for idx in target_idx_list:
-    value = target[target_key][idx]
-    if  value < threshold:
-        result_path = '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/' + origin['path'][idx]
-        result_path_list.append(result_path)
-        target_value_list.append(target[target_key][idx])
-        original_value_list.append(origin[target_key][idx])
-pickle_dump(result_path_list, 'result_list.pickle')
-print(len(result_path_list))
+target_value_list = []
+err_key = 'red'
 
+target_idx_list = np.flipud(np.argsort(origin[err_key])) # 誤差の大きい順で並べる
+origin_threshold = 70
+original_num = 128
+mask = origin[err_key][target_idx_list] > origin_threshold
+target_idx_list = target_idx_list[mask][:original_num] # しきい値以上のインデックスを取得
+# print(origin[err_key][target_idx_list]) # エラーを表示
+
+threshold = 30
+for idx in target_idx_list:
+    origin_value = origin[err_key][idx]
+    target_value = target[err_key][idx]
+    if target_value < threshold:
+        if target_value < origin_value:
+            result_path = '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/' + origin['path'][idx]
+            result_path_list.append(result_path)
+            print(f'origin : {origin[err_key][idx]:.1f}, target : {target[err_key][idx]:.1f}')
+            # original_value_list.append(origin[err_key][idx])
+            # target_value_list.append(target[err_key][idx])
+
+# print(original_value_list)
+# print(target_value_list)
+print('###     ' + str(len(result_path_list)) + '     ###')
+
+pickle_dump(result_path_list, pickle_name)
 import pdb; pdb.set_trace()
 
 
