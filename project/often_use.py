@@ -345,12 +345,12 @@ def render_distance_map_from_axis(
     mask_under_border = 1 / (cam_pos_obj.norm(dim=-1) + 1.0 * obj_scale * ddf.radius) # 良いのか...？
     est_mask = [map_i > border_i for map_i, border_i in zip(est_invdistance_map, mask_under_border)]
     est_mask = torch.stack(est_mask, dim=0)
+    est_distance_map = torch.zeros_like(est_invdistance_map)
+    est_distance_map[est_mask] = 1. / est_invdistance_map[est_mask]
 
     if with_invdistance_map:
-        return est_invdistance_map, est_mask
+        return est_invdistance_map, est_mask, est_distance_map
     else:
-        est_distance_map = torch.zeros_like(est_invdistance_map)
-        est_distance_map[est_mask] = 1. / est_invdistance_map[est_mask]
         return est_mask, est_distance_map
 
 

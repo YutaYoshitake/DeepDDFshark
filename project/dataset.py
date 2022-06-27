@@ -70,8 +70,8 @@ class TaR_dataset(data.Dataset):
                         os.path.join(data_dir, line.rstrip('\n'))
                         )
                 elif self.mode=='val':
-                    # for view_ind in range(self.N_views):
-                    for view_ind in range(1):
+                    for view_ind in range(self.N_views):
+                    # for view_ind in range(1):
                         self.instance_path_list.append(
                             os.path.join(data_dir, line.rstrip('\n'), f'{str(view_ind+1).zfill(5)}.pickle')
                             )
@@ -82,7 +82,7 @@ class TaR_dataset(data.Dataset):
                     #     '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/fc818d6fe03f098fd6f4cef762589739/00005.pickle', 
                     #     '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/e6b77b99ea085896c862eec8232fff1e/00001.pickle', 
                     #     ]
-                    self.instance_path_list = pickle_load('/home/yyoshitake/works/DeepSDF/project/total.pickle')
+                    self.instance_path_list = pickle_load('/home/yyoshitake/works/DeepSDF/project/total.pickle')[70:80]
                     # self.instance_path_list = self.instance_path_list[:5]
 
     def __getitem__(self, index):

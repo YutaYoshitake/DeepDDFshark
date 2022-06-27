@@ -299,7 +299,7 @@ class adam_optimizer(pl.LightningModule):
             shape_code_frame = shape_code_optim[:, None, :].expand(-1, opt_frame_num, self.ddf.latent_size).reshape(-1, self.ddf.latent_size)
             
             rays_d_cam = self.rays_d_cam.expand(batch_size*opt_frame_num, -1, -1, -1).to(w2c)
-            est_invdistance_map, est_mask = render_distance_map_from_axis(
+            est_invdistance_map, est_mask, _ = render_distance_map_from_axis(
                                                     H = self.ddf_H, 
                                                     obj_pos_wrd = pos_wrd_frame, 
                                                     obj_scale = scale_frame[:, 0], 
