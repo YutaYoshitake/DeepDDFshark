@@ -960,7 +960,34 @@ class progressive_optimizer(pl.LightningModule):
         #                            torch.abs(normalized_depth_map[::3][b_i]-est_normalized_depth_map[::3][b_i])], dim=-1)
         #     total_check_map.append(check_map)
         # check_map_torch(torch.cat(total_check_map, dim=0), f'last_{batch_idx}_pro.png')
-        # import pdb; pdb.set_trace()
+
+        ######################################################################
+        ######################################################################
+        ######################################################################
+        frame_idx = 0
+        rays_d_cam = frame_rays_d_cam[:, frame_idx]
+        w2c = frame_w2c[:, frame_idx]
+        cam_pos_wrd = frame_camera_pos[:, frame_idx]
+        pre_obj_axis_green_cam = torch.sum(pre_obj_axis_green_wrd[..., None, :]*w2c, -1)
+        pre_obj_axis_red_cam = torch.sum(pre_obj_axis_red_wrd[..., None, :]*w2c, -1)
+        est_mask, est_distance_map = render_distance_map_from_axis(
+                                        H = self.ddf_H, 
+                                        obj_pos_wrd = pre_obj_pos_wrd, 
+                                        axis_green = pre_obj_axis_green_cam, 
+                                        axis_red = pre_obj_axis_red_cam, 
+                                        obj_scale = pre_obj_scale[:, 0], 
+                                        input_lat_vec = pre_shape_code, 
+                                        cam_pos_wrd = cam_pos_wrd, 
+                                        rays_d_cam = rays_d_cam, 
+                                        w2c = w2c.detach(), 
+                                        ddf = self.ddf, 
+                                        with_invdistance_map = False)
+        est_map = torch.cat([est_i for est_i in est_distance_map], dim=0)
+        gt_map = torch.cat([gt_i for gt_i in frame_clopped_distance_map[:, frame_idx]], dim=0)
+        check_map_torch(torch.cat([gt_map, est_map], dim=-1), 'tes_pro.png')
+        ######################################################################
+        ######################################################################
+        ######################################################################
 
 
         ###################################
@@ -981,7 +1008,18 @@ class progressive_optimizer(pl.LightningModule):
                                         ddf = self.ddf, 
                                         )
             depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1))
-
+            
+            ######################################################################
+            ######################################################################
+            ######################################################################
+            if shape_i==3:
+                est_map = torch.cat([est_i for est_i in est_distance_map], dim=0)
+                gt_map = torch.cat([gt_i for gt_i in gt_distance_map], dim=0)
+                check_map_torch(torch.cat([gt_map, est_map], dim=-1), 'can_pro.png')
+                import pdb; pdb.set_trace()
+            ######################################################################
+            ######################################################################
+            ######################################################################
 
         # Cal err.
         err_pos = torch.abs(pre_obj_pos_wrd - frame_obj_pos[:, 0]).mean(dim=-1)
@@ -1186,28 +1224,28 @@ if __name__=='__main__':
     model.use_deep_optimizer = True
     model.use_adam_optimizer = not(model.use_deep_optimizer)
 
-    # Save logs.
-    import datetime
-    dt_now = datetime.datetime.now()
-    time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
+    # # Save logs.
+    # import datetime
+    # dt_now = datetime.datetime.now()
+    # time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
 
-    os.mkdir('./txt/experiments/log/' + time_log)
-    file_name = './txt/experiments/log/' + time_log + '/log.txt'
-    model.test_log_path = file_name
-    ckpt_path = args.model_ckpt_path
-    with open(file_name, 'a') as file:
-        file.write('script_name : ' + 'val adam multi' + '\n')
-        file.write('time_log : ' + time_log + '\n')
-        file.write('ckpt_path : ' + ckpt_path + '\n')
-        file.write('val_N_views : ' + str(args.val_N_views) + '\n')
-        file.write('val_instance_list_txt : ' + str(args.val_instance_list_txt) + '\n')
-        file.write('\n')
-        file.write('only_init_net : ' + str(model.only_init_net) + '\n')
-        file.write('start_frame_idx : ' + str(model.start_frame_idx) + '\n')
-        file.write('frame_sequence_num : ' + str(model.frame_sequence_num) + '\n')
-        file.write('half_lambda_max : ' + str(model.half_lambda_max) + '\n')
-        file.write('itr_frame_num : ' + str(model.itr_frame_num) + '\n')
-        file.write('\n')
+    # os.mkdir('./txt/experiments/log/' + time_log)
+    # file_name = './txt/experiments/log/' + time_log + '/log.txt'
+    # model.test_log_path = file_name
+    # ckpt_path = args.model_ckpt_path
+    # with open(file_name, 'a') as file:
+    #     file.write('script_name : ' + 'val adam multi' + '\n')
+    #     file.write('time_log : ' + time_log + '\n')
+    #     file.write('ckpt_path : ' + ckpt_path + '\n')
+    #     file.write('val_N_views : ' + str(args.val_N_views) + '\n')
+    #     file.write('val_instance_list_txt : ' + str(args.val_instance_list_txt) + '\n')
+    #     file.write('\n')
+    #     file.write('only_init_net : ' + str(model.only_init_net) + '\n')
+    #     file.write('start_frame_idx : ' + str(model.start_frame_idx) + '\n')
+    #     file.write('frame_sequence_num : ' + str(model.frame_sequence_num) + '\n')
+    #     file.write('half_lambda_max : ' + str(model.half_lambda_max) + '\n')
+    #     file.write('itr_frame_num : ' + str(model.itr_frame_num) + '\n')
+    #     file.write('\n')
 
     # Test model.
     trainer = pl.Trainer(

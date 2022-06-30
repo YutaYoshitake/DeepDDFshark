@@ -36,17 +36,17 @@ DEBUG = False
 
 
 
-label_a = "progressive"
-label_b = "original"
-pickle_name = 'list0.pickle'
-aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_56_45/log_error.pickle')
-bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_14_15/log_error.pickle')
-pickle_name = 'list1.pickle'
-aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_05_45/log_error.pickle')
-bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_24_32/log_error.pickle')
-pickle_name = 'list2.pickle'
-aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_40/log_error.pickle')
-bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_56/log_error.pickle')
+# label_a = "progressive"
+# label_b = "original"
+# pickle_name = 'list0.pickle'
+# aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_56_45/log_error.pickle')
+# bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_14_15/log_error.pickle')
+# pickle_name = 'list1.pickle'
+# aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_05_45/log_error.pickle')
+# bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_24_32/log_error.pickle')
+# pickle_name = 'list2.pickle'
+# aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_40/log_error.pickle')
+# bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_56/log_error.pickle')
 # pickle_name = 'list3.pickle'
 # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_37_40/log_error.pickle')
 # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_53_36/log_error.pickle')
@@ -54,14 +54,20 @@ bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/ex
 # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_47_02/log_error.pickle')
 # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_04_12/log_error.pickle')
 
-# for key in aaa.keys():
-#     fig = pylab.figure()
-#     ax = fig.add_subplot(1,1,1)
-#     ax.hist([aaa[key], bbb[key]], bins=50, label=[label_a, label_b])
-#     if key == 'path':
-#         break
-#     ax.legend()
-#     fig.savefig(f"err_{key}.png")
+label_a = "w_switch"
+label_b = "wo_switch"
+pickle_name = 'list2.pickle'
+aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_06_28_11_03_57/log_error.pickle')
+bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_40/log_error.pickle')
+
+for key in aaa.keys():
+    fig = pylab.figure()
+    ax = fig.add_subplot(1,1,1)
+    ax.hist([aaa[key], bbb[key]], bins=50, label=[label_a, label_b])
+    if key == 'path':
+        break
+    ax.legend()
+    fig.savefig(f"err_{key}.png")
 
 origin = aaa
 target = bbb
@@ -77,7 +83,7 @@ mask = origin[err_key][target_idx_list] > origin_threshold
 target_idx_list = target_idx_list[mask][:original_num] # しきい値以上のインデックスを取得
 # print(origin[err_key][target_idx_list]) # エラーを表示
 
-threshold = 30
+threshold = 5
 for idx in target_idx_list:
     origin_value = origin[err_key][idx]
     target_value = target[err_key][idx]

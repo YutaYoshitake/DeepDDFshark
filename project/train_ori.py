@@ -701,7 +701,7 @@ class original_optimizer(pl.LightningModule):
                     # if len(check_map)>5:
                     #     break
                 check_map = torch.cat(check_map, dim=0)
-                check_map_torch(check_map, f'ori_{batch_idx}_{new_frame_idx}.png')
+                check_map_torch(check_map, f'{batch_idx}_ori_{new_frame_idx}.png')
                 # import pdb; pdb.set_trace()
                 ##################################################
                 diff_pos_cim, diff_obj_axis_green_cam, diff_obj_axis_red_cam, diff_scale, diff_shape_code = self.df_net(
@@ -830,7 +830,7 @@ class original_optimizer(pl.LightningModule):
                                    est_normalized_depth_map[::3][b_i], 
                                    torch.abs(normalized_depth_map[::3][b_i]-est_normalized_depth_map[::3][b_i])], dim=-1)
             total_check_map.append(check_map)
-        check_map_torch(torch.cat(total_check_map, dim=0), f'ori_{batch_idx}.png')
+        check_map_torch(torch.cat(total_check_map, dim=0), f'last_{batch_idx}_ori.png')
         # import pdb; pdb.set_trace()
 
 

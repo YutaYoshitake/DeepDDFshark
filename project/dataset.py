@@ -82,7 +82,7 @@ class TaR_dataset(data.Dataset):
                     #     '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/fc818d6fe03f098fd6f4cef762589739/00005.pickle', 
                     #     '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/e6b77b99ea085896c862eec8232fff1e/00001.pickle', 
                     #     ]
-                    self.instance_path_list = pickle_load('/home/yyoshitake/works/DeepSDF/project/total.pickle')[70:80]
+                    # self.instance_path_list = pickle_load('/home/yyoshitake/works/DeepSDF/project/list2.pickle') + pickle_load('/home/yyoshitake/works/DeepSDF/project/instance_lists/ori_is_goo_but_pro_is_bad.pickle')[70:80]
                     # self.instance_path_list = self.instance_path_list[:5]
 
     def __getitem__(self, index):
