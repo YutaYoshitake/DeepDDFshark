@@ -1,0 +1,12 @@
+script_name : val adam multi
+time_log : 2022_07_11_02_24_05
+ckpt_path : lightning_logs/DeepTaR/chair/initnet_list0_date0705/checkpoints/0000000200.ckpt
+val_N_views : 32
+val_instance_list_txt : instance_lists/kmean/kmeans0_test_list.txt
+
+start_frame_idx : 0
+frame_sequence_num : 5
+grad_optim_max : 50
+shape_code_reg : 0.0
+adam_step_ratio : 0.01
+

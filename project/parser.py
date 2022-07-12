@@ -54,11 +54,17 @@ def config_parser():
                         help='')
     parser.add_argument("--xxx", type=str,
                         help='')
-    parser.add_argument("--automatic_optimization", type=str,default='manual', 
+    parser.add_argument("--automatic_optimization", type=str, default='manual', 
                         help='')
     parser.add_argument("--re_wood", type=bool, default=False,
                         help='')
     parser.add_argument("--model_ckpt_path", type=str, 
+                        help='')
+    parser.add_argument("--initnet_ckpt_path", type=str, 
+                        help='')
+    parser.add_argument("--optim_mode", type=str, default='optimall',
+                        help='')
+    parser.add_argument("--init_mode", type=str, default='all',
                         help='')
 
     # training options
@@ -92,9 +98,25 @@ def config_parser():
                         help='')
     parser.add_argument("--train_optim_num", type=int, default=2,
                         help='')
-    parser.add_argument("--frame_sequence_num", type=int, default=3,
+    parser.add_argument("--grad_optim_max", type=int, default=50,
+                        help='')
+    parser.add_argument("--shape_code_reg", type=float, default=0.1, 
+                        help='')
+    parser.add_argument("--frame_sequence_num", type=int,
                         help='')
     parser.add_argument("--depth_sampling_type", type=str,
+                        help='')
+    parser.add_argument("--optim_num", type=int, default=5, 
+                        help='')
+    parser.add_argument("--itr_frame_num", type=int, default=5, 
+                        help='')
+    parser.add_argument("--rand_P_range", type=float, default=0.2, 
+                        help='')
+    parser.add_argument("--rand_S_range", type=float, default=0.2, 
+                        help='')
+    parser.add_argument("--rand_R_range", type=float, default=2., 
+                        help='')
+    parser.add_argument("--rand_Z_sigma", type=float, default=0.05, 
                         help='')
     parser.add_argument("--L_p", type=float, default=1e1, 
                         help='')
@@ -106,6 +128,7 @@ def config_parser():
                         help='')
     parser.add_argument("--L_d", type=float, default=1e0, 
                         help='')
+    
 
     # ddf config.
     parser.add_argument("--ddf_model_path", type=str, 

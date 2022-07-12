@@ -500,6 +500,19 @@ def diff2estimation(obj_pos_cim, scale_diff, bbox_list, avg_z_map, fov, canonica
 
 
 
+def get_clopping_infos(bbox_list, avg_z_map, fov):
+    # Get Bbox info.
+    fov = torch.deg2rad(torch.tensor(fov, dtype=torch.float))
+    bbox_hight = bbox_list[:, 0, 1] - bbox_list[:, 1, 1]
+    bbox_center = bbox_list.mean(1)
+
+    # clopした深度マップでの予測物体中心(x, y)をカメラ座標系における(x, y)に変換
+    cim2im_scale = (bbox_hight) / 2 # clopしたBBoxの高さ÷画像の高さ２
+    im2cam_scale = avg_z_map * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)
+    return cim2im_scale, im2cam_scale, bbox_center
+
+
+
 
 def diffcim2diffcam(diff_pos_cim, cim2im_scale, im2cam_scale):
     # Get Bbox info.
@@ -536,3 +549,27 @@ def get_canonical_map(
         return est_invdepth_map, est_mask, est_depth_map
     else:
         return est_mask, est_depth_map
+
+
+
+def sample_fibonacci_views(n):
+    i = arange(0, n, dtype=float)
+    phi = arccos(1 - 2*i/n)
+    goldenRatio = (1 + 5**0.5)/2
+    theta = 2 * pi * i / goldenRatio
+    X, Y, Z = cos(theta) * sin(phi), sin(theta) * sin(phi), cos(phi)
+    xyz = np.stack([X, Y, Z], axis=1)
+    return xyz
+
+
+
+# Sampling view points on a sphere uniformaly by the fibonacci sampling.
+from numpy import arange, pi, cos, sin, tan, dot, arccos
+def sample_fibonacci_views(n):
+    i = arange(0, n, dtype=float)
+    phi = arccos(1 - 2*i/n)
+    goldenRatio = (1 + 5**0.5)/2
+    theta = 2 * pi * i / goldenRatio
+    X, Y, Z = cos(theta) * sin(phi), sin(theta) * sin(phi), cos(phi)
+    xyz = np.stack([X, Y, Z], axis=1)
+    return xyz

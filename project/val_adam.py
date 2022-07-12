@@ -73,18 +73,12 @@ class adam_optimizer(pl.LightningModule):
             for line in lines:
                 self.ddf_instance_list.append(line.rstrip('\n'))
         self.save_interval = args.save_interval
-        self.frame_sequence_num = args.frame_sequence_num
-        self.optim_num = args.frame_sequence_num
-        self.itr_frame_num = 3
 
         # Make model
         self.ddf = ddf
         from train_ori import initializer, deep_optimizer
         self.init_net = initializer(args, in_channel=2) #init_net
         self.df_net = deep_optimizer(args, in_channel=5)
-        self.adam_step_ratio = model.adam_step_ratio
-        self.grad_optim_max = model.grad_optim_max
-        self.shape_code_reg = model.shape_code_reg
 
         # loss func.
         self.l1 = torch.nn.L1Loss()
@@ -166,19 +160,12 @@ class adam_optimizer(pl.LightningModule):
         frame_gt_obj_axis_green_wrd = gt_obj_axis_green_wrd.reshape(batch_size, -1, 3)
         frame_gt_obj_axis_red_wrd = gt_obj_axis_red_wrd.reshape(batch_size, -1, 3)
 
-        if mode=='train':
-            return batch_size, frame_raw_invdistance_map, frame_clopped_mask, \
-                    frame_clopped_distance_map, frame_bbox_list, frame_rays_d_cam, \
-                    frame_clopped_depth_map, frame_normalized_depth_map, frame_avg_depth_map, frame_bbox_info, gt_shape_code, \
-                    frame_w2c, frame_gt_obj_axis_green_wrd, frame_gt_obj_axis_red_wrd, \
-                    frame_camera_pos, frame_obj_pos, frame_obj_scale
-        elif mode=='val':
-            return batch_size, frame_raw_invdistance_map, frame_clopped_mask, \
-                    frame_clopped_distance_map, frame_bbox_list, frame_rays_d_cam, \
-                    frame_clopped_depth_map, frame_normalized_depth_map, frame_avg_depth_map, frame_bbox_info, \
-                    frame_w2c, frame_gt_obj_axis_green_wrd, frame_gt_obj_axis_red_wrd, \
-                    frame_camera_pos, frame_obj_pos, frame_obj_scale, \
-                    canonical_distance_map, canonical_camera_pos, canonical_camera_rot, instance_id, path
+        return batch_size, frame_raw_invdistance_map, frame_clopped_mask, \
+                frame_clopped_distance_map, frame_bbox_list, frame_rays_d_cam, \
+                frame_clopped_depth_map, frame_normalized_depth_map, frame_avg_depth_map, frame_bbox_info, \
+                frame_w2c, frame_gt_obj_axis_green_wrd, frame_gt_obj_axis_red_wrd, \
+                frame_camera_pos, frame_obj_pos, frame_obj_scale, \
+                canonical_distance_map, canonical_camera_pos, canonical_camera_rot, instance_id, path
 
 
     def test_step(self, batch, batch_idx):
@@ -189,6 +176,10 @@ class adam_optimizer(pl.LightningModule):
         frame_camera_pos, frame_obj_pos, frame_obj_scale, \
         canonical_distance_map, canonical_camera_pos, canonical_camera_rot, instance_id, path = self.preprocess(batch, mode='val')
 
+        # ###################################
+        # import time # Time.
+        # time_sta = time.time()
+        # ###################################
 
         ###################################
         #####     Start training      #####
@@ -250,7 +241,6 @@ class adam_optimizer(pl.LightningModule):
         #####      Perform adam.     #####
         ###################################
         # Set variables with grad = True.
-        import pdb; pdb.set_trace()
         torch.set_grad_enabled(True)
         obj_pos_wrd_optim = est_obj_pos_wrd.detach().clone()
         obj_scale_optim = est_obj_scale.detach().clone()
@@ -268,28 +258,20 @@ class adam_optimizer(pl.LightningModule):
         optimizer = torch.optim.Adam(params, self.adam_step_ratio)
 
         for grad_optim_idx in range(self.grad_optim_max):
+            # Reset optimizer.
+            optimizer.zero_grad()
+
             # Set frames
-            frame_idx_list = random.sample(list(range(self.frame_sequence_num)), self.itr_frame_num) # それ以外ではランダムに抽出
+            frame_idx_list = list(range(self.frame_sequence_num)) # 最適化も全てのフレームに対して行う
             opt_frame_num = len(frame_idx_list)
 
             # Get current maps.
             raw_invdistance_map = frame_raw_invdistance_map[:, frame_idx_list].reshape(-1, self.input_H, self.input_W).detach()
-            clopped_mask = frame_clopped_mask[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
-            clopped_distance_map = frame_clopped_distance_map[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
-            bbox_list = frame_bbox_list[:, frame_idx_list].reshape(-1, 2, 2).detach()
             rays_d_cam = frame_rays_d_cam[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H, 3).detach()
-            clopped_depth_map = frame_clopped_depth_map[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
-            normalized_depth_map = frame_normalized_depth_map[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H).detach()
-            avg_depth_map = frame_avg_depth_map[:, frame_idx_list].reshape(-1).detach()
-            bbox_info = frame_bbox_info[:, frame_idx_list].reshape(-1, 7).detach()
 
             # Get current GT.
             w2c = frame_w2c[:, frame_idx_list].reshape(-1, 3, 3).detach()
-            gt_obj_axis_green_wrd = frame_gt_obj_axis_green_wrd[:, frame_idx_list].detach()
-            gt_obj_axis_red_wrd = frame_gt_obj_axis_red_wrd[:, frame_idx_list].detach()
             cam_pos_wrd = frame_camera_pos[:, frame_idx_list].reshape(-1, 3).detach()
-            gt_obj_pos_wrd = frame_obj_pos[:, frame_idx_list].detach()
-            gt_obj_scale = frame_obj_scale[:, frame_idx_list][..., None].detach()
 
             # Get input for each frame.
             pos_wrd_frame = obj_pos_wrd_optim[:, None, :].expand(-1, opt_frame_num, 3).reshape(-1, 3)
@@ -312,22 +294,22 @@ class adam_optimizer(pl.LightningModule):
                                                     ddf = self.ddf, 
                                                     with_invdistance_map = True, 
                                                     )
-            energy = self.l1(est_invdistance_map, raw_invdistance_map.detach()) # + self.shape_code_reg * torch.norm(shape_code_optim) # 0.5?
+            energy = self.l1(est_invdistance_map, raw_invdistance_map) + self.shape_code_reg * torch.norm(shape_code_optim) # 0.5?
             energy.backward()
             optimizer.step()
 
-            ###################################
-            # if grad_optim_idx%10==0:
-            # if grad_optim_idx==30:
-            check_map = []
-            gt = raw_invdistance_map
-            est = est_invdistance_map
-            for i in range(batch_size*opt_frame_num):
-                check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
-            # check_map_torch(torch.cat(check_map, dim=-1), f'opt_{grad_optim_idx}.png')
-            check_map_torch(torch.cat(check_map, dim=-1), f'tes.png')
-            import pdb; pdb.set_trace()
-            ###################################
+        #     print(energy.item())
+        # ###################################
+        # # if grad_optim_idx%10==0:
+        # # if grad_optim_idx==30:
+        # check_map = []
+        # gt = raw_invdistance_map
+        # est = est_invdistance_map
+        # for i in range(batch_size*opt_frame_num):
+        #     check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+        # check_map_torch(torch.cat(check_map, dim=-1), f'opt_{grad_optim_idx}_{batch_idx}.png')
+        # # check_map_torch(torch.cat(check_map, dim=-1), f'tes.png')
+        # ###################################
 
         torch.set_grad_enabled(False)
         pre_obj_pos_wrd = obj_pos_wrd_optim.detach().clone()
@@ -335,6 +317,13 @@ class adam_optimizer(pl.LightningModule):
         pre_obj_axis_green_wrd = F.normalize(obj_axis_green_wrd_optim, dim=1).detach().clone()
         pre_obj_axis_red_wrd = F.normalize(obj_axis_red_wrd_optim, dim=1).detach().clone()
         pre_shape_code = shape_code_optim.detach().clone()
+
+
+        # ###################################
+        # time_end = time.time()
+        # with open(f'time.txt', 'a') as file:
+        #     file.write(str(time_end- time_sta) + '\n')
+        # ###################################
 
 
         ###################################
@@ -355,7 +344,17 @@ class adam_optimizer(pl.LightningModule):
                                         ddf = self.ddf, 
                                         )
             depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1))
-            import pdb; pdb.set_trace()
+
+            # ###################################
+            # if shape_i==3:
+            #     check_map = []
+            #     gt = gt_distance_map
+            #     est = est_distance_map
+            #     for i in range(batch_size):
+            #         check_map.append(torch.cat([gt[i], est[i], torch.abs(gt[i]-est[i])], dim=0))
+            #     check_map_torch(torch.cat(check_map, dim=-1), f'canonical_{batch_idx}.png')
+            #     import pdb; pdb.set_trace()
+            # ###################################
 
 
         # Cal err.
@@ -383,35 +382,29 @@ class adam_optimizer(pl.LightningModule):
 
     def test_epoch_end(self, outputs):
         # Log loss.
-        err_pos_list = torch.cat([x['err_pos'] for x in outputs], dim=0)
-        half_list_length = len(err_pos_list) // 2
-        mode_err_pos = sorted(err_pos_list)[half_list_length]
-        avg_err_pos = err_pos_list.mean()
-        err_scale_list = torch.cat([x['err_scale'] for x in outputs], dim=0)
-        mode_err_scale = sorted(err_scale_list)[half_list_length]
-        avg_err_scale = err_scale_list.mean()
-        err_red_list = torch.cat([x['err_axis_red'] for x in outputs], dim=0)
-        mode_err_red = sorted(err_red_list)[half_list_length]
-        avg_err_red = err_red_list.mean()
-        err_green_list = torch.cat([x['err_axis_green'] for x in outputs], dim=0)
-        mode_err_green = sorted(err_green_list)[half_list_length]
-        avg_err_green = err_green_list.mean()
-        err_depth_list = torch.cat([x['depth_error'] for x in outputs], dim=0)
-        mode_err_depth = sorted(err_depth_list)[half_list_length]
-        avg_err_depth = err_depth_list.mean()
+        err_pos_list = torch.cat([x['err_pos'] for x in outputs], dim=0).to('cpu').detach().numpy().copy()
+        med_err_pos = np.median(err_pos_list)
+        avg_err_pos = np.mean(err_pos_list)
+        err_scale_list = torch.cat([x['err_scale'] for x in outputs], dim=0).to('cpu').detach().numpy().copy()
+        med_err_scale = np.median(err_scale_list)
+        avg_err_scale = np.mean(err_scale_list)
+        err_red_list = torch.cat([x['err_axis_red'] for x in outputs], dim=0).to('cpu').detach().numpy().copy()
+        med_err_red = np.median(err_red_list)
+        avg_err_red = np.mean(err_red_list)
+        err_green_list = torch.cat([x['err_axis_green'] for x in outputs], dim=0).to('cpu').detach().numpy().copy()
+        med_err_green = np.median(err_green_list)
+        avg_err_green = np.mean(err_green_list)
+        err_depth_list = torch.cat([x['depth_error'] for x in outputs], dim=0).to('cpu').detach().numpy().copy()
+        med_err_depth = np.median(err_depth_list)
+        avg_err_depth = np.mean(err_depth_list)
         path_list = np.concatenate([x['path'] for x in outputs])
         with open(self.test_log_path, 'a') as file:
-            file.write('avg_err_pos  ' + ' : '  + str(avg_err_pos.item())   + ' : ' + str(mode_err_pos.item()) + '\n')
-            file.write('avg_err_scale' + ' : '  + str(avg_err_scale.item()) + ' : ' + str(mode_err_scale.item()) + '\n')
-            file.write('avg_err_red  ' + ' : '  + str(avg_err_red.item())   + ' : ' + str(mode_err_red.item()) + '\n')
-            file.write('avg_err_green' + ' : '  + str(avg_err_green.item()) + ' : ' + str(mode_err_green.item()) + '\n')
-            file.write('avg_err_depth' + ' : '  + str(avg_err_depth.item()) + ' : ' + str(mode_err_depth.item()) + '\n')
+            file.write('avg_err_pos  ' + ' : '  + str(avg_err_pos.item())   + ' : ' + str(med_err_pos.item()) + '\n')
+            file.write('avg_err_scale' + ' : '  + str(avg_err_scale.item()) + ' : ' + str(med_err_scale.item()) + '\n')
+            file.write('avg_err_red  ' + ' : '  + str(avg_err_red.item())   + ' : ' + str(med_err_red.item()) + '\n')
+            file.write('avg_err_green' + ' : '  + str(avg_err_green.item()) + ' : ' + str(med_err_green.item()) + '\n')
+            file.write('avg_err_depth' + ' : '  + str(avg_err_depth.item()) + ' : ' + str(med_err_depth.item()) + '\n')
 
-        err_pos_list = err_pos_list.to('cpu').detach().numpy().copy()
-        err_scale_list = err_scale_list.to('cpu').detach().numpy().copy()
-        err_red_list = err_red_list.to('cpu').detach().numpy().copy()
-        err_green_list = err_green_list.to('cpu').detach().numpy().copy()
-        err_depth_list = err_depth_list.to('cpu').detach().numpy().copy()
         log_dict = {'pos':err_pos_list, 
                     'scale':err_scale_list, 
                     'red':err_red_list, 
@@ -464,30 +457,21 @@ if __name__=='__main__':
     ddf = ddf.load_from_checkpoint(checkpoint_path=args.ddf_model_path, args=args)
     ddf.eval()
     model = adam_optimizer(args, ddf)
-    model = model.load_from_checkpoint(checkpoint_path=args.model_ckpt_path, args=args, ddf=ddf)
     ###########################################################################
-    from train_pro import progressive_optimizer
-    model_ = progressive_optimizer(args, ddf)
-    init_net_skpt = 'lightning_logs/DeepTaR/chair/progressive_list0_0621/checkpoints/0000000500.ckpt'
-    model_ = model_.load_from_checkpoint(checkpoint_path=init_net_skpt, args=args, ddf=ddf)
+    from train_ini import only_init_net
+    model_ = only_init_net(args, ddf)
+    init_net_ckpt = args.initnet_ckpt_path
+    model_ = model_.load_from_checkpoint(checkpoint_path=init_net_ckpt, args=args, ddf=ddf)
     model.init_net = model_.init_net
     del model_
     ###########################################################################
 
     # Setting model.
     model.start_frame_idx = 0
-    model.half_lambda_max = 3
-    model.grad_optim_max = 50
-    model.shape_code_reg = 0.0
+    model.frame_sequence_num = 5
+    model.grad_optim_max = args.grad_optim_max
+    model.shape_code_reg = args.shape_code_reg
     model.adam_step_ratio = 0.01
-    model.model_mode = args.model_mode
-    if model.model_mode == 'only_init':
-        model.only_init_net = True
-        model.test_optim_num = 1
-    else:
-        model.only_init_net = False
-    model.use_deep_optimizer = True
-    model.use_adam_optimizer = not(model.use_deep_optimizer)
 
     # Save logs.
     import datetime
@@ -497,7 +481,7 @@ if __name__=='__main__':
     os.mkdir('./txt/experiments/log/' + time_log)
     file_name = './txt/experiments/log/' + time_log + '/log.txt'
     model.test_log_path = file_name
-    ckpt_path = args.model_ckpt_path
+    ckpt_path = init_net_ckpt
     with open(file_name, 'a') as file:
         file.write('script_name : ' + 'val adam multi' + '\n')
         file.write('time_log : ' + time_log + '\n')
