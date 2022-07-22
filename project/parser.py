@@ -30,6 +30,8 @@ def config_parser():
     parser = configargparse.ArgumentParser()
     parser.add_argument('--config', is_config_file=True, 
                         help='config file path')
+    parser.add_argument("--code_mode", type=str,
+                        help='')
     parser.add_argument("--expname", type=str, 
                         help='experiment name')
     parser.add_argument("--exp_version", type=str, default=0,
@@ -127,6 +129,12 @@ def config_parser():
     parser.add_argument("--L_c", type=float, default=1e1, 
                         help='')
     parser.add_argument("--L_d", type=float, default=1e0, 
+                        help='')
+    parser.add_argument("--depth_error_mode", type=str, default='non', 
+                        help='')
+    parser.add_argument("--integrate_mode", type=str, default='average', 
+                        help='')
+    parser.add_argument("--trans_integrate_mode", type=str, default='average', 
                         help='')
     
 

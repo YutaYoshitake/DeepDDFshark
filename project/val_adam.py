@@ -85,10 +85,6 @@ class adam_optimizer(pl.LightningModule):
         self.cossim = nn.CosineSimilarity(dim=-1)
         self.cosssim_min = -1+1e-8
         self.cosssim_max = 1-1e-8
-        self.use_depth_error = args.use_depth_error
-        self.depth_sampling_type = args.depth_sampling_type # 'clopping'
-        self.sampling_interval = 8
-        self.clopping_size = 100
         self.L_p = args.L_p
         self.L_s = args.L_s
         self.L_a = args.L_a
@@ -125,7 +121,7 @@ class adam_optimizer(pl.LightningModule):
                                                             )
 
         # Get normalized depth map.
-        rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, self.fov, bbox_list).to(frame_camera_rot)
+        rays_d_cam = get_clopped_rays_d_cam(self.ddf_H, bbox_list, self.rays_d_cam).to(frame_camera_rot)
         clopped_depth_map, normalized_depth_map, avg_depth_map = get_normalized_depth_map(
                                                                     clopped_mask, 
                                                                     clopped_distance_map, 
@@ -298,7 +294,7 @@ class adam_optimizer(pl.LightningModule):
             energy.backward()
             optimizer.step()
 
-        #     print(energy.item())
+            # print(energy.item())
         # ###################################
         # # if grad_optim_idx%10==0:
         # # if grad_optim_idx==30:
@@ -317,6 +313,9 @@ class adam_optimizer(pl.LightningModule):
         pre_obj_axis_green_wrd = F.normalize(obj_axis_green_wrd_optim, dim=1).detach().clone()
         pre_obj_axis_red_wrd = F.normalize(obj_axis_red_wrd_optim, dim=1).detach().clone()
         pre_shape_code = shape_code_optim.detach().clone()
+        pre_obj_axis_blue_wrd = torch.cross(pre_obj_axis_red_wrd, pre_obj_axis_green_wrd, dim=-1)
+        pre_obj_axis_blue_wrd = F.normalize(pre_obj_axis_blue_wrd, dim=-1)
+        pre_obj_axis_red_wrd = torch.cross(pre_obj_axis_green_wrd, pre_obj_axis_blue_wrd, dim=-1)
 
 
         # ###################################

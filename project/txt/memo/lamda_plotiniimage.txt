@@ -134,3 +134,77 @@
                     # fig.savefig(f"tes.png", dpi=300)
                     pylab.close()
                     import pdb; pdb.set_trace()
+
+
+
+
+
+
+
+
+                # ###################################
+                # #####    Start Lamda Step     #####
+                # ###################################
+                # for half_lambda_idx in range(self.half_lambda_max):
+                #     import pdb; pdb.set_trace()
+                #     # print(f'lamda_{half_lambda_idx}')
+                #     # Reshape to (batch, frame, ?)
+                #     inp_est_obj_pos_wrd = est_obj_pos_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
+                #     inp_est_obj_scale = est_obj_scale[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 1)
+                #     inp_est_obj_axis_green_wrd = est_obj_axis_green_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
+                #     inp_est_obj_axis_red_wrd = est_obj_axis_red_wrd[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, 3)
+                #     inp_est_shape_code = est_shape_code[:, None, :].expand(-1, opt_frame_num, -1).reshape(-1, self.ddf.latent_size)
+                #     inp_est_obj_pos_cam = torch.sum((inp_est_obj_pos_wrd - cam_pos_wrd)[..., None, :]*w2c, dim=-1)
+                #     inp_est_obj_pos_cim = torch.cat([
+                #                             (inp_est_obj_pos_cam[:, :-1] / im2cam_scale[:, None] - bbox_center) / cim2im_scale[:, None], 
+                #                             (inp_est_obj_pos_cam[:, -1] - avg_depth_map)[:, None]], dim=-1)
+                #     inp_est_obj_scale_cim = inp_est_obj_scale / (im2cam_scale[:, None] * cim2im_scale[:, None] * 2 * math.sqrt(2))
+
+                #     # Simulate DDF.
+                #     inp_est_obj_axis_green_cam = torch.sum(inp_est_obj_axis_green_wrd[..., None, :]*w2c, -1)
+                #     inp_est_obj_axis_red_cam = torch.sum(inp_est_obj_axis_red_wrd[..., None, :]*w2c, -1)
+                #     est_mask, est_distance_map = render_distance_map_from_axis(
+                #                                     H = self.ddf_H, 
+                #                                     obj_pos_wrd = inp_est_obj_pos_wrd, 
+                #                                     axis_green = inp_est_obj_axis_green_cam, 
+                #                                     axis_red = inp_est_obj_axis_red_cam, 
+                #                                     obj_scale = inp_est_obj_scale[:, 0], 
+                #                                     input_lat_vec = inp_est_shape_code, 
+                #                                     cam_pos_wrd = cam_pos_wrd, 
+                #                                     rays_d_cam = rays_d_cam, 
+                #                                     w2c = w2c.detach(), 
+                #                                     ddf = self.ddf, 
+                #                                     with_invdistance_map = False)
+                #     _, est_normalized_depth_map, _ = get_normalized_depth_map(
+                #                                         est_mask, est_distance_map, rays_d_cam, avg_depth_map, 
+                #                                         )
+                #     error = torch.abs(est_normalized_depth_map - normalized_depth_map)
+                #     error = error.reshape(batch_size, opt_frame_num, self.ddf_H, self.ddf_H).mean(dim=-1).mean(dim=-1)
+                #     error = error.mean(dim=-1)
+
+                #     # Make update mask.
+                #     un_update_mask = (pre_error - error) < 0.
+                #     decade_all_error = not un_update_mask.any()
+                #     over_lamda_step = half_lambda_idx + 1 == self.half_lambda_max
+
+                #     # 更新により、エラーが全てのバッチで小さくなった or ラムダステップの最大まで行った
+                #     # -> 次の最適化ステップかフレームへ
+                #     if decade_all_error or over_lamda_step:
+                #         # Update values.
+                #         est_obj_pos_wrd[un_update_mask] = pre_obj_pos_wrd[un_update_mask]
+                #         est_obj_scale[un_update_mask] = pre_obj_scale[un_update_mask]
+                #         est_obj_axis_green_wrd[un_update_mask] = pre_obj_axis_green_wrd[un_update_mask]
+                #         est_obj_axis_red_wrd[un_update_mask] = pre_obj_axis_red_wrd[un_update_mask]
+                #         est_shape_code[un_update_mask] = pre_shape_code[un_update_mask]
+                #         break # ラムダステップ終了。
+
+                #     # 更新により、エラーが全てのバッチで小さくななかった
+                #     # -> ならなかったUpdateを半減させて再計算
+                #     # -> 具体的にはun_update_maskを変更
+                #     else:
+                #         lamda_i = 1 / 2**(half_lambda_idx+1)
+                #         est_obj_pos_wrd[un_update_mask] = pre_obj_pos_wrd[un_update_mask] + lamda_i * diff_pos_wrd[un_update_mask]
+                #         est_obj_scale[un_update_mask] = pre_obj_scale[un_update_mask] * (1. + lamda_i * (diff_scale[un_update_mask] - 1.))
+                #         est_obj_axis_green_wrd[un_update_mask] = F.normalize(pre_obj_axis_green_wrd[un_update_mask] + lamda_i * diff_obj_axis_green_wrd[un_update_mask], dim=-1)
+                #         est_obj_axis_red_wrd[un_update_mask] = F.normalize(pre_obj_axis_red_wrd[un_update_mask] + lamda_i * diff_obj_axis_red_wrd[un_update_mask], dim=-1)
+                #         est_shape_code[un_update_mask] = pre_shape_code[un_update_mask] + lamda_i * diff_shape_code[un_update_mask]

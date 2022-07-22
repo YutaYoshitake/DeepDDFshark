@@ -1,0 +1,19 @@
+script_name : val ori multi
+time_log : 2022_07_18_11_45_01
+ckpt_path : lightning_logs/DeepTaR/chair/dfnet_list0_randR05_trans_mlpQ_date0717/checkpoints/0000000500.ckpt
+val_N_views : 32
+val_instance_list_txt : instance_lists/kmean/kmeans0_test_list.txt
+
+only_init_net : False
+start_frame_idx : 0
+itr_frame_num : 5
+half_lambda_max : 0
+optim_num : 7
+init_mode : all
+optim_mode : optimall
+
+avg_err_pos   : 0.02051735669374466 : 0.006803133059293032
+avg_err_scale : 0.027318472042679787 : 0.014904677867889404
+avg_err_red   : 3.042999267578125 : 2.0685224533081055
+avg_err_green : 1.7966704368591309 : 1.3818974494934082
+avg_err_depth : 0.07509617507457733 : 0.07196002453565598

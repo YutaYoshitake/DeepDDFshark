@@ -29,6 +29,7 @@ from ResNet import *
 from parser import *
 from dataset import *
 from often_use import *
+# from model import *
 from DDF.train_pl import DDF
 
 torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
@@ -46,8 +47,6 @@ if device=='cuda':
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-
-
 
 
 
@@ -161,7 +160,7 @@ class deep_optimizer(pl.LightningModule):
                 )
 
 
-    def forward(self, inp, bbox_info, pre_pos, pre_axis_green, pre_axis_red, pre_scale, pre_shape_code):
+    def forward(self, inp, bbox_info, pre_pos, pre_axis_green, pre_axis_red, pre_scale, pre_shape_code, with_x=False):
         # Backbone.
         x = self.backbone_encoder(inp)
         x = x.reshape(inp.shape[0], -1)
@@ -181,7 +180,13 @@ class deep_optimizer(pl.LightningModule):
         # Get shape code diff.
         diff_shape_code = self.fc_shape_code(torch.cat([x, pre_shape_code], dim=-1))
 
-        return diff_pos, diff_axis_green, diff_axis_red, diff_scale_cim, diff_shape_code
+        if not with_x:
+            return diff_pos, diff_axis_green, diff_axis_red, diff_scale_cim, diff_shape_code
+
+        elif with_x:
+            return diff_pos, diff_axis_green, diff_axis_red, diff_scale_cim, diff_shape_code, x
+
+
 
 
 

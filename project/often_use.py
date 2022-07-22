@@ -449,23 +449,31 @@ def get_normalized_depth_map(mask, distance_map, rays_d_cam, avg_depth_map='not_
 
 
 
-def get_clopped_rays_d_cam(size, fov_h, bbox_list, input_H='not_given', input_W='not_given', input_F='not_given'):
-    bbox_list_ = 0.5 * bbox_list
-    if  input_H == 'not_given':
-        fov = torch.deg2rad(torch.tensor(fov_h, dtype=torch.float))
-        x_coord = batch_linspace(torch.tan(fov*bbox_list_[:, 1, 0]), torch.tan(fov*bbox_list_[:, 0, 0]), size)
-        x_coord = x_coord[:, None, :].expand(-1, size, -1)
-        y_coord = batch_linspace(torch.tan(fov*bbox_list_[:, 1, 1]), torch.tan(fov*bbox_list_[:, 0, 1]), size)
-        y_coord = y_coord[:, :, None].expand(-1, -1, size)
-    else:
-        fov_h = 2*torch.arctan(torch.tensor(0.5*input_H/input_F, dtype=torch.float))
-        fov_w = 2*torch.arctan(torch.tensor(0.5*input_W/input_F, dtype=torch.float))
-        x_coord = batch_linspace(torch.tan(fov_w*bbox_list_[:, 1, 0]), torch.tan(fov_w*bbox_list_[:, 0, 0]), size)
-        x_coord = x_coord[:, None, :].expand(-1, size, -1)
-        y_coord = batch_linspace(torch.tan(fov_h*bbox_list_[:, 1, 1]), torch.tan(fov_h*bbox_list_[:, 0, 1]), size)
-        y_coord = y_coord[:, :, None].expand(-1, -1, size)
-    rays_d_cam = torch.stack([x_coord, y_coord, torch.ones_like(x_coord)], dim=-1)
-    rays_d_cam = F.normalize(rays_d_cam, dim=-1)
+# def get_clopped_rays_d_cam(size, fov_h, bbox_list, input_H='not_given', input_W='not_given', input_F='not_given'):
+    # bbox_list_ = 0.5 * bbox_list
+    # if  input_H == 'not_given':
+    #     fov = torch.deg2rad(torch.tensor(fov_h, dtype=torch.float))
+    #     x_coord = batch_linspace(torch.tan(fov*bbox_list_[:, 1, 0]), torch.tan(fov*bbox_list_[:, 0, 0]), size)
+    #     x_coord = x_coord[:, None, :].expand(-1, size, -1)
+    #     y_coord = batch_linspace(torch.tan(fov*bbox_list_[:, 1, 1]), torch.tan(fov*bbox_list_[:, 0, 1]), size)
+    #     y_coord = y_coord[:, :, None].expand(-1, -1, size)
+    # else:
+    #     fov_h = 2*torch.arctan(torch.tensor(0.5*input_H/input_F, dtype=torch.float))
+    #     fov_w = 2*torch.arctan(torch.tensor(0.5*input_W/input_F, dtype=torch.float))
+    #     x_coord = batch_linspace(torch.tan(fov_w*bbox_list_[:, 1, 0]), torch.tan(fov_w*bbox_list_[:, 0, 0]), size)
+    #     x_coord = x_coord[:, None, :].expand(-1, size, -1)
+    #     y_coord = batch_linspace(torch.tan(fov_h*bbox_list_[:, 1, 1]), torch.tan(fov_h*bbox_list_[:, 0, 1]), size)
+    #     y_coord = y_coord[:, :, None].expand(-1, -1, size)
+    # rays_d_cam = torch.stack([x_coord, y_coord, torch.ones_like(x_coord)], dim=-1)
+    # rays_d_cam = F.normalize(rays_d_cam, dim=-1)
+def get_clopped_rays_d_cam(size, bbox_list, rays_d_cam):
+    coord_x = batch_linspace(bbox_list[:, 1, 0], bbox_list[:, 0, 0], size)
+    coord_x = coord_x[:, None, :].expand(-1, size, -1)
+    coord_y = batch_linspace(bbox_list[:, 1, 1], bbox_list[:, 0, 1], size)
+    coord_y = coord_y[:, :, None].expand(-1, -1, size)
+    sampling_coord = torch.stack([coord_x, coord_y], dim=-1)
+    rays_d_cam = rays_d_cam.expand(bbox_list.shape[0], -1, -1, -1).permute(0, 3, 1, 2)
+    rays_d_cam = F.grid_sample(rays_d_cam.to(sampling_coord.dtype), sampling_coord, align_corners=True).permute(0, 2, 3, 1)
     return rays_d_cam # H, W, 3:xyz
 
 

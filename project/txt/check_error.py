@@ -36,29 +36,29 @@ DEBUG = False
 
 
 
-# label_a = "progressive"
-# label_b = "original"
-# pickle_name = 'list0.pickle'
-# aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_56_45/log_error.pickle')
-# bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_14_15/log_error.pickle')
-# pickle_name = 'list1.pickle'
-# aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_05_45/log_error.pickle')
-# bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_24_32/log_error.pickle')
-# pickle_name = 'list2.pickle'
-# aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_40/log_error.pickle')
-# bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_56/log_error.pickle')
-# pickle_name = 'list3.pickle'
-# aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_37_40/log_error.pickle')
-# bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_53_36/log_error.pickle')
-# pickle_name = 'list4.pickle'
-# aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_47_02/log_error.pickle')
-# bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_04_12/log_error.pickle')
+# # label_a = "progressive"
+# # label_b = "original"
+# # pickle_name = 'list0.pickle'
+# # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_56_45/log_error.pickle')
+# # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_14_15/log_error.pickle')
+# # pickle_name = 'list1.pickle'
+# # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_05_45/log_error.pickle')
+# # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_24_32/log_error.pickle')
+# # pickle_name = 'list2.pickle'
+# # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_40/log_error.pickle')
+# # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_56/log_error.pickle')
+# # pickle_name = 'list3.pickle'
+# # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_37_40/log_error.pickle')
+# # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_53_36/log_error.pickle')
+# # pickle_name = 'list4.pickle'
+# # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_47_02/log_error.pickle')
+# # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_04_12/log_error.pickle')
 
-label_a = "w_switch"
-label_b = "wo_switch"
-pickle_name = 'list2.pickle'
-aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_06_28_11_03_57/log_error.pickle')
-bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_40/log_error.pickle')
+label_a = "Rad_1"
+label_b = "Rad_05"
+pickle_name = 'Rad.pickle'
+aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/dee/Rad1/2022_07_10_23_52_29/log_error.pickle')
+bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/dee/Rad05/2022_07_10_23_57_23/log_error.pickle')
 
 for key in aaa.keys():
     fig = pylab.figure()
@@ -68,6 +68,8 @@ for key in aaa.keys():
         break
     ax.legend()
     fig.savefig(f"err_{key}.png")
+
+import pdb; pdb.set_trace()
 
 origin = aaa
 target = bbb
@@ -158,3 +160,11 @@ import pdb; pdb.set_trace()
 #             with open(f'df_{key}.txt', 'a') as f:
 #                 f.writelines(f'{path[-1]}\n')
 #     import pdb; pdb.set_trace()
+
+
+
+# pickle_name = 'adam_vs_deep_kmeans0_test.pickle'
+# mmm = pickle_load('/home/yyoshitake/works/DeepSDF/project/adam_vs_deep_kmeans0_test.pickle')
+# for idx in range(len(mmm)):
+#     mmm[idx] = '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/' + mmm[idx]
+# pickle_dump(mmm, pickle_name)

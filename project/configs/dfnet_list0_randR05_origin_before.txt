@@ -1,4 +1,4 @@
-expname = DeepTaR/chair/dfnet_list0_randR05
+expname = DeepTaR/chair/dfnet_list0_randR05_origin_before
 fov = 49.134
 train_data_dir = /home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64
 train_N_views = 64
@@ -22,6 +22,7 @@ L_s = 10.
 L_a = 1.
 L_c = 10.
 L_d = 0.
+integrate_mode = average_but_loss_against_before
 
 ddf_model_path = /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/chair/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000010000.ckpt
 ddf_instance_list_txt = ./instance_lists/instance_list.txt

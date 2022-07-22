@@ -1,0 +1,34 @@
+expname = DeepTaR/chair/dfnet_list2_randR05
+fov = 49.134
+train_data_dir = /home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64
+train_N_views = 64
+train_instance_list_txt = /home/yyoshitake/works/DeepSDF/project/instance_lists/kmean/kmeans2_train_list.txt
+
+save_interval = 100
+N_epoch = 10000
+N_batch = 5
+check_val_every_n_epoch = 10
+lr = 0.0001
+train_optim_num = 5
+model_mode = single
+optim_num = 5
+itr_frame_num = 5 
+rand_P_range = 0.2
+rand_S_range = 0.2
+rand_R_range = 0.5
+rand_Z_sigma = 0.05
+L_p = 10.
+L_s = 10.
+L_a = 1.
+L_c = 10.
+L_d = 0.
+
+ddf_model_path = /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/chair/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000010000.ckpt
+ddf_instance_list_txt = ./instance_lists/instance_list.txt
+latent_size = 256
+use_world_dir = True
+use_3d_code = True
+voxel_ch_num = 32
+voxel_sample_num = 32
+only_latent = False
+integrate_sampling_mode = 'CAT'
