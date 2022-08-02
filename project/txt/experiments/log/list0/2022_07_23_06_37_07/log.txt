@@ -1,0 +1,31 @@
+script_name : val ori multi
+time_log : 2022_07_23_06_37_07
+ckpt_path : lightning_logs/DeepTaR/chair/dfnet_list0_randR05_origin_after_date0721/checkpoints/0000000500.ckpt
+val_N_views : 16
+val_instance_list_txt : instance_lists/kmean/kmeans0_test_list.txt
+
+only_init_net : False
+start_frame_idx : 0
+itr_frame_num : 5
+half_lambda_max : 0
+optim_num : 7
+init_mode : all
+optim_mode : optimall
+
+avg_err_pos   : 0.018365446478128433 : 0.006493472959846258
+avg_err_scale : 0.11521007120609283 : 0.020932167768478394
+avg_err_red   : 2.5928401947021484 : 1.2479596138000488
+avg_err_green : 2.279644012451172 : 1.2102265357971191
+avg_err_depth : 0.0681224837899208 : 0.05830550193786621
+300epo
+avg_err_pos   : 0.007893196307122707 : 0.0069686491042375565
+avg_err_scale : 0.020092952996492386 : 0.016403794288635254
+avg_err_red   : 1.9746477603912354 : 1.719364881515503
+avg_err_green : 1.6308233737945557 : 1.4109755754470825
+avg_err_depth : 0.06841874122619629 : 0.06514604389667511
+400epo
+avg_err_pos   : 0.006913752295076847 : 0.005907490383833647
+avg_err_scale : 0.021785946562886238 : 0.017476260662078857
+avg_err_red   : 1.8669129610061646 : 1.614648699760437
+avg_err_green : 1.2711544036865234 : 1.085794448852539
+avg_err_depth : 0.06245972961187363 : 0.05922434478998184

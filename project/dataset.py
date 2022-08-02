@@ -65,26 +65,36 @@ class TaR_dataset(data.Dataset):
         with open(instance_list_txt, 'r') as f:
             lines = f.read().splitlines()
             for line in lines:
+                # if self.mode=='train':
+                #     self.instance_path_list.append(
+                #         os.path.join(data_dir, line.rstrip('\n'))
+                #         )
                 if self.mode=='train':
-                    self.instance_path_list.append(
-                        os.path.join(data_dir, line.rstrip('\n'))
-                        )
+                    for view_ind in range(self.N_views):
+                        self.instance_path_list.append(
+                            os.path.join(data_dir, line.rstrip('\n'), f'{str(view_ind+1).zfill(5)}.pickle')
+                            ) # '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/{???}/00001.pickle' 
                 elif self.mode=='val':
-                    # for view_ind in range(self.N_views):
-                    for view_ind in range(8):
+                    for view_ind in range(self.N_views):
                         self.instance_path_list.append(
                             os.path.join(data_dir, line.rstrip('\n'), f'{str(view_ind+1).zfill(5)}.pickle')
                             ) # '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/{???}/00001.pickle' 
         # self.instance_path_list = pickle_load('/home/yyoshitake/works/DeepSDF/project/adam_vs_deep_kmeans0_test.pickle')
-        # self.instance_path_list = self.instance_path_list[:2]
+        self.instance_path_list = self.instance_path_list[:96]
+        # self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/c967b1e07ef7fc0bebc740fe800c0367/00007.pickle',
+        #                            '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/2249c62788a52c61613f0dbd986ed6f8/00006.pickle',
+        #                            '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/c7786437606ac263b04cb542e2c50eb4/00008.pickle']
+
 
     def __getitem__(self, index):
         # Load data
+        # if self.mode=='train':
+        #     view_ind = random.randrange(1, self.N_views + 1)
+        #     path = os.path.join(
+        #         self.instance_path_list[index], 
+        #         f'{str(view_ind).zfill(5)}.pickle')
         if self.mode=='train':
-            view_ind = random.randrange(1, self.N_views + 1)
-            path = os.path.join(
-                self.instance_path_list[index], 
-                f'{str(view_ind).zfill(5)}.pickle')
+            path = self.instance_path_list[index]
         elif self.mode=='val':
             path = self.instance_path_list[index]
 
@@ -112,7 +122,7 @@ class TaR_dataset(data.Dataset):
 
         # Preprocessing.
         frame_rgb_map = 0 # self.rgb_transform(frame_rgb_map)
-        instance_id = self.instance_path_list[index].split('/')[-1]
+        instance_id = self.instance_path_list[index].split('/')[-2] # [-1]
 
         if self.mode=='val':
             splitted_path_list = path.split('/')

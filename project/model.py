@@ -166,19 +166,28 @@ class deep_optimizer(pl.LightningModule):
         self.integrate_mode = args.integrate_mode
 
         if self.integrate_mode == 'sha_v0':
-            self.integrater = mha_integrator_v0(args, d_model=512, nhead=1, add_zero_attn=False, update_keys=['update_value'])
+            self.integrater = mha_integrator_v0(d_model=512, nhead=1, add_zero_attn=False, update_keys=['update_value'], use_nn_linear = False)
 
         elif self.integrate_mode == 'sha_v1':
-            self.integrater = mha_integrator_v0(args, d_model=512, nhead=1, add_zero_attn=True, update_keys=['update_value'])
+            self.integrater = mha_integrator_v0(d_model=512, nhead=1, add_zero_attn=True, update_keys=['update_value'], use_nn_linear = False)
+
+        elif self.integrate_mode == 'sha_v3':
+            self.integrater = mha_integrator_v0(d_model=512, nhead=1, add_zero_attn=False, update_keys=['update_value'], use_nn_linear = True)
 
         elif self.integrate_mode == 'sha_v2':
-            self.integrater = mha_integrator_v0(args, d_model=512, nhead=1, add_zero_attn=False, update_keys=['P', 'z'])
+            self.integrater = mha_integrator_v0(d_model=512, nhead=1, add_zero_attn=False, update_keys=['P', 'z'], use_nn_linear = False)
+
+        elif self.integrate_mode == 'sha_v4':
+            self.integrater = mha_integrator_v0(d_model=512, nhead=1, add_zero_attn=False, update_keys=['update_value'], use_nn_linear = False)
 
         elif self.integrate_mode == 'mha_v0':
-            self.integrater = mha_integrator_v0(args, d_model=512, heads_integrate_mode='average')
+            self.integrater = mha_integrator_v0(d_model=512, heads_integrate_mode='average')
 
         elif self.integrate_mode == 'mha_v1':
-            self.integrater = mha_integrator_v0(args, d_model=512, heads_integrate_mode='learnable_weighted_average')
+            self.integrater = mha_integrator_v0(d_model=512, heads_integrate_mode='learnable_weighted_average')
+
+        elif self.integrate_mode == 'mha_v2':
+            self.integrater = mha_integrator_v0(d_model=512, heads_integrate_mode='average')
 
         elif self.integrate_mode == 'transformer_v0':
             self.integrater = atten_integrator_v0(args, d_model=512, use_integrated_q=True)
@@ -271,7 +280,7 @@ class deep_optimizer(pl.LightningModule):
             memory = feature.clone().reshape(batch_size, opt_frame_num, -1).permute(1, 0, 2) # [sequence, batch_size, embed_dim]
             integrated_update_dict, raw_update_dict, attn_weight_dict = self.integrater(tgt, memory, pre_update_dict)
 
-            if (self.integrate_mode in {'transformer_v2'}) and self.code_mode=='TRAIN':
+            if (self.integrate_mode in {'sha_v4', 'mha_v2'}) and self.code_mode=='TRAIN':
                 diff_pos_wrd = raw_update_dict['update_value'][..., :3]
                 diff_scale = raw_update_dict['update_value'][..., 3].unsqueeze(-1)
                 diff_obj_axis_green_wrd = raw_update_dict['update_value'][..., 4:7]
@@ -311,13 +320,13 @@ class mha_integrator_v0(pl.LightningModule):
 
     def __init__(
         self, 
-        args, 
         d_model, 
         nhead = 8, 
         update_keys = ['update_value'], 
         trans_integrate_mode = 'average', 
         add_zero_attn = False, 
         heads_integrate_mode = 'average', 
+        use_nn_linear = False, 
         ):
         super(mha_integrator_v0, self).__init__()
 
@@ -327,19 +336,36 @@ class mha_integrator_v0(pl.LightningModule):
         self.update_keys = update_keys
         self.trans_integrate_mode = trans_integrate_mode
 
+        self.use_nn_linear = use_nn_linear
         if self.update_keys == ['update_value']:
-            self.W_k = nn.Parameter(torch.empty(nhead, d_model, self.d_k))
-            self.W_q = nn.Parameter(torch.empty(nhead, d_model, self.d_k))
-            nn.init.xavier_uniform_(self.W_q)
-            nn.init.xavier_uniform_(self.W_k)
+            if use_nn_linear:
+                print('nn_Liner')
+                self.W_k = nn.Linear(d_model, d_model)
+                self.W_q = nn.Linear(d_model, d_model)
+                nn.init.xavier_uniform_(self.W_k.weight)
+                nn.init.xavier_uniform_(self.W_q.weight)
+            else:
+                self.W_k = nn.Parameter(torch.empty(nhead, d_model, self.d_k))
+                self.W_q = nn.Parameter(torch.empty(nhead, d_model, self.d_k))
+                nn.init.xavier_uniform_(self.W_q)
+                nn.init.xavier_uniform_(self.W_k)
         else:
-            self.W_k = nn.ParameterDict({})
-            self.W_q = nn.ParameterDict({})
-            for key_i in update_keys:
-                self.W_k[key_i] = nn.Parameter(torch.empty(nhead, d_model, self.d_k))
-                self.W_q[key_i] = nn.Parameter(torch.empty(nhead, d_model, self.d_k))
-                nn.init.xavier_uniform_(self.W_q[key_i])
-                nn.init.xavier_uniform_(self.W_k[key_i])
+            if use_nn_linear:
+                self.W_k = nn.ModuleDict({})
+                self.W_q = nn.ModuleDict({})
+                for key_i in update_keys:
+                    self.W_k[key_i] = nn.Linear(d_model, d_model)
+                    self.W_q[key_i] = nn.Linear(d_model, d_model)
+                    nn.init.xavier_uniform_(self.W_k[key_i].weight)
+                    nn.init.xavier_uniform_(self.W_q[key_i].weight)
+            else:
+                self.W_k = nn.ParameterDict({})
+                self.W_q = nn.ParameterDict({})
+                for key_i in update_keys:
+                    self.W_k[key_i] = nn.Parameter(torch.empty(nhead, d_model, self.d_k))
+                    self.W_q[key_i] = nn.Parameter(torch.empty(nhead, d_model, self.d_k))
+                    nn.init.xavier_uniform_(self.W_q[key_i])
+                    nn.init.xavier_uniform_(self.W_k[key_i])
 
         self.add_zero_attn = add_zero_attn
 
@@ -367,17 +393,22 @@ class mha_integrator_v0(pl.LightningModule):
             batch_size, seq_len = q.size(0), q.size(1)
             v_dim = v.size(-1)
 
-            q = q.repeat(self.nhead, 1, 1, 1)  # head, batch_size, seq_len, d_model
-            k = k.repeat(self.nhead, 1, 1, 1)  # head, batch_size, seq_len, d_model
-            v = v.repeat(self.nhead, 1, 1, 1)  # head, batch_size, seq_len, d_model
-
-            if self.update_keys == ['update_value']:
-                q = torch.einsum("hijk,hkl->hijl", (q, self.W_q)) # head, batch_size, d_k, seq_len
-                k = torch.einsum("hijk,hkl->hijl", (k, self.W_k)) # head, batch_size, d_k, seq_len
+            if self.use_nn_linear:
+                q = self.W_q(q).reshape(batch_size, seq_len, self.nhead, self.d_k).permute(2, 0, 1, 3)
+                k = self.W_k(k).reshape(batch_size, seq_len, self.nhead, self.d_k).permute(2, 0, 1, 3)
+                v = v.repeat(self.nhead, 1, 1, 1)  # head, batch_size, seq_len, d_model
             else:
-                q = torch.einsum("hijk,hkl->hijl", (q, self.W_q[key_i])) # head, batch_size, d_k, seq_len
-                k = torch.einsum("hijk,hkl->hijl", (k, self.W_k[key_i])) # head, batch_size, d_k, seq_len
-            q = q.contiguous().view(self.nhead * batch_size, seq_len, self.d_k)
+                q = q.repeat(self.nhead, 1, 1, 1)  # head, batch_size, seq_len, d_model
+                k = k.repeat(self.nhead, 1, 1, 1)  # head, batch_size, seq_len, d_model
+                v = v.repeat(self.nhead, 1, 1, 1)  # head, batch_size, seq_len, d_model
+                if self.update_keys == ['update_value']:
+                    q = torch.einsum("hijk,hkl->hijl", (q, self.W_q)) # head, batch_size, seq_len, d_k
+                    k = torch.einsum("hijk,hkl->hijl", (k, self.W_k)) # head, batch_size, seq_len, d_k
+                else:
+                    q = torch.einsum("hijk,hkl->hijl", (q, self.W_q[key_i])) # head, batch_size, seq_len, d_k
+                    k = torch.einsum("hijk,hkl->hijl", (k, self.W_k[key_i])) # head, batch_size, seq_len, d_k
+            
+            q = q.contiguous().view(self.nhead * batch_size, seq_len, self.d_k) # [batch_size, opt_frame_num, d_model]
             k = k.contiguous().view(self.nhead * batch_size, seq_len, self.d_k)
             v = v.contiguous().view(self.nhead * batch_size, seq_len, v_dim)
 

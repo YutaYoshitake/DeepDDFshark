@@ -36,18 +36,15 @@ def config_parser():
                         help='experiment name')
     parser.add_argument("--exp_version", type=str, default=0,
                         help='')
-    parser.add_argument("--train_data_dir", type=str, 
-                        help='')
-    parser.add_argument("--train_N_views", type=int, 
-                        help='')
-    parser.add_argument("--train_instance_list_txt", type=str, 
-                        help='')
-    parser.add_argument("--val_data_dir", type=str, 
-                        help='')
-    parser.add_argument("--val_N_views", type=int, 
-                        help='')
-    parser.add_argument("--val_instance_list_txt", type=str, 
-                        help='')
+    parser.add_argument("--train_data_dir", type=str)
+    parser.add_argument("--train_N_views", type=int)
+    parser.add_argument("--train_instance_list_txt", type=str)
+    parser.add_argument("--val_data_dir", type=str, default='non')
+    parser.add_argument("--val_N_views", type=int)
+    parser.add_argument("--val_instance_list_txt", type=str, default='non')
+    parser.add_argument("--test_data_dir", type=str, default='non')
+    parser.add_argument("--test_N_views", type=int)
+    parser.add_argument("--test_instance_list_txt", type=str, default='non')
     parser.add_argument("--frame_num", type=int, 
                         help='')
     parser.add_argument("--use_gru", type=bool, default=False,
@@ -60,13 +57,19 @@ def config_parser():
                         help='')
     parser.add_argument("--re_wood", type=bool, default=False,
                         help='')
-    parser.add_argument("--model_ckpt_path", type=str, 
+    parser.add_argument("--model_ckpt_path", type=str, default='non', 
                         help='')
-    parser.add_argument("--initnet_ckpt_path", type=str, 
+    parser.add_argument("--initnet_ckpt_path", type=str, default='non', 
                         help='')
     parser.add_argument("--optim_mode", type=str, default='optimall',
                         help='')
     parser.add_argument("--init_mode", type=str, default='all',
+                        help='')
+    parser.add_argument("--init_net_name", type=str, default='non', 
+                        help='')
+    parser.add_argument("--val_model_epoch", type=int, default=0, 
+                        help='')
+    parser.add_argument("--init_net_epoch", type=int, default=0, 
                         help='')
 
     # training options

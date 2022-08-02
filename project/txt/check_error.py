@@ -7,6 +7,7 @@ import random
 import pylab
 import glob
 import math
+import shutil
 import re
 from tqdm import tqdm, trange
 import torch
@@ -36,73 +37,75 @@ DEBUG = False
 
 
 
-# # label_a = "progressive"
-# # label_b = "original"
-# # pickle_name = 'list0.pickle'
-# # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_56_45/log_error.pickle')
-# # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_14_15/log_error.pickle')
-# # pickle_name = 'list1.pickle'
-# # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_05_45/log_error.pickle')
-# # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_24_32/log_error.pickle')
-# # pickle_name = 'list2.pickle'
-# # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_40/log_error.pickle')
-# # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_00_37_56/log_error.pickle')
-# # pickle_name = 'list3.pickle'
-# # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_37_40/log_error.pickle')
-# # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_53_36/log_error.pickle')
-# # pickle_name = 'list4.pickle'
-# # aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_05_47_02/log_error.pickle')
-# # bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/exp0626/2022_06_26_06_04_12/log_error.pickle')
-
-label_a = "Rad_1"
-label_b = "Rad_05"
+label_a = "trans_avg"
+label_b = "origin"
 pickle_name = 'Rad.pickle'
-aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/dee/Rad1/2022_07_10_23_52_29/log_error.pickle')
-bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/dee/Rad05/2022_07_10_23_57_23/log_error.pickle')
+aaa = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_07_18_12_58_59/log_error.pickle')
+bbb = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_07_18_12_59_04/log_error.pickle')
 
-for key in aaa.keys():
-    fig = pylab.figure()
-    ax = fig.add_subplot(1,1,1)
-    ax.hist([aaa[key], bbb[key]], bins=50, label=[label_a, label_b])
-    if key == 'path':
-        break
-    ax.legend()
-    fig.savefig(f"err_{key}.png")
+# for key in aaa.keys():
+#     fig = pylab.figure()
+#     ax = fig.add_subplot(1,1,1)
+#     ax.hist([aaa[key], bbb[key]], bins=50, label=[label_a, label_b])
+#     if key == 'path':
+#         break
+#     ax.legend()
+#     fig.savefig(f"err_{key}.png")
 
-import pdb; pdb.set_trace()
 
-origin = aaa
-target = bbb
-result_path_list = []
-original_value_list = []
-target_value_list = []
-err_key = 'red'
 
-target_idx_list = np.flipud(np.argsort(origin[err_key])) # 誤差の大きい順で並べる
-origin_threshold = 70
-original_num = 128
-mask = origin[err_key][target_idx_list] > origin_threshold
-target_idx_list = target_idx_list[mask][:original_num] # しきい値以上のインデックスを取得
-# print(origin[err_key][target_idx_list]) # エラーを表示
+target_dir = 'list1/ryouhou_ii'
+parent_directory_path = f'sample_images/whether_it_works/{target_dir}/'
+os.makedirs(parent_directory_path, exist_ok=True)
+key = 'red'
+criterion = bbb
+target = aaa
+criterion_min = 10 # criterionで誤差がこれ以上
+target_max = 3 # criterionで誤差がこれ以上
 
-threshold = 5
-for idx in target_idx_list:
-    origin_value = origin[err_key][idx]
-    target_value = target[err_key][idx]
-    if target_value < threshold:
-        if target_value < origin_value:
-            result_path = '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/' + origin['path'][idx]
-            result_path_list.append(result_path)
-            print(f'origin : {origin[err_key][idx]:.1f}, target : {target[err_key][idx]:.1f}')
-            # original_value_list.append(origin[err_key][idx])
-            # target_value_list.append(target[err_key][idx])
+min_mask = criterion[key] < 1
+max_mask = target[key][min_mask] < 1 # > 10 
+path_list = target['path'][min_mask][max_mask]
 
-# print(original_value_list)
-# print(target_value_list)
-print('###     ' + str(len(result_path_list)) + '     ###')
+for path_i in path_list:
+    split_dot = path_i.split('.')[0] # '738395f54b301d80b1f5d603f931c1aa/00001'
+    split_slash = split_dot.split('/') # '738395f54b301d80b1f5d603f931c1aa', '00001'
+    path_i = 'dataset/dugon/moving_camera/train/views64/' + split_dot + '.png'
+    target_name = path_i.split('.')[0]
+    shutil.copyfile(path_i, parent_directory_path + split_slash[0] + '_' + split_slash[1] + '.png')
 
-pickle_dump(result_path_list, pickle_name)
-import pdb; pdb.set_trace()
+# origin = aaa
+# target = bbb
+# result_path_list = []
+# original_value_list = []
+# target_value_list = []
+# err_key = 'red'
+
+# target_idx_list = np.flipud(np.argsort(origin[err_key])) # 誤差の大きい順で並べる
+# origin_threshold = 70
+# original_num = 128
+# mask = origin[err_key][target_idx_list] > origin_threshold
+# target_idx_list = target_idx_list[mask][:original_num] # しきい値以上のインデックスを取得
+# # print(origin[err_key][target_idx_list]) # エラーを表示
+
+# threshold = 5
+# for idx in target_idx_list:
+#     origin_value = origin[err_key][idx]
+#     target_value = target[err_key][idx]
+#     if target_value < threshold:
+#         if target_value < origin_value:
+#             result_path = '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/' + origin['path'][idx]
+#             result_path_list.append(result_path)
+#             print(f'origin : {origin[err_key][idx]:.1f}, target : {target[err_key][idx]:.1f}')
+#             # original_value_list.append(origin[err_key][idx])
+#             # target_value_list.append(target[err_key][idx])
+
+# # print(original_value_list)
+# # print(target_value_list)
+# print('###     ' + str(len(result_path_list)) + '     ###')
+
+# pickle_dump(result_path_list, pickle_name)
+# import pdb; pdb.set_trace()
 
 
 

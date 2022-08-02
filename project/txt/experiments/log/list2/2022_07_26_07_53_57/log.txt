@@ -1,0 +1,19 @@
+time_log : 2022_07_26_07_53_57
+ini_ckpt_path : lightning_logs/DeepTaR/chair/initnet_list2_date0705/checkpoints/0000000300.ckpt
+ckpt_path : lightning_logs/DeepTaR/chair/dfnet_list2_randR05_origin_before_date0723/checkpoints/0000000400.ckpt
+test_N_views : 8
+test_instance_list_txt : instance_lists/kmean/kmeans2_test_list.txt
+
+only_init_net : False
+start_frame_idx : 0
+itr_frame_num : 5
+half_lambda_max : 0
+optim_num : 5
+init_mode : all
+optim_mode : optimall
+
+avg_err_pos   : 0.012821752578020096 : 0.01172291487455368
+avg_err_scale : 0.029667112976312637 : 0.024145513772964478
+avg_err_red   : 3.3869056701660156 : 2.6385622024536133
+avg_err_green : 2.766324043273926 : 2.4037508964538574
+avg_err_depth : 0.11621914058923721 : 0.11358029395341873

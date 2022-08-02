@@ -1,175 +1,3 @@
-CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
-CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
-CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
-CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
-CUDA_VISIBLE_DEVICES=7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
-CUDA_VISIBLE_DEVICES=6,7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
-CUDA_VISIBLE_DEVICES=6,7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
-CUDA_VISIBLE_DEVICES=6,7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
-CUDA_VISIBLE_DEVICES=6,7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
-CUDA_VISIBLE_DEVICES=6,7 python train_pl.py --config=configs/voxel/voxel_normal_original.txt 
-python
-vim run_sif.sh 
-vim run_sif.sh 
-pip install 
-ls
-cd project/
-ksa
-python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-ls
-cd /disks/
-ls
-cd local/
-ls
-cd ~/works/DeepSDF/project/dataset
-;s
-ls
-cd local/
-ls
-cd multi_35_normal
-ls
-cd 
-cd works/DeepSDF/project/
-ls
-CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-CUDA_VISIBLE_DEVICES=0,1 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-CUDA_VISIBLE_DEVICES=0,1,2,3,4 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-CUDA_VISIBLE_DEVICES=0,1,2,3,4 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-CUDA_VISIBLE_DEVICES=0,1,2 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-CUDA_VISIBLE_DEVICES=0,1,2,3,4 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-CUDA_VISIBLE_DEVICES=0,1,2,3,4 python train_multi.py --config=configs/ins35/multi_wrd_i35_v2048_mini3d.txt 
-ls
-ls
-cd /
-ls
-cd
-cd works/DeepSDF/project/
-ls
-python
-cd project/
-python
-python make_sh.py 
-python make_sh.py 
-python make_sh.py 
-rm -r test_view_multi3281/
-tmux a
-tensorboard --logdir /home/yyoshitake/shark/works/DeepSDF/project/lightning_logs --port 6007
-nvidia-smi
-ls
-cd works/DeepSDF/project/
-CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=cat_0407_depth_mae_normal_mae_seed0
-CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=configs/multi35/cat_0407_depth_mae_normal_mae_seed0
-CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=configs/multi35/cat_0407.txt --exp_version=cat_0407_depth_mse_normal_mse_seed0
-CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=configs/multi35/cat_0407.txt --exp_version=cat_0407_depth_mae_normal_mae_seed0
-CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=configs/multi35/cat_0407.txt --exp_version=cat_0407_depth_mae_normal_mae_seed0
-CUDA_VISIBLE_DEVICES=4 python render_normal_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
-CUDA_VISIBLE_DEVICES=4 python render_depth_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
-CUDA_VISIBLE_DEVICES=4 python render_depth_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
-CUDA_VISIBLE_DEVICES=4 python render_depth_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
-CUDA_VISIBLE_DEVICES=4 python render_depth_rot.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_seed0
-nvidia-smi
-tensorboard --logdir /home/yyoshitake/shark/works/DeepSDF/project/lightning_logs --port 6007
-tensorboard --logdir /home/yyoshitake/shark/works/DeepSDF/project/lightning_logs --port 7788
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs --port 7788
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs --port 7788
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/ --port 7788
-cd works/DeepSDF/project/
-CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-cd works/DeepSDF/project/
-CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --ex
-cd works/DeepSDF/project/
-CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-ls
-nvidia-smi
-CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-cd works/DeepSDF/project/
-CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-CUDA_VISIBLE_DEVICES=4 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=4 --automatic_optimization=non
-cd works/DeepSDF/project/
-CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-CUDA_VISIBLE_DEVICES=1 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-CUDA_VISIBLE_DEVICES=1 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-CUDA_VISIBLE_DEVICES=0 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-CUDA_VISIBLE_DEVICES=0 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-nvidia-smi
-nvidia-smi
-CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-CUDA_VISIBLE_DEVICES=1,3,4,5,6,7,8,9 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-nvidia-smi
-CUDA_VISIBLE_DEVICES=0 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=re
-CUDA_VISIBLE_DEVICES=2 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0 --N_batch=12
-CUDA_VISIBLE_DEVICES=2 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=2 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-nvidia-smi
-CUDA_VISIBLE_DEVICES=2 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=8 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-cd works/DeepSDF/project/
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-CUDA_VISIBLE_DEVICES=7 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=2
-cd works/DeepSDF/project/
-CUDA_VISIBLE_DEVICES=2 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=0
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=1
-CUDA_VISIBLE_DEVICES=5 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=3 --automatic_optimization=False
-cd works/DeepSDF/project/
-ls
-nvidia-smi
-CUDA_VISIBLE_DEVICES=3 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=3 --automatic_optimization=False
-CUDA_VISIBLE_DEVICES=3 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=3 --automatic_optimization=non
-CUDA_VISIBLE_DEVICES=3 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=3 --automatic_optimization=non
-CUDA_VISIBLE_DEVICES=3 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=3 --automatic_optimization=non
-cd works/DeepSDF/project/
-ls
-CUDA_VISIBLE_DEVICES=4 python train_dfnet.py --config=configs/dfnet_fulldep.txt --exp_version=4 --automatic_optimization=non
-nvidia-sm
-nvidia-smi
-htop
 cd works/DeepSDF/project/
 sh sh/experiment_5.sh 
 sh sh/experiment_5.sh 
@@ -498,3 +326,175 @@ sh sh/train.sh
 cd works/DeepSDF/project/
 sh sh/train.sh 
 sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+sh sh/train.sh 
+nvidia-smi
+nvidia-smi
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/val.sh 
+nvidia-smi
+nvidia-smi
+sh sh/val.sh 
+nvidia-smi
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/val.sh 
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/val.sh 
+sh sh/train.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/train.sh 
+python
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/val.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+cd /home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/49434684366778973002761e7a3ba3bd/
+ls
+cd
+cd works/DeepSDF/project/
+sh sh/train.sh \
+sh sh/train.sh
+sh sh/train.sh
+sh sh/train.sh
+sh sh/train.sh
+sh sh/val.sh
+sh sh/val.sh
+sh sh/val.sh
+sh sh/train.sh
+cd works/DeepSDF/project/
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/train.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 
+sh sh/val.sh 

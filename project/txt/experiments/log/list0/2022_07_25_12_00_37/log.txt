@@ -1,0 +1,19 @@
+script_name : test ori multi
+time_log : 2022_07_25_12_00_37
+ckpt_path : lightning_logs/DeepTaR/chair/dfnet_list0_randR05_sha_separate_atten_date0721/checkpoints/0000000400.ckpt
+test_N_views : 8
+test_instance_list_txt : instance_lists/kmean/kmeans0_test_list.txt
+
+only_init_net : False
+start_frame_idx : 0
+itr_frame_num : 5
+half_lambda_max : 0
+optim_num : 5
+init_mode : all
+optim_mode : optimall
+
+avg_err_pos   : 0.03011595457792282 : 0.004873069003224373
+avg_err_scale : 0.022155793383717537 : 0.017667055130004883
+avg_err_red   : 1.7521103620529175 : 1.4191348552703857
+avg_err_green : 1.3191694021224976 : 1.085884690284729
+avg_err_depth : 0.06349452584981918 : 0.06020772457122803
