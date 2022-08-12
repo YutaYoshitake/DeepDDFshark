@@ -1,1 +1,8 @@
-CUDA_VISIBLE_DEVICES=7 python train_ori.py --code_mode=TRAIN --config=configs/dfnet_list0_randR10_origin_after.txt  --exp_version=date_0802 --N_batch=5
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_origin_after_list0_randR05_inpDepth_outImg.txt         --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_origin_after_list0_randR05_inpDepth_outObj.txt         --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=2 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_origin_after_list0_randR05_inpOSMap_outObj.txt         --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=3 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj_peAdd.txt --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=4 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj_peCat.txt --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=5 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt       --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=6 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpOSMap_outObj_peAdd.txt --exp_version=date0810 --N_batch=8
+CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpOSMap_outObj.txt       --exp_version=date0810 --N_batch=8

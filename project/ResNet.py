@@ -180,3 +180,92 @@ def ResNet18(args, in_channel=3):
         BatchNorm = nn.BatchNorm2d
     model = ResNet(BasicBlock, [2, 2, 2, 2], args.output_stride, BatchNorm, in_channel=in_channel)
     return model
+
+
+
+
+
+class ResNet_wo_dilation(nn.Module):
+
+    def __init__(self, block, layers, output_stride, BatchNorm, pretrained=True, in_channel=5, input_HW=256):
+        self.inplanes = 64
+        super(ResNet_wo_dilation, self).__init__()
+        blocks = [1, 2, 4]
+        if output_stride == 8:
+            if input_HW == 128:
+                strides = [1, 2, 1, 1]
+            elif input_HW == 256:
+                strides = [2, 2, 1, 1]
+            else:
+                raise NotImplementedError
+            dilations = [1, 1, 1, 1]
+        else:
+            raise NotImplementedError
+
+        # Modules
+        self.conv1 = nn.Conv2d(in_channel, 64, kernel_size=7, stride=2, padding=3,
+                                bias=False)        
+        self.bn1 = BatchNorm(64)
+        self.relu = nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+
+        self.layer1 = self._make_layer(block, 64, layers[0], stride=strides[0], dilation=dilations[0], BatchNorm=BatchNorm)
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=strides[1], dilation=dilations[1], BatchNorm=BatchNorm)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=strides[2], dilation=dilations[2], BatchNorm=BatchNorm)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=strides[3], dilation=dilations[3], BatchNorm=BatchNorm)
+        self._init_weight()
+
+    def _make_layer(self, block, planes, blocks, stride=1, dilation=1, BatchNorm=None):
+        downsample = None
+        if stride != 1 or self.inplanes != planes * block.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(self.inplanes, planes * block.expansion,
+                          kernel_size=1, stride=stride, bias=False),
+                BatchNorm(planes * block.expansion),
+            )
+
+        layers = []
+        layers.append(block(self.inplanes, planes, stride, dilation, downsample, BatchNorm))
+        self.inplanes = planes * block.expansion
+        for i in range(1, blocks):
+            layers.append(block(self.inplanes, planes, dilation=dilation, BatchNorm=BatchNorm))
+
+        return nn.Sequential(*layers)
+
+    def forward(self, input):
+        # input : torch.Size([10, 5, 256, 256])
+        x = self.conv1(input) # torch.Size([10, 64, 128, 128])
+        x = self.bn1(x) # torch.Size([10, 64, 128, 128])
+        x = self.relu(x) # torch.Size([10, 64, 64, 64])
+        x = self.maxpool(x) # torch.Size([10, 64, 64, 64])
+
+        x = self.layer1(x) # torch.Size([10, 256, 32, 32])
+        x = self.layer2(x) # torch.Size([10, 512, 16, 16])
+        x = self.layer3(x) # torch.Size([10, 1024, 16, 16])
+        x = self.layer4(x) # torch.Size([10, 2048, 16, 16])
+        return x
+
+    def _init_weight(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, SynchronizedBatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
+
+
+
+
+
+def ResNet50_wo_dilation(in_channel=3, gpu_num=1):
+    if gpu_num > 1:
+        BatchNorm = SynchronizedBatchNorm2d
+    else:
+        BatchNorm = nn.BatchNorm2d
+    model = ResNet_wo_dilation(Bottleneck, [3, 4, 6, 3], output_stride=8, BatchNorm=BatchNorm, in_channel=in_channel)
+    return model

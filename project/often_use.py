@@ -40,14 +40,10 @@ def pickle_dump(obj, path):
 
 
 
-
-
 def pickle_load(path):
     with open(path, mode='rb') as f:
         data = pickle.load(f)
         return data
-
-
 
 
 
@@ -59,15 +55,11 @@ def polar2xyz(theta, phi, r=1):
 
 
 
-
-
 def xyz2polar(x, y, z):
     r = torch.sqrt(x**2 + y**2 + z**2)
     theta = torch.arccos(z/r)
     phi = torch.sgn(y) * torch.arccos(x/torch.sqrt(x**2+y**2))
     return r, theta, phi
-
-
 
 
 
@@ -85,8 +77,6 @@ def check_map_torch(image, path = 'sample_images/tes.png', figsize=[10,10]):
 
 
 
-
-
 def check_map_np(image, path = 'sample_images/tes.png', figsize=[10,10]):
     fig = pylab.figure(figsize=figsize)
 
@@ -98,8 +88,6 @@ def check_map_np(image, path = 'sample_images/tes.png', figsize=[10,10]):
     ax1.yaxis.set_ticklabels([])
     fig.savefig(path, dpi=300)
     pylab.close()
-
-
 
 
 
@@ -117,8 +105,6 @@ def vec2skew(v):
 
 
 
-
-
 def Exp(r):
     """so(3) vector to SO(3) matrix
     :param r: (3, ) axis-angle, torch tensor
@@ -129,8 +115,6 @@ def Exp(r):
     eye = torch.eye(3, dtype=torch.float32, device=r.device)
     R = eye + (torch.sin(norm_r) / norm_r) * skew_r + ((1 - torch.cos(norm_r)) / norm_r**2) * (skew_r @ skew_r)
     return R
-
-
 
 
 
@@ -149,8 +133,6 @@ def get_ray_direction(size, fov, c2w=False):
 
 
 
-
-
 def path2posc2w(path, model):
     if not model.model_params_dtype:
         model.check_model_info()
@@ -162,8 +144,6 @@ def path2posc2w(path, model):
     c2w = torch.from_numpy(c2w).clone().to(model.model_params_dtype).unsqueeze(0).to(model.device) # batch, 3*3:SO3
 
     return pos, c2w # returen as torchtensor
-
-
 
 
 
@@ -208,8 +188,6 @@ def path2depthinfo(path, model, with_depth = False, with_normal = False, H = 'un
             return inverced_depth_map, blur_mask, depth_map, hit_obj_mask
         else:
             return inverced_depth_map, blur_mask
-
-
 
 
 
@@ -342,7 +320,7 @@ def render_distance_map_from_axis(
     est_invdistance_map = est_invdistance_map_obj_scale / obj_scale[:, None, None]
 
     # Get distance map.
-    mask_under_border = 1 / (cam_pos_obj.norm(dim=-1) + 1.0 * obj_scale * ddf.radius) # 良いのか...？
+    mask_under_border = 1 / (cam_pos_obj.norm(dim=-1) + .5 * obj_scale * ddf.radius) # 良いのか...？
     est_mask = [map_i > border_i for map_i, border_i in zip(est_invdistance_map, mask_under_border)]
     est_mask = torch.stack(est_mask, dim=0)
     est_distance_map = torch.zeros_like(est_invdistance_map)
@@ -449,23 +427,6 @@ def get_normalized_depth_map(mask, distance_map, rays_d_cam, avg_depth_map='not_
 
 
 
-# def get_clopped_rays_d_cam(size, fov_h, bbox_list, input_H='not_given', input_W='not_given', input_F='not_given'):
-    # bbox_list_ = 0.5 * bbox_list
-    # if  input_H == 'not_given':
-    #     fov = torch.deg2rad(torch.tensor(fov_h, dtype=torch.float))
-    #     x_coord = batch_linspace(torch.tan(fov*bbox_list_[:, 1, 0]), torch.tan(fov*bbox_list_[:, 0, 0]), size)
-    #     x_coord = x_coord[:, None, :].expand(-1, size, -1)
-    #     y_coord = batch_linspace(torch.tan(fov*bbox_list_[:, 1, 1]), torch.tan(fov*bbox_list_[:, 0, 1]), size)
-    #     y_coord = y_coord[:, :, None].expand(-1, -1, size)
-    # else:
-    #     fov_h = 2*torch.arctan(torch.tensor(0.5*input_H/input_F, dtype=torch.float))
-    #     fov_w = 2*torch.arctan(torch.tensor(0.5*input_W/input_F, dtype=torch.float))
-    #     x_coord = batch_linspace(torch.tan(fov_w*bbox_list_[:, 1, 0]), torch.tan(fov_w*bbox_list_[:, 0, 0]), size)
-    #     x_coord = x_coord[:, None, :].expand(-1, size, -1)
-    #     y_coord = batch_linspace(torch.tan(fov_h*bbox_list_[:, 1, 1]), torch.tan(fov_h*bbox_list_[:, 0, 1]), size)
-    #     y_coord = y_coord[:, :, None].expand(-1, -1, size)
-    # rays_d_cam = torch.stack([x_coord, y_coord, torch.ones_like(x_coord)], dim=-1)
-    # rays_d_cam = F.normalize(rays_d_cam, dim=-1)
 def get_clopped_rays_d_cam(size, bbox_list, rays_d_cam):
     coord_x = batch_linspace(bbox_list[:, 1, 0], bbox_list[:, 0, 0], size)
     coord_x = coord_x[:, None, :].expand(-1, size, -1)
@@ -474,6 +435,7 @@ def get_clopped_rays_d_cam(size, bbox_list, rays_d_cam):
     sampling_coord = torch.stack([coord_x, coord_y], dim=-1)
     rays_d_cam = rays_d_cam.expand(bbox_list.shape[0], -1, -1, -1).permute(0, 3, 1, 2)
     rays_d_cam = F.grid_sample(rays_d_cam.to(sampling_coord.dtype), sampling_coord, align_corners=True).permute(0, 2, 3, 1)
+    rays_d_cam = F.normalize(rays_d_cam, dim=-1)
     return rays_d_cam # H, W, 3:xyz
 
 
@@ -518,7 +480,6 @@ def get_clopping_infos(bbox_list, avg_z_map, fov):
     cim2im_scale = (bbox_hight) / 2 # clopしたBBoxの高さ÷画像の高さ２
     im2cam_scale = avg_z_map * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)
     return cim2im_scale, im2cam_scale, bbox_center
-
 
 
 
@@ -581,3 +542,50 @@ def sample_fibonacci_views(n):
     X, Y, Z = cos(theta) * sin(phi), sin(theta) * sin(phi), cos(phi)
     xyz = np.stack([X, Y, Z], axis=1)
     return xyz
+
+
+
+def get_OSMap(distance_map, rays_d_cam, w2c, cam_pos_wrd, o2w, obj_pos_wrd, obj_scale, mask='non'):
+    OSMap_cam = distance_map[..., None] * rays_d_cam
+    OSMap_wrd = torch.sum(OSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+    OSMap_wrd = OSMap_wrd + cam_pos_wrd[..., None, None, :]
+    OSMap_obj = OSMap_wrd - obj_pos_wrd[..., None, None, :]
+    OSMap_obj = torch.sum(OSMap_obj[..., None, :]*o2w.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+    OSMap_obj = OSMap_obj / obj_scale[..., None, None, :]
+    if mask == 'non':
+        return OSMap_obj
+    else:
+        OSMap_obj[torch.logical_not(mask)] = 0.
+        return OSMap_obj
+
+
+
+def get_diff_OSMap(diff_distance_map, rays_d_cam, w2c, o2w, obj_scale, mask='non'):
+    diff_OSMap_cam = diff_distance_map[..., None] * rays_d_cam
+    diff_OSMap_wrd = torch.sum(diff_OSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+    diff_OSMap_obj = torch.sum(diff_OSMap_wrd[..., None, :]*o2w.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+    diff_OSMap_obj = diff_OSMap_obj / obj_scale[..., None, None, :]
+    if mask == 'non':
+        return diff_OSMap_obj
+    else:
+        diff_OSMap_obj[torch.logical_not(mask)] = 0.
+        return diff_OSMap_obj
+
+
+
+def get_positional_encoding(cam_pos_wrd, rays_d_cam, batch_size, opt_frame_num, w2c, obj_pos_wrd, o2w, obj_scale_wrd, image_lengs, bbox_info):
+    cam_d_cam = F.normalize(F.grid_sample(
+                    rays_d_cam.permute(0, 3, 1, 2), 
+                    torch.zeros(batch_size*opt_frame_num, 1, 1, 2).to(rays_d_cam), 
+                    align_corners=True, 
+                    )[:, :, 0, 0], dim=-1)
+    cam_d_wrd = torch.sum(cam_d_cam[..., None, :]*w2c.permute(0, 2, 1), -1).reshape(batch_size, opt_frame_num, 3)
+    cam_d_obj = torch.sum(cam_d_wrd[..., None, :]*o2w.permute(0, 2, 1).reshape(batch_size, opt_frame_num, 3, 3), dim=-1)
+    cam_p_wrd = cam_pos_wrd.reshape(batch_size, opt_frame_num, 3)
+    cam_p_obj = cam_p_wrd - obj_pos_wrd.reshape(batch_size, opt_frame_num, 3)
+    cam_p_obj = torch.sum(
+                    cam_p_obj[..., None, :]*o2w.permute(0, 2, 1).reshape(batch_size, opt_frame_num, 3, 3)
+                    , dim=-1) / obj_scale_wrd.reshape(batch_size, opt_frame_num, 1)
+    clop_size_wrd = image_lengs * .5 * (bbox_info[:, 0]-bbox_info[:, 2]).reshape(batch_size, opt_frame_num, 1)
+    clop_size_obj = clop_size_wrd / obj_scale_wrd.reshape(batch_size, opt_frame_num, 1)
+    return torch.cat([cam_p_obj, cam_d_obj, clop_size_obj], dim=-1)

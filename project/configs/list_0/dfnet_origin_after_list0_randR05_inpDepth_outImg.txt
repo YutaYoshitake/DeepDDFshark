@@ -1,37 +1,36 @@
-expname = DeepTaR/chair/dfnet_list0_randR05_origin_before
+expname = DeepTaR/chair/dfnet_origin_after_list0_randR05_inpDepth_outImg
 fov = 49.134
 train_data_dir = /home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64
 train_N_views = 64
 train_instance_list_txt = /home/yyoshitake/works/DeepSDF/project/instance_lists/kmean/kmeans0_train_list.txt
 val_data_dir = /home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64
-val_N_views = 8
+val_N_views = 16
 val_instance_list_txt = /home/yyoshitake/works/DeepSDF/project/instance_lists/kmean/kmeans0_val_list.txt
 test_data_dir = /home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64
 test_N_views = 16
 test_instance_list_txt = /home/yyoshitake/works/DeepSDF/project/instance_lists/kmean/kmeans0_test_list.txt
 init_net_name = initnet_list0_date0705
 
-
 save_interval = 1
-N_epoch = 10000
-N_batch = 5
-check_val_every_n_epoch = 10
+N_epoch = 32
+N_batch = 2
+check_val_every_n_epoch = 1
 lr = 0.0001
-train_optim_num = 5
 model_mode = single
-optim_num = 7
+optim_num = 5
 itr_frame_num = 5 
 rand_P_range = 0.3
 rand_S_range = 0.3
-rand_R_range = 1.0
+rand_R_range = 0.5
 rand_Z_sigma = 0.05
 L_p = 10.
 L_s = 10.
 L_a = 1.
 L_c = 10.
 L_d = 0.
-integrate_mode = average_but_loss_against_before
-
+optimizer_type = origin
+input_type = depth
+output_diff_coordinate = img
 
 ddf_model_path = /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/chair/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000010000.ckpt
 ddf_instance_list_txt = ./instance_lists/instance_list.txt

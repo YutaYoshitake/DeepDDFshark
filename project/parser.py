@@ -36,22 +36,37 @@ def config_parser():
                         help='experiment name')
     parser.add_argument("--exp_version", type=str, default=0,
                         help='')
-    parser.add_argument("--train_data_dir", type=str)
-    parser.add_argument("--train_N_views", type=int)
-    parser.add_argument("--train_instance_list_txt", type=str)
-    parser.add_argument("--val_data_dir", type=str, default='non')
-    parser.add_argument("--val_N_views", type=int)
-    parser.add_argument("--val_instance_list_txt", type=str, default='non')
-    parser.add_argument("--test_data_dir", type=str, default='non')
-    parser.add_argument("--test_N_views", type=int)
-    parser.add_argument("--test_instance_list_txt", type=str, default='non')
+    parser.add_argument("--optimizer_type", type=str, default='origin', 
+                        help='')
+    parser.add_argument("--input_type", type=str, default='depth', 
+                        help='')
+    parser.add_argument("--output_diff_coordinate", type=str, default='img', 
+                        help='')
+    parser.add_argument("--positional_encoding_mode", type=str, default='non', 
+                        help='')
+    parser.add_argument("--train_data_dir", type=str, 
+                        help='')
+    parser.add_argument("--train_N_views", type=int, 
+                        help='')
+    parser.add_argument("--train_instance_list_txt", type=str, 
+                        help='')
+    parser.add_argument("--val_data_dir", type=str, default='non', 
+                        help='')
+    parser.add_argument("--val_N_views", type=int, 
+                        help='')
+    parser.add_argument("--val_instance_list_txt", type=str, default='non', 
+                        help='')
+    parser.add_argument("--test_data_dir", type=str, default='non', 
+                        help='')
+    parser.add_argument("--test_N_views", type=int, 
+                        help='')
+    parser.add_argument("--test_instance_list_txt", type=str, default='non', 
+                        help='')
     parser.add_argument("--frame_num", type=int, 
                         help='')
     parser.add_argument("--use_gru", type=bool, default=False,
                         help='')
     parser.add_argument("--model_mode", type=str, 
-                        help='')
-    parser.add_argument("--xxx", type=str,
                         help='')
     parser.add_argument("--automatic_optimization", type=str, default='manual', 
                         help='')
@@ -70,6 +85,8 @@ def config_parser():
     parser.add_argument("--val_model_epoch", type=int, default=0, 
                         help='')
     parser.add_argument("--init_net_epoch", type=int, default=0, 
+                        help='')
+    parser.add_argument("--xxx", type=str,
                         help='')
 
     # training options

@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=7 python train_ori.py --code_mode=VAL --config=configs/dfnet_list0_randR10_origin_after.txt --exp_version=date0721 --N_batch=5 --init_net_epoch=300 --val_model_epoch=700
+CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpOSMap_outObj.txt --exp_version=date0810 --N_batch=8 --init_net_epoch=300 --val_model_epoch=700

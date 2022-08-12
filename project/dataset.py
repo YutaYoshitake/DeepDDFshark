@@ -80,7 +80,7 @@ class TaR_dataset(data.Dataset):
                             os.path.join(data_dir, line.rstrip('\n'), f'{str(view_ind+1).zfill(5)}.pickle')
                             ) # '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/{???}/00001.pickle' 
         # self.instance_path_list = pickle_load('/home/yyoshitake/works/DeepSDF/project/adam_vs_deep_kmeans0_test.pickle')
-        self.instance_path_list = self.instance_path_list[:96]
+        # self.instance_path_list = self.instance_path_list[:3]
         # self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/c967b1e07ef7fc0bebc740fe800c0367/00007.pickle',
         #                            '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/2249c62788a52c61613f0dbd986ed6f8/00006.pickle',
         #                            '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/c7786437606ac263b04cb542e2c50eb4/00008.pickle']
@@ -141,3 +141,61 @@ class TaR_dataset(data.Dataset):
 
     def __len__(self):
         return len(self.instance_path_list)
+
+
+
+
+
+# if __name__=='__main__':
+
+#     size = 256
+#     fov = 49.134
+#     rays_d_cam = get_ray_direction(size, fov).to('cpu').detach().numpy().copy()
+
+#     data_path = '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/23e726da58f115f69b9f2eb77f5e247e/00001.pickle'
+#     data_dict = pickle_load(data_path)
+#     frame_mask = data_dict['mask']
+#     frame_distance_map = data_dict['depth_map'].astype(np.float32)
+#     frame_camera_pos = data_dict['camera_pos'].astype(np.float32)
+#     frame_camera_rot = data_dict['camera_rot'].astype(np.float32)
+#     frame_obj_pos = data_dict['obj_pos'].astype(np.float32)
+#     frame_obj_rot = data_dict['obj_rot'].astype(np.float32)
+#     frame_obj_scale = data_dict['obj_scale'].astype(np.float32)
+
+
+    
+#     depth_map_list = frame_distance_map
+#     mask_list = frame_mask
+#     camera_rot_list = frame_camera_rot
+#     camera_pos_list = frame_camera_pos
+#     obj_rot_list = frame_obj_rot
+#     obj_pos_list = frame_obj_pos
+#     normalized_rays_d = rays_d_cam[0]
+#     fig = plt.figure()
+#     ax = Axes3D(fig)
+#     ax.set_xlabel("X")
+#     ax.set_ylabel("Y")
+#     ax.set_zlabel("Z")
+#     for ind_1 in range(len(depth_map_list)):
+#         point_1 = (depth_map_list[ind_1][..., None] * normalized_rays_d)[mask_list[ind_1]].reshape(-1, 3) 
+#         point_1 = np.sum(point_1[:, None, :]*camera_rot_list[ind_1].T, -1) + camera_pos_list[ind_1]
+#         point_1 = np.sum(point_1[:, None, :]*obj_rot_list[ind_1].T, -1) + obj_pos_list[ind_1]
+#         ax.scatter(point_1[::3, 0], point_1[::3, 1], point_1[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
+#     # plt.show()
+#     # ax.view_init(elev=0, azim=90)
+#     fig.savefig("tes.png")
+#     # print(rgb_path)
+#     # import pdb; pdb.set_trace()
+#     plt.close()
+
+
+
+
+#     ind_1 = 0
+#     point_1 = (depth_map_list[ind_1][..., None] * normalized_rays_d)
+#     frame_surface_pos_cam_map = np.sum(point_1[..., None, :]*camera_rot_list[ind_1].T, -1) + camera_pos_list[ind_1]
+#     frame_surface_pos_obj_map = np.sum(point_1[..., None, :]*obj_rot_list[ind_1].T, -1) + obj_pos_list[ind_1]
+#     frame_surface_pos_obj_map -= frame_surface_pos_obj_map.min()
+#     frame_surface_pos_obj_map /= frame_surface_pos_obj_map.max()
+#     frame_surface_pos_obj_map[np.logical_not(mask_list[0])] = .0
+#     import pdb; pdb.set_trace()

@@ -1352,3 +1352,45 @@ class df_resnet_encoder_with_gru(pl.LightningModule):
                                 #     pre_shape_code = get_weighted_average(
                                 #                             target = torch.stack(frame_est_list['shape_code'], dim=1).detach(), 
                                 #                             ratio = 1/torch.stack(frame_est_list['error'], dim=1).detach())
+
+
+
+# Check OSMap
+            fig = plt.figure()
+            ax = Axes3D(fig)
+            ax.set_xlabel("X")
+            ax.set_ylabel("Y")
+            ax.set_zlabel("Z")
+            for ind_1 in range(opt_frame_num):
+                ind_1 += 0 * opt_frame_num
+                point_1 = obs_OSMap_obj[ind_1][clopped_mask[ind_1]]
+                point_1 = point_1.to('cpu').detach().numpy().copy()
+                ax.scatter(point_1[::3, 0], point_1[::3, 1], point_1[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
+
+                point_1 = est_OSMap_obj[ind_1][est_clopped_mask[ind_1]]
+                point_1 = point_1.to('cpu').detach().numpy().copy()
+                ax.scatter(point_1[::3, 0], point_1[::3, 1], point_1[::3, 2], marker="o", linestyle='None', c='c', s=0.05)
+            ax.view_init(elev=0, azim=90)
+            fig.savefig("tes_1.png")
+            ax.view_init(elev=0, azim=0)
+            fig.savefig("tes_2.png")
+            ax.view_init(elev=45, azim=45)
+            fig.savefig("tes_3.png")
+            plt.close()
+
+
+# Check Ray sampling
+        import matplotlib.pyplot as plt
+        fig = plt.figure()
+        x = rays_d_cam.permute(0, 3, 1, 2)[0, 0, :, :].reshape(-1).to('cpu').detach().numpy().copy()
+        y = rays_d_cam.permute(0, 3, 1, 2)[0, 1, :, :].reshape(-1).to('cpu').detach().numpy().copy()
+        z = rays_d_cam.permute(0, 3, 1, 2)[0, 2, :, :].reshape(-1).to('cpu').detach().numpy().copy()
+        # plt.scatter(x, y)
+        plt.scatter(x, z)
+        x = sampled_rays_d[0, 0, :, :].reshape(-1).to('cpu').detach().numpy().copy()
+        y = sampled_rays_d[0, 1, :, :].reshape(-1).to('cpu').detach().numpy().copy()
+        z = sampled_rays_d[0, 2, :, :].reshape(-1).to('cpu').detach().numpy().copy()
+        # plt.scatter(x, y)
+        plt.scatter(x, z)
+        path = 'tes.png'
+        fig.savefig(path)
