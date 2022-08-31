@@ -261,7 +261,6 @@ class ResNet_wo_dilation(nn.Module):
 
 
 
-
 def ResNet50_wo_dilation(in_channel=3, gpu_num=1):
     if gpu_num > 1:
         BatchNorm = SynchronizedBatchNorm2d

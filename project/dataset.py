@@ -80,11 +80,26 @@ class TaR_dataset(data.Dataset):
                             os.path.join(data_dir, line.rstrip('\n'), f'{str(view_ind+1).zfill(5)}.pickle')
                             ) # '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/{???}/00001.pickle' 
         # self.instance_path_list = pickle_load('/home/yyoshitake/works/DeepSDF/project/adam_vs_deep_kmeans0_test.pickle')
-        # self.instance_path_list = self.instance_path_list[:3]
-        # self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/c967b1e07ef7fc0bebc740fe800c0367/00007.pickle',
-        #                            '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/2249c62788a52c61613f0dbd986ed6f8/00006.pickle',
-        #                            '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/c7786437606ac263b04cb542e2c50eb4/00008.pickle']
-
+        # self.instance_path_list = self.instance_path_list[:8]
+        # self.instance_path_list = ['/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00011.pickle',
+        #                            '/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00012.pickle', 
+        #                            '/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00013.pickle', 
+        #                            '/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00014.pickle', 
+        #                            '/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00015.pickle', 
+        #                            '/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00016.pickle', ]
+        #                            '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/kmean0_randn/1c199ef7e43188887215a1e3ffbff428/00039.pickle']
+        self.rand_idx_list = 'non'
+        # ###############################################################
+        # self.rand_idx_list = 'hi'
+        # pickle_path = '/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_08_28_16_22_22/log_error.pickle'
+        # targets = pickle_load(pickle_path)
+        # self.instance_path_list = targets['path']
+        # self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/kmean0_randn/'+instance_path for instance_path in self.instance_path_list]
+        # self.rand_P_seed = targets['rand_P_seed']
+        # self.rand_S_seed = targets['rand_S_seed']
+        # self.randn_theta_seed = targets['randn_theta_seed']
+        # self.randn_axis_idx = targets['randn_axis_idx']
+        # ###############################################################
 
     def __getitem__(self, index):
         # Load data
@@ -106,7 +121,7 @@ class TaR_dataset(data.Dataset):
         frame_camera_rot = data_dict['camera_rot'].astype(np.float32)
         frame_obj_pos = data_dict['obj_pos'].astype(np.float32)
         frame_obj_rot = data_dict['obj_rot'].astype(np.float32)
-        frame_obj_scale = data_dict['obj_scale'].astype(np.float32)
+        frame_obj_scale = np.squeeze(data_dict['obj_scale'].astype(np.float32)) # data_dict['obj_scale'].astype(np.float32)
 
         # splitted_path_list = path.split('/')
         # log_path = splitted_path_list[-2]+'/'+splitted_path_list[-1]
@@ -132,12 +147,23 @@ class TaR_dataset(data.Dataset):
             canonical_distance_map = canonical_data_dict['depth_map'].astype(np.float32)
             canonical_camera_pos = canonical_data_dict['camera_pos'].astype(np.float32)
             canonical_camera_rot = canonical_data_dict['camera_rot'].astype(np.float32)
+
+            if self.rand_idx_list != 'non':
+                rand_P_seed = self.rand_P_seed[index]
+                rand_S_seed = self.rand_S_seed[index]
+                randn_theta_seed = self.randn_theta_seed[index]
+                randn_axis_idx = self.randn_axis_idx[index]
+            else:
+                rand_P_seed = 'non'
+                rand_S_seed = 'non'
+                randn_theta_seed = 'non'
+                randn_axis_idx = 'non'
         
         if self.mode=='train':
             return frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_pos, frame_obj_rot, frame_obj_scale, instance_id
         elif self.mode=='val':
             return frame_mask, frame_distance_map, frame_camera_pos, frame_camera_rot, frame_obj_pos, frame_obj_rot, frame_obj_scale, \
-            canonical_distance_map, canonical_camera_pos, canonical_camera_rot, instance_id, log_path
+            canonical_distance_map, canonical_camera_pos, canonical_camera_rot, instance_id, log_path, rand_P_seed, rand_S_seed, randn_theta_seed, randn_axis_idx
 
     def __len__(self):
         return len(self.instance_path_list)

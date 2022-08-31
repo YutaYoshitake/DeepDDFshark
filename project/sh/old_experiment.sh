@@ -117,3 +117,67 @@ CUDA_VISIBLE_DEVICES=0 python train_ori.py --code_mode=VAL   --config=configs/df
 # CUDA_VISIBLE_DEVICES=6 python train_ori.py --code_mode=TRAIN --config=configs/dfnet_list2_randR05_mha_avg_learned_weighted.txt  --exp_version=date0723 --N_batch=10
 CUDA_VISIBLE_DEVICES=7 python train_ori.py --code_mode=TRAIN --config=configs/dfnet_list2_randR05_origin_after.txt  --exp_version=tes --N_batch=12
 # CUDA_VISIBLE_DEVICES=8 python train_ori.py --code_mode=TRAIN --config=configs/dfnet_list2_randR05_origin_before.txt  --exp_version=date0723 --N_batch=10
+
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_origin_after_list0_randR05_inpDepth_outImg.txt         --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_origin_after_list0_randR05_inpDepth_outObj.txt         --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_origin_after_list0_randR05_inpOSMap_outObj.txt         --exp_version=date0810 --N_batch=8 --val_model_epoch=10
+# CUDA_VISIBLE_DEVICES=3 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj_peAdd.txt --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=4 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj_peCat.txt --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=5 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt       --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=6 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpOSMap_outObj_peAdd.txt --exp_version=date0810 --N_batch=8
+# CUDA_VISIBLE_DEVICES=2 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt        --exp_version=date0813 --N_batch=8 --val_model_epoch=3
+# CUDA_VISIBLE_DEVICES=3 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcnn1_after_list0_randR05_inpOSMap_outObj.txt       --exp_version=date0813 --N_batch=8
+# CUDA_VISIBLE_DEVICES=4 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcnn2_after_list0_randR05_inpOSMap_outObj.txt       --exp_version=date0813 --N_batch=8
+# CUDA_VISIBLE_DEVICES=5 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt        --exp_version=batchseqhidden --N_batch=8
+# CUDA_VISIBLE_DEVICES=6 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt        --exp_version=detach --N_batch=8
+# CUDA_VISIBLE_DEVICES=2 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt        --exp_version=layernorm --N_batch=8
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt        --exp_version=onlymean --N_batch=8
+# CUDA_VISIBLE_DEVICES=8 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt        --exp_version=MLP --N_batch=8
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=0layers --N_batch=10 --num_encoder_layers=0
+
+# CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=1layers --N_batch=10 --num_encoder_layers=1
+# CUDA_VISIBLE_DEVICES=5 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=2layers --N_batch=10 --num_encoder_layers=2
+# CUDA_VISIBLE_DEVICES=6 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=3layers --N_batch=10 --num_encoder_layers=3
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=6layers --N_batch=10 --num_encoder_layers=6
+# CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=1layers_detach --N_batch=8 --num_encoder_layers=1
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=2layers_dff1024_dh256  --N_batch=10 --num_encoder_layers=2 --dim_feedforward=1024 --hidden_dim=256
+# CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=2layers_wupLr_step4000 --N_batch=10 --num_encoder_layers=2 --lr=-1
+CUDA_VISIBLE_DEVICES=2 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=2layers_nondropout     --N_batch=10 --num_encoder_layers=2 --dropout=0.0
+
+# CUDA_VISIBLE_DEVICES=2 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=4layers                --N_batch=10 --num_encoder_layers=4
+# CUDA_VISIBLE_DEVICES=4 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=5layers                --N_batch=10 --num_encoder_layers=5
+# CUDA_VISIBLE_DEVICES=8 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj_peAdd.txt --exp_version=3layers_nonPe --N_batch=10  --num_encoder_layers=3 --positional_encoding_mode=non
+# CUDA_VISIBLE_DEVICES=2 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=1layers                --N_batch=10 --num_encoder_layers=1
+# CUDA_VISIBLE_DEVICES=3 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=2layers                --N_batch=10 --num_encoder_layers=2
+# CUDA_VISIBLE_DEVICES=4 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=3layers                --N_batch=10 --num_encoder_layers=3
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=6layers                --N_batch=10 --num_encoder_layers=6
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=6layers_wupLr_step4000 --N_batch=10 --num_encoder_layers=6 --lr=-1
+# CUDA_VISIBLE_DEVICES=8 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpOSMap_outObj.txt --exp_version=1layers_split_wPe           --N_batch=10 --num_encoder_layers=1 --split_into_patch=wPe
+# CUDA_VISIBLE_DEVICES=9 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpOSMap_outObj.txt --exp_version=3layers_split_wPe           --N_batch=10 --num_encoder_layers=3 --split_into_patch=wPe
+# CUDA_VISIBLE_DEVICES=9 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpOSMap_outObj.txt --exp_version=3layers_split_woPe           --N_batch=10 --num_encoder_layers=3 --split_into_patch=woPe
+
+# CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj_peAdd.txt --exp_version=3layers --num_encoder_layers=3 --N_batch=10
+# CUDA_VISIBLE_DEVICES=5 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj_peCat.txt --exp_version=3layers --num_encoder_layers=3 --N_batch=10
+# CUDA_VISIBLE_DEVICES=6 python train.py --code_mode=TRAIN --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpOSMap_outObj_peAdd.txt --exp_version=3layers --num_encoder_layers=3 --N_batch=10
+
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=1layers --N_batch=2 --num_encoder_layers=1 --init_net_epoch=300 --val_model_epoch=10
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=2layers --N_batch=2 --num_encoder_layers=2 --init_net_epoch=300 --val_model_epoch=10
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=3layers --N_batch=2 --num_encoder_layers=3 --init_net_epoch=300 --val_model_epoch=10
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcnn1_after_list0_randR05_inpOSMap_outObj.txt --exp_version=date0813 --N_batch=2 --num_encoder_layers=0 --init_net_epoch=300 --val_model_epoch=15
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcnn2_after_list0_randR05_inpOSMap_outObj.txt --exp_version=date0813 --N_batch=2 --num_encoder_layers=0 --init_net_epoch=300 --val_model_epoch=10
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=1layers --N_batch=2 --num_encoder_layers=1 --init_net_epoch=300 --val_model_epoch=13
+CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=2layers --N_batch=2 --num_encoder_layers=2 --init_net_epoch=300 --val_model_epoch=13
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=3layers --N_batch=2 --num_encoder_layers=3 --init_net_epoch=300 --val_model_epoch=13
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcnn1_after_list0_randR05_inpOSMap_outObj.txt --exp_version=date0813 --N_batch=2 --num_encoder_layers=0 --init_net_epoch=300 --val_model_epoch=12
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcnn2_after_list0_randR05_inpOSMap_outObj.txt --exp_version=date0813 --N_batch=2 --num_encoder_layers=0 --init_net_epoch=300 --val_model_epoch=14
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transavg_after_list0_randR05_inpOSMap_outObj.txt --exp_version=1layers --N_batch=2 --num_encoder_layers=1 --init_net_epoch=300 --val_model_epoch=15
+
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=1layers --N_batch=2 --num_encoder_layers=1 --init_net_epoch=300 --val_model_epoch=11
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=2layers --N_batch=2 --num_encoder_layers=2 --init_net_epoch=300 --val_model_epoch=12
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=3layers --N_batch=2 --num_encoder_layers=3 --init_net_epoch=300 --val_model_epoch=8
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=3layers --N_batch=2 --num_encoder_layers=3 --init_net_epoch=300 --val_model_epoch=13
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj.txt --exp_version=6layers --N_batch=2 --num_encoder_layers=6 --init_net_epoch=300 --val_model_epoch=10
+
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj_peAdd.txt --exp_version=3layers --num_encoder_layers=3 --N_batch=2 --init_net_epoch=300 --val_model_epoch=11
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpDepth_outObj_peCat.txt --exp_version=3layers --num_encoder_layers=3 --N_batch=2 --init_net_epoch=300 --val_model_epoch=13
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=VAL --config=configs/list_0/dfnet_transcls_after_list0_randR05_inpOSMap_outObj_peAdd.txt --exp_version=3layers --num_encoder_layers=3 --N_batch=2 --init_net_epoch=300 --val_model_epoch=12

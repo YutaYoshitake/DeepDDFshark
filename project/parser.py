@@ -26,7 +26,6 @@ def get_args():
 
 
 def config_parser():
-
     parser = configargparse.ArgumentParser()
     parser.add_argument('--config', is_config_file=True, 
                         help='config file path')
@@ -38,11 +37,33 @@ def config_parser():
                         help='')
     parser.add_argument("--optimizer_type", type=str, default='origin', 
                         help='')
+    parser.add_argument("--transformer_model", type=str, default='pytorch', 
+                        help='')
     parser.add_argument("--input_type", type=str, default='depth', 
                         help='')
     parser.add_argument("--output_diff_coordinate", type=str, default='img', 
                         help='')
+    parser.add_argument("--num_encoder_layers", type=int, default=6, 
+                        help='')
     parser.add_argument("--positional_encoding_mode", type=str, default='non', 
+                        help='')
+    parser.add_argument("--integration_mode", type=str, default='cls_token', 
+                        help='')
+    parser.add_argument("--loss_timing", type=str, default='after_mean', 
+                        help='')
+    parser.add_argument("--hidden_dim", type=int, default=512, 
+                        help='')
+    parser.add_argument("--dim_feedforward", type=int, default=2048, 
+                        help='')
+    parser.add_argument("--dropout", type=float, default=0.1, 
+                        help='')
+    parser.add_argument("--num_head", type=int, default=8, 
+                        help='')
+    parser.add_argument("--reset_transformer_params", action='store_true', # 'store_false', 
+                        help='')
+    parser.add_argument("--split_into_patch", type=str, default='non', # 'store_false', 
+                        help='')
+    parser.add_argument("--encoder_norm_type", type=str, default='LayerNorm', 
                         help='')
     parser.add_argument("--train_data_dir", type=str, 
                         help='')
@@ -64,13 +85,7 @@ def config_parser():
                         help='')
     parser.add_argument("--frame_num", type=int, 
                         help='')
-    parser.add_argument("--use_gru", type=bool, default=False,
-                        help='')
-    parser.add_argument("--model_mode", type=str, 
-                        help='')
     parser.add_argument("--automatic_optimization", type=str, default='manual', 
-                        help='')
-    parser.add_argument("--re_wood", type=bool, default=False,
                         help='')
     parser.add_argument("--model_ckpt_path", type=str, default='non', 
                         help='')
@@ -114,10 +129,6 @@ def config_parser():
                         help='epoch size')
     parser.add_argument("--lr", type=float,
                         help="")
-    parser.add_argument("--dynamic", type=bool, default=False,
-                        help='')
-    parser.add_argument("--use_depth_error", type=bool, default=False,
-                        help='')
     parser.add_argument("--train_optim_num", type=int, default=2,
                         help='')
     parser.add_argument("--grad_optim_max", type=int, default=50,

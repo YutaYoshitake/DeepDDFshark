@@ -1,0 +1,24 @@
+time_log : 2022_08_29_17_35_52
+ini_ckpt_path : non
+rand_P_range : 0.3
+rand_S_range : 0.3
+rand_R_range : 1.5707963705062866
+random_axis_num : 1024
+rand_Z_sigma : 0.05
+ckpt_path : lightning_logs/DeepTaR/chair/baseline_list0randn_randR05_inpOSMap_outObj_cnn01_after/checkpoints/0000000012.ckpt
+test_N_views : 32
+test_instance_list_txt : /home/yyoshitake/works/DeepSDF/project/instance_lists/kmean/kmeans0_test_list.txt
+
+only_init_net : False
+start_frame_idx : 0
+itr_frame_num : 3
+half_lambda_max : 0
+optim_num : 5
+init_mode : all
+optim_mode : optimall
+
+avg_err_pos   : 0.014912718906998634 : 0.012990279123187065
+avg_err_scale : 5.640724182128906 : 5.05421257019043
+avg_err_red   : 3.3130102157592773 : 2.2800168991088867
+avg_err_green : 2.2959680557250977 : 1.9215755462646484
+avg_err_depth : 0.09279082715511322 : 0.09172408282756805

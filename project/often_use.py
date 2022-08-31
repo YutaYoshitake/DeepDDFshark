@@ -12,6 +12,7 @@ import sys
 import numpy as np
 import torch
 import torch.nn.functional as F
+from tqdm import tqdm, trange
 
 torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 
@@ -19,16 +20,16 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 np.random.seed(0)
 DEBUG = False
 
-seed = 42
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-os.environ['PYTHONHASHSEED'] = str(seed)
-if device=='cuda':
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+# seed = 42
+# random.seed(seed)
+# np.random.seed(seed)
+# torch.manual_seed(seed)
+# torch.cuda.manual_seed(seed)
+# os.environ['PYTHONHASHSEED'] = str(seed)
+# if device=='cuda':
+#     torch.cuda.manual_seed_all(seed)
+#     torch.backends.cudnn.deterministic = True
+#     torch.backends.cudnn.benchmark = False
 
 
 
@@ -589,3 +590,23 @@ def get_positional_encoding(cam_pos_wrd, rays_d_cam, batch_size, opt_frame_num, 
     clop_size_wrd = image_lengs * .5 * (bbox_info[:, 0]-bbox_info[:, 2]).reshape(batch_size, opt_frame_num, 1)
     clop_size_obj = clop_size_wrd / obj_scale_wrd.reshape(batch_size, opt_frame_num, 1)
     return torch.cat([cam_p_obj, cam_d_obj, clop_size_obj], dim=-1)
+
+
+
+class WarmupScheduler(torch.optim.lr_scheduler.LambdaLR):
+
+    def __init__(self, optimizer, warmup_steps, last_epoch=-1, d_model=512):
+
+        def lr_lambda(step_num):
+            step_num = step_num + 1
+            return d_model**(-0.5) * min(step_num**(-0.5), step_num*(warmup_steps**(-1.5)))
+
+        super(WarmupScheduler, self).__init__(optimizer, lr_lambda, last_epoch=last_epoch)
+
+    def get_lr(self):
+        if not self._get_lr_called_within_step:
+            warnings.warn("To get the last learning rate computed by the scheduler, "
+                          "please use `get_last_lr()`.")
+
+        if self.last_epoch == 0: print('warm up !')
+        return [lmbda(self.last_epoch) for lmbda in self.lr_lambdas]
