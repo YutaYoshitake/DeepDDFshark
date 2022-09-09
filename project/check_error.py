@@ -18,10 +18,10 @@ from often_use import *
 
 
 
-label_a = "trans_avg"
-label_b = "baseline"
-aaa_date = '2022_08_30_06_35_54'
-bbb_date = '2022_08_30_06_35_10'
+label_a = "wo_normalization"
+label_b = "w_normalization"
+aaa_date = '2022_09_02_17_27_51'
+bbb_date = '2022_08_31_00_54_04'
 aaa = pickle_load(f'/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/{aaa_date}/log_error.pickle')
 bbb = pickle_load(f'/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/{bbb_date}/log_error.pickle')
 data_mode = 'randn'
@@ -40,17 +40,31 @@ os.makedirs(parent_directory_path, exist_ok=True)
 # parent_directory_path = f'sample_images/list0randn/{data_mode}/{target_mode}/'
 # os.makedirs(parent_directory_path, exist_ok=True)
 
-# for key in aaa.keys():
-#     # if key in {'pos', 'green', 'red', 'scale', 'depth'}:
-#     if key in {'depth'}:
-#         fig = pylab.figure()
-#         ax = fig.add_subplot(1,1,1)
-#         ax.hist([
-#             aaa[key].squeeze(), 
-#             bbb[key].squeeze()], bins=50, label=[label_a, label_b], log=True)
-#         ax.legend()
-#         fig.savefig(f"err_{key}_{data_mode}.png")
-# import pdb; pdb.set_trace()
+x_label = {'pos': 'Translation error', 
+           'green': 'Green axis error (Deg)', 
+           'red': 'Red axis error (Deg)', 
+           'scale': 'Scale error (%)', 
+           'depth': 'Depth error', }
+for key in aaa.keys():
+    if key in {'pos', 'green', 'red', 'scale', 'depth'}:
+    # if key in {'depth'}:
+        fig = pylab.figure(figsize=(4.5,3.5))
+        ax = fig.add_subplot(1,1,1)
+        ax.hist([
+            aaa[key].squeeze(), 
+            bbb[key].squeeze()], bins=50, label=[label_a, label_b], log=False)
+        ax.legend()
+        ax.set_xlabel(x_label[key])
+        ax.set_ylabel('Frequency')
+        fig.subplots_adjust(right=0.95)
+        fig.subplots_adjust(top=0.95)
+        fig.subplots_adjust(left=0.137)
+        fig.subplots_adjust(bottom=0.137)
+        fig.savefig(f"err_{key}_{data_mode}.png")
+import pdb; pdb.set_trace()
+
+
+
 
 
 # # bad_targetのエラーが大きく、
@@ -59,7 +73,7 @@ os.makedirs(parent_directory_path, exist_ok=True)
 # bad_target = bbb # base
 # better_target = aaa # tra
 # bad_model_min = 10
-# better_model_max = 3
+# better_model_max = 5
 
 # # bad_targetだけ悪い。
 # min_mask = bad_target[key] > bad_model_min 
@@ -96,51 +110,76 @@ os.makedirs(parent_directory_path, exist_ok=True)
 # import pdb; pdb.set_trace()
 
 
-aaa_avg_log = {
-    'pos' : np.array([0.15056264, 0.041626837, 0.020613406, 0.01565276, 0.01430345, 0.013998766]), 
-    'green' : np.array([35.05945, 9.837852, 4.0477667, 2.9562793, 2.784236, 2.777223]), 
-    'red' : np.array([34.601006, 14.917136, 5.514079, 3.2407093, 2.7908962, 2.6284115]), 
-    'scale' : np.array([0.14908247, 0.09709674, 0.045342874, 0.043955114, 0.04671287, 0.048863348]), 
-    'shape' : np.array([0.11309633, 0.11423056, 0.09505049, 0.08657477, 0.08538977, 0.08539624]), 
-    }
 
 
-aaa_med_log = {
-    'pos' : np.array([0.15141244, 0.037736975, 0.018097376, 0.013762844, 0.012551535, 0.012287206]), 
-    'green' : np.array([32.443924, 7.987003, 3.3821697, 2.5984201, 2.5304513, 2.5487561]), 
-    'red' : np.array([31.590153, 10.900149, 3.5682874, 2.0715504, 1.7912761, 1.6784723]), 
-    'scale' : np.array([0.14883542, 0.075674, 0.038639307, 0.038916737, 0.042843014, 0.04523912]), 
-    'shape' : np.array([0.114758685, 0.11213647, 0.09303734, 0.08508292, 0.08364142, 0.083610624]), 
-    }
 
-bbb_avg_log = {
-    'pos' : np.array([0.15056264, 0.05596557, 0.031111112, 0.0209413, 0.016729988, 0.014851256]), 
-    'green' : np.array([35.05945, 15.122427, 6.305102, 3.245079, 2.244779, 1.9063562]), 
-    'red' : np.array([34.601006, 20.18334, 9.8631115, 5.8022523, 4.1355586, 3.3885996]), 
-    'scale' : np.array([0.14908247, 0.16531149, 0.0919075, 0.060989607, 0.050514653, 0.04767442]), 
-    'shape' : np.array([0.11309633, 0.11850956, 0.101638004, 0.0911587, 0.0863531, 0.08443022]), 
-    }
+# label_a = "Poseformer (??sec/itr)"
+# label_b = "Baseline (??sec/itr)"
 
-bbb_med_log = {
-    'pos' : np.array([0.15141244, 0.04883195, 0.025358409, 0.016685855, 0.013490843, 0.012084553]), 
-    'green' : np.array([32.443924, 11.463316, 4.1068416, 2.023859, 1.5544411, 1.4232655]), 
-    'red' : np.array([31.590153, 14.074621, 5.0661416, 2.4849858, 1.8294358, 1.6376343]), 
-    'scale' : np.array([0.14883542, 0.13335133, 0.057513297, 0.039941877, 0.038881034, 0.038632244]), 
-    'shape' : np.array([0.114758685, 0.115968704, 0.09927876, 0.08843007, 0.084171735, 0.082229]), 
-    }
+# aaa_avg_log = {
+#     'pos' : np.array([0.15056264, 0.041626837, 0.020613406, 0.01565276, 0.01430345, 0.013998766]), 
+#     'green' : np.array([35.05945, 9.837852, 4.0477667, 2.9562793, 2.784236, 2.777223]), 
+#     'red' : np.array([34.601006, 14.917136, 5.514079, 3.2407093, 2.7908962, 2.6284115]), 
+#     'scale' : np.array([0.14908247, 0.09709674, 0.045342874, 0.043955114, 0.04671287, 0.048863348]), 
+#     'shape' : np.array([0.11309633, 0.11423056, 0.09505049, 0.08657477, 0.08538977, 0.08539624]), 
+#     }
 
-itr = np.array([1, 2, 3, 4, 5])
-for key in aaa_avg_log.keys():
-    if key in {'pos', 'green', 'red', 'scale', 'shape'}:
-        fig = pylab.figure()
-        ax = fig.add_subplot(1,1,1)
-        ax.plot(itr, aaa_med_log[key].squeeze()[1:], label=label_a)
-        ax.plot(itr, bbb_med_log[key].squeeze()[1:], label=label_b)
-        # plt.yscale("log")
-        ax.set_xlabel('iteration')
-        ax.set_ylabel('error')
-        ax.legend()
-        fig.savefig(f"log_{key}_{data_mode}.png")
+
+# aaa_med_log = {
+#     'pos' : np.array([0.15141244, 0.037736975, 0.018097376, 0.013762844, 0.012551535, 0.012287206]), 
+#     'green' : np.array([32.443924, 7.987003, 3.3821697, 2.5984201, 2.5304513, 2.5487561]), 
+#     'red' : np.array([31.590153, 10.900149, 3.5682874, 2.0715504, 1.7912761, 1.6784723]), 
+#     'scale' : np.array([0.14883542, 0.075674, 0.038639307, 0.038916737, 0.042843014, 0.04523912]), 
+#     'shape' : np.array([0.114758685, 0.11213647, 0.09303734, 0.08508292, 0.08364142, 0.083610624]), 
+#     }
+
+# bbb_avg_log = {
+#     'pos' : np.array([0.15056264, 0.05596557, 0.031111112, 0.0209413, 0.016729988, 0.014851256]), 
+#     'green' : np.array([35.05945, 15.122427, 6.305102, 3.245079, 2.244779, 1.9063562]), 
+#     'red' : np.array([34.601006, 20.18334, 9.8631115, 5.8022523, 4.1355586, 3.3885996]), 
+#     'scale' : np.array([0.14908247, 0.16531149, 0.0919075, 0.060989607, 0.050514653, 0.04767442]), 
+#     'shape' : np.array([0.11309633, 0.11850956, 0.101638004, 0.0911587, 0.0863531, 0.08443022]), 
+#     }
+
+# bbb_med_log = {
+#     'pos' : np.array([0.15141244, 0.04883195, 0.025358409, 0.016685855, 0.013490843, 0.012084553]), 
+#     'green' : np.array([32.443924, 11.463316, 4.1068416, 2.023859, 1.5544411, 1.4232655]), 
+#     'red' : np.array([31.590153, 14.074621, 5.0661416, 2.4849858, 1.8294358, 1.6376343]), 
+#     'scale' : np.array([0.14883542, 0.13335133, 0.057513297, 0.039941877, 0.038881034, 0.038632244]), 
+#     'shape' : np.array([0.114758685, 0.115968704, 0.09927876, 0.08843007, 0.084171735, 0.082229]), 
+#     }
+
+# itr = np.array([1, 2, 3, 4, 5])
+# y_label = {'pos': 'Translation error', 
+#            'green': 'Green axis error (Deg)', 
+#            'red': 'Red axis error (Deg)', 
+#            'scale': 'Scale error (%)', 
+#            'shape': 'Depth error', }
+# for key in aaa_avg_log.keys():
+#     if key in {'pos', 'green', 'red', 'scale', 'shape'}:
+#         # fig = pylab.figure()
+#         fig = pylab.figure(figsize=(4.5,3.5))
+#         ax = fig.add_subplot(1,1,1)
+#         ax.plot(itr, aaa_med_log[key].squeeze()[1:], label=label_a)
+#         ax.plot(itr, bbb_med_log[key].squeeze()[1:], label=label_b)
+#         # plt.yscale("log")
+#         ax.legend()
+#         ax.set_ylabel('error')
+#         ax.set_xlabel('Iteration')
+#         ax.set_ylabel(y_label[key])
+#         ax = plt.gca()
+#         from matplotlib.ticker import *
+#         ax.xaxis.set_major_locator(MultipleLocator(1))
+#         fig.subplots_adjust(right=0.95)
+#         fig.subplots_adjust(top=0.95)
+#         if key in {'pos', 'shape'}:
+#             fig.subplots_adjust(left=0.18)
+#         elif key in {'scale'}:
+#             fig.subplots_adjust(left=0.16)
+#         else:
+#             fig.subplots_adjust(left=0.136)
+#         fig.subplots_adjust(bottom=0.137)
+#         fig.savefig(f"log_{key}_{data_mode}.png")
 
 
 

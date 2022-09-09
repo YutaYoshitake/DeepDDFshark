@@ -101,6 +101,14 @@ def config_parser():
                         help='')
     parser.add_argument("--init_net_epoch", type=int, default=0, 
                         help='')
+    parser.add_argument("--backboneconfs_datadir_list", type=str, default='gt', 
+                        help='')
+    parser.add_argument("--backboneconfs_N_randn", type=int, default=1, 
+                        help='')
+    parser.add_argument("--backbone_lr", type=float, default=1.e-3, 
+                        help='')
+    parser.add_argument("--del_backbone_norm", type=str, default='no', 
+                        help='')
     parser.add_argument("--xxx", type=str,
                         help='')
 
@@ -180,7 +188,7 @@ def config_parser():
                         help='layers in network')
     parser.add_argument("--netwidth", type=int, default=512, 
                         help='channels per layer')
-    parser.add_argument("--use_world_dir", action='store_true',
+    parser.add_argument("--use_world_dir", type=bool, default=True,
                         help='')
     parser.add_argument("--latent_size", type=int, default=256,
                         help='')

@@ -81,13 +81,7 @@ class TaR_dataset(data.Dataset):
                             ) # '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/{???}/00001.pickle' 
         # self.instance_path_list = pickle_load('/home/yyoshitake/works/DeepSDF/project/adam_vs_deep_kmeans0_test.pickle')
         # self.instance_path_list = self.instance_path_list[:8]
-        # self.instance_path_list = ['/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00011.pickle',
-        #                            '/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00012.pickle', 
-        #                            '/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00013.pickle', 
-        #                            '/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00014.pickle', 
-        #                            '/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00015.pickle', 
-        #                            '/home/yyoshitake/works/make_depth_image/project/moving_camera/randn__/8da6959dc59296c9f2f43e6f841bd32b/00016.pickle', ]
-        #                            '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/kmean0_randn/1c199ef7e43188887215a1e3ffbff428/00039.pickle']
+        # self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/kmean0_fixed/bee929929700e99fad8a0ee9b106700e/00003.pickle', ] # 1b5e876f3559c231532a8e162f399205/00007.pickle', ]
         self.rand_idx_list = 'non'
         # ###############################################################
         # self.rand_idx_list = 'hi'

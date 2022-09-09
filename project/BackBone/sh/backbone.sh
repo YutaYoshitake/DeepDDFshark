@@ -1,0 +1,3 @@
+# CUDA_VISIBLE_DEVICES=0 python train_backbone.py --config=configs/03001627/randn/list0/train_gt_pre.txt --del_backbone_norm=w_norms  --exp_version=wNorm  --N_batch=256
+# CUDA_VISIBLE_DEVICES=1 python train_backbone.py --config=configs/03001627/randn/list0/train_dif.txt    --del_backbone_norm=w_norms  --exp_version=wNorm  --N_batch=256
+CUDA_VISIBLE_DEVICES=0 python train_backbone.py --config=configs/03001627/randn/list0/train_dif.txt --del_backbone_norm=w_norms  --exp_version=wNorm --N_batch=512 --expname=03001627/randn/list0/all --backboneconfs_datadir_list=dif_gt_pre --N_epoch=128

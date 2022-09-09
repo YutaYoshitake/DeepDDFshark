@@ -1,60 +1,3 @@
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-nvidia-smi
-nvidia-smi
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/val.sh 
-sh sh/val.sh 
-sh sh/val.sh 
-sh sh/val.sh 
-sh sh/val.sh 
-sh sh/val.sh 
-sh sh/val.sh 
-sh sh/val.sh 
-sh sh/val.sh 
-sh sh/val.sh 
-sh sh/val.sh 
-sh sh/val.sh 
-sh sh/val.sh 
 sh sh/val.sh 
 sh sh/val.sh 
 sh sh/val.sh 
@@ -498,3 +441,60 @@ python check_error.py
 python check_error.py 
 python check_error.py 
 python check_error.py 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/
+sh sh/train.sh
+sh sh/train.sh
+cd works/DeepSDF/project/
+sh sh/train.sh 
+cd works/DeepSDF/project/BackBone/
+sh sh/make_data.sh 
+sh sh/make_data.sh 
+sh sh/make_data.sh 
+sh sh/make_data.sh 
+rm dataset/03001627/randn/dif/*
+rm dataset/03001627/randn/dif/*
+rm -rf dataset/03001627/randn/dif/*
+rm -rf dataset/03001627/randn/gt/*
+rm -rf dataset/03001627/randn/pre/*
+sh sh/make_data.sh 
+sh sh/make_data.sh 
+sh sh/make_data.sh 
+sh sh/make_data.sh 
+rm dataset/03001627/randn/dif/*
+rm -rf dataset/03001627/randn/dif/*
+rm -rf dataset/03001627/randn/gt/*
+rm -rf dataset/03001627/randn/pre/*
+nvidia-smi
+nvidia-smi
+htop
+sh sh/make_data.sh 
+sh sh/make_data.sh 
+cd works/DeepSDF/project/
+cd BackBone/
+ls
+sh sh/
+sh sh/make_data.sh 
+cd works/DeepSDF/project/BackBone/
+sh sh/backbone_gt_pre.sh 
+sh sh/backbone_gt_pre.sh 
+sh sh/backbone_gt_pre.sh 
+cd works/DeepSDF/project/BackBone/
+sh sh/backbone_gt_pre.sh 
+cd works/DeepSDF/project/
+cd works/DeepSDF/project/BackBone/
+sh sh/backbone.sh 
+cd works/DeepSDF/project/BackBone/
+sh sh/backbone.sh 
+sh sh/backbone.sh 
+sh sh/backbone.sh 
+sh sh/backbone.sh 
+cd works/DeepSDF/project/BackBone/
+sh sh/backbone.sh 
+cd works/DeepSDF/project/BackBone/
+sh sh/backbone.sh 

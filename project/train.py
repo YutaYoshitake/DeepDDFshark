@@ -290,11 +290,11 @@ class original_optimizer(pl.LightningModule):
     
 
 
-    # def forward(self, batch_size, opt_frame_num, normalized_depth_map, clopped_mask, clopped_distance_map, pre_etimations, 
-    #     w2c, cam_pos_wrd, rays_d_cam, bbox_info, frame_obj_rot=False, gt_obj_pos_wrd=False, 
-    #     gt_obj_axis_green_wrd=False, gt_obj_axis_red_wrd=False, gt_obj_scale=False, gt_shape_code=False, frame_idx_list=False, 
-    #     cim2im_scale=False, im2cam_scale=False, bbox_center=False, avg_depth_map=False, 
-    #     model_mode='train', batch_idx=0, optim_idx=0):
+    # (self, batch_size, opt_frame_num, normalized_depth_map, clopped_mask, clopped_distance_map, pre_etimations, 
+    # w2c, cam_pos_wrd, rays_d_cam, bbox_info, frame_obj_rot=False, gt_obj_pos_wrd=False, 
+    # gt_obj_axis_green_wrd=False, gt_obj_axis_red_wrd=False, gt_obj_scale=False, gt_shape_code=False, frame_idx_list=False, 
+    # cim2im_scale=False, im2cam_scale=False, bbox_center=False, avg_depth_map=False, 
+    # model_mode='train', batch_idx=0, optim_idx=0):
     def forward(self, batch_size, opt_frame_num, normalized_depth_map, clopped_mask, clopped_distance_map, pre_etimations, 
         w2c, cam_pos_wrd, rays_d_cam, bbox_info, cim2im_scale=False, im2cam_scale=False, bbox_center=False, avg_depth_map=False, 
         model_mode='train', batch_idx=0, optim_idx=0):
@@ -405,6 +405,8 @@ class original_optimizer(pl.LightningModule):
         # check_map = torch.cat([gt, est, torch.abs(gt-est)], dim=-1)
         # check_map = torch.cat([map_i for map_i in check_map], dim=0)
         # check_map_torch(check_map, f'tes_{str_batch_idx}_{str_optim_idx}.png')
+        # # import pdb; pdb.set_trace()
+        ##################################################
         # # self.layers[0].attn_output_weights.mean(1)
         # attn_weights = []
         # for layer in self.df_net.encoder.layers:
@@ -416,7 +418,7 @@ class original_optimizer(pl.LightningModule):
         # end_step = model_mode=='train' and optim_idx==(self.optim_num-1)
         # end_step = end_step or (model_mode=='val' and optim_idx==self.optim_num)
         # if end_step: import pdb; pdb.set_trace()
-        # ##################################################
+        ##################################################
         # gt = obs_OSMap_obj
         # est = est_OSMap_obj
         # dif = diff_OSMap_obj
@@ -425,8 +427,34 @@ class original_optimizer(pl.LightningModule):
         # check_map = torch.cat([gt, est, dif], dim=2)
         # check_map = torch.cat([map_i for map_i in check_map], dim=0)
         # check_map_torch(check_map, f'tesos_{str_batch_idx}_{str_optim_idx}.png')
-        # import pdb; pdb.set_trace()
-        # ##################################################
+        ##################################################
+        # if batch_size == 1:
+        #     # import cv2
+        #     # str_optim_idx = str(optim_idx).zfill(2)
+        #     # for target_name, target, masks in zip(['gt'], [obs_OSMap_obj, est_OSMap_obj, diff_OSMap_obj], [clopped_mask, est_clopped_mask, diff_mask]):
+        #     #     for idx, (target_i, mask_i) in enumerate(zip(target, masks)):
+        #     #         target[idx] = torch.stack(
+        #     #             [(target_ii-target_ii.min()) / (target_ii.max()-target_ii.min()) for target_ii in target_i.permute(2, 0, 1)], 
+        #     #             dim=0).permute(1, 2, 0)
+        #     #         target_i[torch.logical_not(mask_i)] = 0.
+        #     #         target_i = (255 * target_i.to('cpu').detach().numpy().copy()).astype(np.uint8)
+        #     #         path = f'cam_c_{target_name}_{idx}_{str_optim_idx}.png'
+        #     #         cv2.imwrite(path, target_i)
+        #     import cv2
+        #     str_batch_idx = str(batch_idx).zfill(5)
+        #     str_optim_idx = str(optim_idx).zfill(2)
+        #     for idx in range(clopped_distance_map.shape[0]):
+        #         depth_map = torch.abs(clopped_distance_map[idx] - est_clopped_distance_map[idx])
+        #         mask = clopped_mask + est_clopped_distance_map
+        #         depth_map = (depth_map - depth_map.min()) / (depth_map.max() - depth_map.min())
+        #         mask2 = depth_map < 0.1
+        #         depth_map = (255 * depth_map.to('cpu').detach().numpy().copy()).astype('uint8')
+        #         depth_map = cv2.applyColorMap(depth_map, cv2.COLORMAP_WINTER)
+        #         depth_map[torch.logical_not(mask[idx]).to('cpu')] = np.array([70, 10, 50])
+        #         depth_map[mask2.to('cpu')] = np.array([70, 10, 50])
+        #         cv2.imwrite(f'{str_optim_idx}_{str_batch_idx}_gtdepth{idx}.png', depth_map)
+        #     import pdb; pdb.set_trace()
+        ##################################################
 
         return diff_pos_wrd, diff_obj_axis_green_wrd, diff_obj_axis_red_wrd, diff_scale, diff_shape_code
 
@@ -746,7 +774,7 @@ class original_optimizer(pl.LightningModule):
 
             ##################################################
             err_pos_i = torch.abs(pre_obj_pos_wrd - frame_obj_pos[:, 0]).mean(dim=-1)
-            err_scale_i = torch.abs(1 - pre_obj_scale_wrd[:, 0] / frame_obj_scale[:, 0])
+            err_scale_i = (100 * torch.abs((pre_obj_scale_wrd - frame_obj_scale[:, -1]) / frame_obj_scale[:, -1]))[..., 0]
             err_axis_red_cos_sim_i = self.cossim(pre_obj_axis_red_wrd, frame_gt_obj_axis_red_wrd[:, 0]).clamp(min=self.cosssim_min, max=self.cosssim_max)
             err_axis_red_i = torch.acos(err_axis_red_cos_sim_i) * 180 / torch.pi
             err_axis_green_cos_sim_i = self.cossim(pre_obj_axis_green_wrd, frame_gt_obj_axis_green_wrd[:, 0]).clamp(min=self.cosssim_min, max=self.cosssim_max)

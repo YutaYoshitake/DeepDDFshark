@@ -1,0 +1,18 @@
+expname = 03001627/randn/list0/dif
+
+
+
+train_data_dir = /home/yyoshitake/works/DeepSDF/project/BackBone/dataset/03001627/randn
+train_N_views = 128
+train_instance_list_txt = /home/yyoshitake/works/DeepSDF/project/instance_lists/kmean/kmeans0_train_list.txt
+val_data_dir = /home/yyoshitake/works/DeepSDF/project/BackBone/dataset/03001627/randn
+val_N_views = 32
+val_instance_list_txt = /home/yyoshitake/works/DeepSDF/project/instance_lists/kmean/kmeans0_val_list.txt
+
+
+
+N_epoch = 64
+save_interval = 1
+backbone_lr = 1.e-3
+backboneconfs_datadir_list = dif
+backboneconfs_N_randn = 2

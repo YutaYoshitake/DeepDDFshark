@@ -161,16 +161,16 @@ class optimize_former(pl.LightningModule):
         self.integration_mode = integration_mode
         if not integration_mode in {'cnn_only_1', 'cnn_only_2'}:
             ##################################################
-            encoder_norm = nn.LayerNorm(hidden_dim)
-            encoder_layer = nn.TransformerEncoderLayer(d_model=hidden_dim, nhead=num_head, dim_feedforward=dim_feedforward, dropout=dropout, activation="relu")
-            self.encoder = nn.TransformerEncoder(encoder_layer, num_encoder_layers, encoder_norm) # , 1, encoder_norm)
+            # encoder_norm = nn.LayerNorm(hidden_dim)
+            # # encoder_layer = nn.TransformerEncoderLayer(d_model=hidden_dim, nhead=num_head, dim_feedforward=dim_feedforward, dropout=dropout, activation="relu")
+            # # self.encoder = nn.TransformerEncoder(encoder_layer, num_encoder_layers, encoder_norm) # , 1, encoder_norm)
             # encoder_layer = TransformerEncoderLayer(d_model=hidden_dim, nhead=num_head, dim_feedforward=dim_feedforward, dropout=dropout, activation="relu")
             # self.encoder = TransformerEncoder(encoder_layer, num_encoder_layers, encoder_norm) # , 1, encoder_norm)
             ##################################################
             # self.encoder = nn.MultiheadAttention(hidden_dim, num_head, dropout=0.0)
             ##################################################
-            # encoder_layer = TransformerEncoderLayer_woNorm(d_model=hidden_dim, nhead=num_head, dim_feedforward=dim_feedforward, dropout=0.0, activation="relu")
-            # self.encoder = nn.TransformerEncoder(encoder_layer, num_encoder_layers, None) # , 1, encoder_norm)
+            encoder_layer = TransformerEncoderLayer_woNorm(d_model=hidden_dim, nhead=num_head, dim_feedforward=dim_feedforward, dropout=0.0, activation="relu")
+            self.encoder = nn.TransformerEncoder(encoder_layer, num_encoder_layers, None) # , 1, encoder_norm)
             ##################################################
         self.loss_timing = loss_timing
 
