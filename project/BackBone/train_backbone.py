@@ -38,13 +38,21 @@ class BasicBlock(nn.Module):
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=dilation, dilation=dilation, bias=False)
         self.relu_inplace = nn.LeakyReLU(negative_slope=0.1, inplace=True) # nn.ReLU(inplace=True)
         self.downsample = downsample
-        self.bn1 = BatchNorm(planes)
-        self.bn2 = BatchNorm(planes)
+        if BatchNorm is None:
+            print('##### No Norms #####')
+            self.bn1 = None
+        else:
+            self.bn1 = BatchNorm(planes)
+            self.bn2 = BatchNorm(planes)
 
     def forward(self, x):
         residual = x
-        out = self.relu(self.bn1(self.conv1(x)))
-        out = self.bn2(self.conv2(out))
+        if self.bn1 is None:
+            out = self.relu(self.conv1(x))
+            out = self.conv2(out)
+        else:
+            out = self.relu(self.bn1(self.conv1(x)))
+            out = self.bn2(self.conv2(out))
         if self.downsample:
             residual = self.downsample(x)
         out = out + residual      
@@ -63,14 +71,13 @@ class encoder_2dcnn(nn.Module):
         BatchNorm = nn.BatchNorm2d
         blocks = [1, 2, 4]
         self.each_layers_num = layers
+        self.embedding_dim = 512
 
         # Modules
-        self.conv1 = nn.Conv2d(in_channel, 64, kernel_size=7, stride=2, padding=3,
-                                bias=False)        
+        self.conv1 = nn.Conv2d(in_channel, 64, kernel_size=7, stride=2, padding=3, bias=False)        
         self.bn1 = BatchNorm(64)
         self.relu = nn.LeakyReLU(negative_slope=0.1, inplace=True) # nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-
         self.layer1 = self._make_layer(block,  64, layers[0], stride=1, dilation=1, BatchNorm=BatchNorm)
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2, dilation=1, BatchNorm=BatchNorm)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2, dilation=1, BatchNorm=BatchNorm)
@@ -149,6 +156,64 @@ class encoder_2dcnn(nn.Module):
             if isinstance(m, nn.BatchNorm2d):
                 print('Failed to fix all norms!')
                 sys.exit()
+
+
+
+class encoder_2dcnn_wonorms(nn.Module):
+
+    def __init__(self, in_channel=4):
+        self.inplanes = 64
+        super(encoder_2dcnn_wonorms, self).__init__()
+        block = BasicBlock
+        layers = [2, 2, 2, 2]
+        blocks = [1, 2, 4]
+        self.each_layers_num = layers
+        self.embedding_dim = 512
+
+        # Modules
+        self.conv1 = nn.Conv2d(in_channel, 64, kernel_size=7, stride=2, padding=3, bias=False)        
+        self.relu = nn.LeakyReLU(negative_slope=0.1, inplace=True) # nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.layer1 = self._make_layer(block,  64, layers[0], stride=1, dilation=1, BatchNorm=None)
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2, dilation=1, BatchNorm=None)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=2, dilation=1, BatchNorm=None)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=2, dilation=1, BatchNorm=None)
+        self.layer5 = nn.AdaptiveAvgPool2d((1,1))
+        self._init_weight()
+
+    def _make_layer(self, block, planes, blocks, stride=1, dilation=1, BatchNorm=None):
+        downsample = None
+        if stride != 1 or self.inplanes != planes * block.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(self.inplanes, planes * block.expansion,
+                        kernel_size=1, stride=stride, bias=False),
+            )
+        layers = []
+        layers.append(block(self.inplanes, planes, stride, dilation, downsample, BatchNorm))
+        self.inplanes = planes * block.expansion
+        for i in range(1, blocks):
+            layers.append(block(self.inplanes, planes, dilation=dilation, BatchNorm=BatchNorm))
+        return nn.Sequential(*layers)
+
+    def forward(self, input):
+        x = self.conv1(input)
+        x = self.relu(x)
+        x = self.maxpool(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.layer5(x)
+        return x
+
+    def _init_weight(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
 
 
 
@@ -280,7 +345,7 @@ class backbone_encoder_decoder(pl.LightningModule):
         self.map_W = 128
         self.map_channel = 4
         self.embedding_dim = 512
-        self.lr = args.backbone_lr
+        self.lr = args.lr_backbone
         self.L_reg = 1.e-3
         self.L_recon_map = 1.0
         self.L_recon_mask = 1.e-1
@@ -291,7 +356,10 @@ class backbone_encoder_decoder(pl.LightningModule):
             sys.exit()
 
         # Models.
-        self.encoder_2dcnn = encoder_2dcnn(self.map_channel)
+        if args.backbone_norms=='with_norm':
+            self.encoder_2dcnn = encoder_2dcnn(self.map_channel)
+        elif args.backbone_norms=='with_out_norm':
+            self.encoder_2dcnn = encoder_2dcnn_wonorms(self.map_channel)
         self.decoder_2dcnn = decoder_2dcnn(self.embedding_dim, self.map_channel).apply(weights_init)
         self.mask_act = nn.Sigmoid()
 

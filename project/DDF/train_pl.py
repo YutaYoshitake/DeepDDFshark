@@ -82,8 +82,8 @@ class DDF_latent_sampler(pl.LightningModule):
         super().__init__()
 
         # Base configs
-        self.H = args.H
-        self.W = args.W
+        self.H = args.ddf_H
+        self.W = self.H
         self.fov = args.fov
         self.use_3d_code = args.use_3d_code
         self.only_latent = args.only_latent
@@ -249,8 +249,8 @@ class DDF(pl.LightningModule):
         super().__init__()
 
         # Base configs
-        self.H = args.H
-        self.W = args.W
+        self.H = args.ddf_H
+        self.W = self.H
         self.fov = args.fov
         self.same_instances = args.same_instances
         self.use_world_dir = args.use_world_dir
@@ -308,7 +308,7 @@ class DDF(pl.LightningModule):
         self.use_normal_loss = args.use_normal_loss
         self.start_normal_loss = 1e4
         self.current_normal_loss = True
-        self.rays_d_cam = get_ray_direction(args.H, args.fov, False)
+        self.rays_d_cam = get_ray_direction(args.ddf_H, args.fov, False)
         self.diff_rad = args.pixel_diff_ratio * torch.pi 
         self.rays_o_cam = torch.tensor([0., 0., -1])
         self.rot_r = Exp(torch.tensor([0., self.diff_rad, 0.]))

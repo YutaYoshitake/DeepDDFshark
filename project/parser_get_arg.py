@@ -33,7 +33,7 @@ def config_parser():
                         help='')
     parser.add_argument("--expname", type=str, 
                         help='experiment name')
-    parser.add_argument("--exp_version", type=str, default=0,
+    parser.add_argument("--exp_version", type=str, default='tes',
                         help='')
     parser.add_argument("--optimizer_type", type=str, default='origin', 
                         help='')
@@ -43,7 +43,9 @@ def config_parser():
                         help='')
     parser.add_argument("--output_diff_coordinate", type=str, default='img', 
                         help='')
-    parser.add_argument("--num_encoder_layers", type=int, default=6, 
+    parser.add_argument("--num_encoder_layers", type=int, default=2, 
+                        help='')
+    parser.add_argument("--num_decoder_layers", type=int, default=1, 
                         help='')
     parser.add_argument("--positional_encoding_mode", type=str, default='non', 
                         help='')
@@ -101,13 +103,15 @@ def config_parser():
                         help='')
     parser.add_argument("--init_net_epoch", type=int, default=0, 
                         help='')
-    parser.add_argument("--backboneconfs_datadir_list", type=str, default='gt', 
-                        help='')
     parser.add_argument("--backboneconfs_N_randn", type=int, default=1, 
                         help='')
-    parser.add_argument("--backbone_lr", type=float, default=1.e-3, 
+    parser.add_argument("--lr_backbone", type=float, default=1.e-3, 
                         help='')
-    parser.add_argument("--del_backbone_norm", type=str, default='no', 
+    parser.add_argument("--backbone_norms", type=str, default='with_norm', 
+                        help='')
+    parser.add_argument("--backboneconfs_datadir_list", type=str, default='gt', 
+                        help='')
+    parser.add_argument("--backbone_training_strategy", type=str, default='scratch', 
                         help='')
     parser.add_argument("--xxx", type=str,
                         help='')
@@ -117,11 +121,7 @@ def config_parser():
                         help='')
     parser.add_argument("--input_W", type=int, default=256, 
                         help='')
-    parser.add_argument("--input_F", type=int, default=280, 
-                        help='')
-    parser.add_argument("--H", type=int, default=256, 
-                        help='')
-    parser.add_argument("--W", type=int, default=256, 
+    parser.add_argument("--ddf_H_W_during_dfnet", type=int, default=256, 
                         help='')
     parser.add_argument("--fov", type=float, default=60,
                         help="")
@@ -169,6 +169,12 @@ def config_parser():
                         help='')
     parser.add_argument("--L_d", type=float, default=1e0, 
                         help='')
+    parser.add_argument("--main_layers_name", type=str, 
+                        help='')
+    parser.add_argument("--optnet_InOut_type", type=str, 
+                        help='')
+    parser.add_argument("--backbone_model_path", type=str, 
+                        help='')
     parser.add_argument("--depth_error_mode", type=str, default='non', 
                         help='')
     parser.add_argument("--integrate_mode", type=str, default='average', 
@@ -183,6 +189,10 @@ def config_parser():
     parser.add_argument('--ddf_instance_list_txt', type=str,
                         help='pos or dir')
     parser.add_argument("--N_instances", type=int, default=3196,
+                        help='')
+    parser.add_argument("--ddf_H", type=int, default=256, 
+                        help='')
+    parser.add_argument("--ddf_W", type=int, default=256, 
                         help='')
     parser.add_argument("--netdepth", type=int, default=8, 
                         help='layers in network')

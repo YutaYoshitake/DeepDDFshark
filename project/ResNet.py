@@ -213,6 +213,10 @@ class ResNet_wo_dilation(nn.Module):
         self.layer2 = self._make_layer(block, 128, layers[1], stride=strides[1], dilation=dilations[1], BatchNorm=BatchNorm)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=strides[2], dilation=dilations[2], BatchNorm=BatchNorm)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=strides[3], dilation=dilations[3], BatchNorm=BatchNorm)
+        #####
+        self.conv_1d = nn.Conv2d(2048, 512, 1)
+        self.avgpool = nn.AdaptiveAvgPool2d((1,1))
+        #####
         self._init_weight()
 
     def _make_layer(self, block, planes, blocks, stride=1, dilation=1, BatchNorm=None):
@@ -232,8 +236,7 @@ class ResNet_wo_dilation(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, input):
-        # input : torch.Size([10, 5, 256, 256])
+    def forward(self, input): # input : torch.Size([10, 5, 256, 256])
         x = self.conv1(input) # torch.Size([10, 64, 128, 128])
         x = self.bn1(x) # torch.Size([10, 64, 128, 128])
         x = self.relu(x) # torch.Size([10, 64, 64, 64])
@@ -243,6 +246,9 @@ class ResNet_wo_dilation(nn.Module):
         x = self.layer2(x) # torch.Size([10, 512, 16, 16])
         x = self.layer3(x) # torch.Size([10, 1024, 16, 16])
         x = self.layer4(x) # torch.Size([10, 2048, 16, 16])
+
+        x = self.conv_1d(x)
+        x = self.avgpool(x)
         return x
 
     def _init_weight(self):

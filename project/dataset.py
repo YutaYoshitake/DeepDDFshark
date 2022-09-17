@@ -65,78 +65,52 @@ class TaR_dataset(data.Dataset):
         with open(instance_list_txt, 'r') as f:
             lines = f.read().splitlines()
             for line in lines:
-                # if self.mode=='train':
-                #     self.instance_path_list.append(
-                #         os.path.join(data_dir, line.rstrip('\n'))
-                #         )
                 if self.mode=='train':
                     for view_ind in range(self.N_views):
                         self.instance_path_list.append(
                             os.path.join(data_dir, line.rstrip('\n'), f'{str(view_ind+1).zfill(5)}.pickle')
-                            ) # '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/{???}/00001.pickle' 
+                            )
                 elif self.mode=='val':
                     for view_ind in range(self.N_views):
                         self.instance_path_list.append(
                             os.path.join(data_dir, line.rstrip('\n'), f'{str(view_ind+1).zfill(5)}.pickle')
-                            ) # '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/val/views16/{???}/00001.pickle' 
-        # self.instance_path_list = pickle_load('/home/yyoshitake/works/DeepSDF/project/adam_vs_deep_kmeans0_test.pickle')
-        # self.instance_path_list = self.instance_path_list[:8]
-        # self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/kmean0_fixed/bee929929700e99fad8a0ee9b106700e/00003.pickle', ] # 1b5e876f3559c231532a8e162f399205/00007.pickle', ]
+                            )
         self.rand_idx_list = 'non'
+        self.canonical_path = f'dataset/dugon/moving_camera/train/canonical/resolution{str(args.ddf_H_W_during_dfnet)}'
         # ###############################################################
         # self.rand_idx_list = 'hi'
         # pickle_path = '/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_08_28_16_22_22/log_error.pickle'
         # targets = pickle_load(pickle_path)
         # self.instance_path_list = targets['path']
-        # self.instance_path_list = ['/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/kmean0_randn/'+instance_path for instance_path in self.instance_path_list]
+        # self.instance_path_list = [
+        #     '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/kmean0_randn/'+instance_path
+        #      for instance_path in self.instance_path_list]
         # self.rand_P_seed = targets['rand_P_seed']
         # self.rand_S_seed = targets['rand_S_seed']
         # self.randn_theta_seed = targets['randn_theta_seed']
         # self.randn_axis_idx = targets['randn_axis_idx']
         # ###############################################################
+        # self.instance_path_list = self.instance_path_list[:16]
 
     def __getitem__(self, index):
-        # Load data
-        # if self.mode=='train':
-        #     view_ind = random.randrange(1, self.N_views + 1)
-        #     path = os.path.join(
-        #         self.instance_path_list[index], 
-        #         f'{str(view_ind).zfill(5)}.pickle')
         if self.mode=='train':
             path = self.instance_path_list[index]
         elif self.mode=='val':
             path = self.instance_path_list[index]
+        instance_id = self.instance_path_list[index].split('/')[-2] # [-1]
 
         data_dict = pickle_load(path)
-        # frame_rgb_map = data_dict['rgb_map'].transpose(0, 3, 1, 2)
         frame_mask = data_dict['mask']
         frame_distance_map = data_dict['depth_map'].astype(np.float32)
         frame_camera_pos = data_dict['camera_pos'].astype(np.float32)
         frame_camera_rot = data_dict['camera_rot'].astype(np.float32)
         frame_obj_pos = data_dict['obj_pos'].astype(np.float32)
         frame_obj_rot = data_dict['obj_rot'].astype(np.float32)
-        frame_obj_scale = np.squeeze(data_dict['obj_scale'].astype(np.float32)) # data_dict['obj_scale'].astype(np.float32)
-
-        # splitted_path_list = path.split('/')
-        # log_path = splitted_path_list[-2]+'/'+splitted_path_list[-1]
-        # canonical_path = '/'.join(splitted_path_list[:-3]) + '/canonical/' + splitted_path_list[-2] + '.pickle'
-        # canonical_data_dict = pickle_load(canonical_path)
-        # frame_mask = canonical_data_dict['mask']
-        # frame_distance_map = canonical_data_dict['depth_map'].astype(np.float32)
-        # frame_camera_pos = canonical_data_dict['camera_pos'].astype(np.float32)
-        # frame_camera_rot = canonical_data_dict['camera_rot'].astype(np.float32)
-        # frame_obj_pos = canonical_data_dict['obj_pos'].astype(np.float32)
-        # frame_obj_rot = canonical_data_dict['obj_rot'].astype(np.float32)
-        # frame_obj_scale = canonical_data_dict['obj_scale'].astype(np.float32)
-
-        # Preprocessing.
-        frame_rgb_map = 0 # self.rgb_transform(frame_rgb_map)
-        instance_id = self.instance_path_list[index].split('/')[-2] # [-1]
+        frame_obj_scale = np.squeeze(data_dict['obj_scale'].astype(np.float32))
 
         if self.mode=='val':
-            splitted_path_list = path.split('/')
-            log_path = splitted_path_list[-2]+'/'+splitted_path_list[-1]
-            canonical_path = '/'.join(splitted_path_list[:-3]) + '/canonical/' + splitted_path_list[-2] + '.pickle'
+            log_path = '/'.join(path.split('/')[-2:])
+            canonical_path = os.path.join(self.canonical_path, instance_id + '.pickle')
             canonical_data_dict = pickle_load(canonical_path)
             canonical_distance_map = canonical_data_dict['depth_map'].astype(np.float32)
             canonical_camera_pos = canonical_data_dict['camera_pos'].astype(np.float32)
@@ -161,61 +135,3 @@ class TaR_dataset(data.Dataset):
 
     def __len__(self):
         return len(self.instance_path_list)
-
-
-
-
-
-# if __name__=='__main__':
-
-#     size = 256
-#     fov = 49.134
-#     rays_d_cam = get_ray_direction(size, fov).to('cpu').detach().numpy().copy()
-
-#     data_path = '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/23e726da58f115f69b9f2eb77f5e247e/00001.pickle'
-#     data_dict = pickle_load(data_path)
-#     frame_mask = data_dict['mask']
-#     frame_distance_map = data_dict['depth_map'].astype(np.float32)
-#     frame_camera_pos = data_dict['camera_pos'].astype(np.float32)
-#     frame_camera_rot = data_dict['camera_rot'].astype(np.float32)
-#     frame_obj_pos = data_dict['obj_pos'].astype(np.float32)
-#     frame_obj_rot = data_dict['obj_rot'].astype(np.float32)
-#     frame_obj_scale = data_dict['obj_scale'].astype(np.float32)
-
-
-    
-#     depth_map_list = frame_distance_map
-#     mask_list = frame_mask
-#     camera_rot_list = frame_camera_rot
-#     camera_pos_list = frame_camera_pos
-#     obj_rot_list = frame_obj_rot
-#     obj_pos_list = frame_obj_pos
-#     normalized_rays_d = rays_d_cam[0]
-#     fig = plt.figure()
-#     ax = Axes3D(fig)
-#     ax.set_xlabel("X")
-#     ax.set_ylabel("Y")
-#     ax.set_zlabel("Z")
-#     for ind_1 in range(len(depth_map_list)):
-#         point_1 = (depth_map_list[ind_1][..., None] * normalized_rays_d)[mask_list[ind_1]].reshape(-1, 3) 
-#         point_1 = np.sum(point_1[:, None, :]*camera_rot_list[ind_1].T, -1) + camera_pos_list[ind_1]
-#         point_1 = np.sum(point_1[:, None, :]*obj_rot_list[ind_1].T, -1) + obj_pos_list[ind_1]
-#         ax.scatter(point_1[::3, 0], point_1[::3, 1], point_1[::3, 2], marker="o", linestyle='None', c='m', s=0.05)
-#     # plt.show()
-#     # ax.view_init(elev=0, azim=90)
-#     fig.savefig("tes.png")
-#     # print(rgb_path)
-#     # import pdb; pdb.set_trace()
-#     plt.close()
-
-
-
-
-#     ind_1 = 0
-#     point_1 = (depth_map_list[ind_1][..., None] * normalized_rays_d)
-#     frame_surface_pos_cam_map = np.sum(point_1[..., None, :]*camera_rot_list[ind_1].T, -1) + camera_pos_list[ind_1]
-#     frame_surface_pos_obj_map = np.sum(point_1[..., None, :]*obj_rot_list[ind_1].T, -1) + obj_pos_list[ind_1]
-#     frame_surface_pos_obj_map -= frame_surface_pos_obj_map.min()
-#     frame_surface_pos_obj_map /= frame_surface_pos_obj_map.max()
-#     frame_surface_pos_obj_map[np.logical_not(mask_list[0])] = .0
-#     import pdb; pdb.set_trace()

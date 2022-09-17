@@ -546,6 +546,31 @@ def sample_fibonacci_views(n):
 
 
 
+def get_OSMap_wrd(distance_map, mask, rays_d_cam, w2c, cam_pos_wrd):
+    OSMap_cam = distance_map[..., None] * rays_d_cam
+    OSMap_wrd = torch.sum(OSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+    OSMap_wrd = OSMap_wrd + cam_pos_wrd[..., None, None, :]
+
+    OSMap_wrd[torch.logical_not(mask)] = 0.
+    OSMap_wrd_wMask = torch.cat([OSMap_wrd, mask.to(OSMap_wrd).unsqueeze(-1)], dim=-1)
+    return OSMap_wrd_wMask
+
+
+
+def get_diffOSMap_wrd(obs_distance_map, est_distance_map, obs_mask, est_mask, rays_d_cam, w2c):
+    diff_or_mask = torch.logical_or(obs_mask, est_mask)
+    diff_xor_mask = torch.logical_xor(obs_mask, est_mask)
+
+    diff_distance_map = est_distance_map - obs_distance_map
+    diffOSMap_cam = diff_distance_map[..., None] * rays_d_cam
+    diffOSMap_wrd = torch.sum(diffOSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+
+    diffOSMap_wrd[torch.logical_not(diff_or_mask)] = 0.
+    diffOSMap_wrd_wMask = torch.cat([diffOSMap_wrd, diff_xor_mask.to(diffOSMap_wrd).unsqueeze(-1)], dim=-1)
+    return diffOSMap_wrd_wMask
+
+
+
 def get_OSMap(distance_map, rays_d_cam, w2c, cam_pos_wrd, o2w, obj_pos_wrd, obj_scale, mask='non'):
     OSMap_cam = distance_map[..., None] * rays_d_cam
     OSMap_wrd = torch.sum(OSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)

@@ -18,10 +18,10 @@ from often_use import *
 
 
 
-label_a = "wo_normalization"
-label_b = "w_normalization"
-aaa_date = '2022_09_02_17_27_51'
-bbb_date = '2022_08_31_00_54_04'
+label_a = "encoder"
+label_b = "mlp"
+aaa_date = '2022_09_15_22_16_39'
+bbb_date = '2022_09_15_22_13_13'
 aaa = pickle_load(f'/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/{aaa_date}/log_error.pickle')
 bbb = pickle_load(f'/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/{bbb_date}/log_error.pickle')
 data_mode = 'randn'
@@ -40,68 +40,68 @@ os.makedirs(parent_directory_path, exist_ok=True)
 # parent_directory_path = f'sample_images/list0randn/{data_mode}/{target_mode}/'
 # os.makedirs(parent_directory_path, exist_ok=True)
 
-x_label = {'pos': 'Translation error', 
-           'green': 'Green axis error (Deg)', 
-           'red': 'Red axis error (Deg)', 
-           'scale': 'Scale error (%)', 
-           'depth': 'Depth error', }
-for key in aaa.keys():
-    if key in {'pos', 'green', 'red', 'scale', 'depth'}:
-    # if key in {'depth'}:
-        fig = pylab.figure(figsize=(4.5,3.5))
-        ax = fig.add_subplot(1,1,1)
-        ax.hist([
-            aaa[key].squeeze(), 
-            bbb[key].squeeze()], bins=50, label=[label_a, label_b], log=False)
-        ax.legend()
-        ax.set_xlabel(x_label[key])
-        ax.set_ylabel('Frequency')
-        fig.subplots_adjust(right=0.95)
-        fig.subplots_adjust(top=0.95)
-        fig.subplots_adjust(left=0.137)
-        fig.subplots_adjust(bottom=0.137)
-        fig.savefig(f"err_{key}_{data_mode}.png")
-import pdb; pdb.set_trace()
-
-
-
-
-
-# # bad_targetのエラーが大きく、
-# # better_targetのエラーが小さい例。
-# key = 'red'
-# bad_target = bbb # base
-# better_target = aaa # tra
-# bad_model_min = 10
-# better_model_max = 5
-
-# # bad_targetだけ悪い。
-# min_mask = bad_target[key] > bad_model_min 
-# max_mask = better_target[key][min_mask] < better_model_max
-
-# # 両方悪い。
-# # min_mask = bad_target[key] > bad_model_min 
-# # max_mask = better_target[key][min_mask] > bad_model_min
-
-# path_list = better_target['path'][min_mask][max_mask]
-# rand_P_seed = better_target['rand_P_seed'][min_mask][max_mask]
-# rand_S_seed = better_target['rand_S_seed'][min_mask][max_mask]
-# randn_theta_seed = better_target['randn_theta_seed'][min_mask][max_mask]
-# randn_axis_idx = better_target['randn_axis_idx'][min_mask][max_mask]
-
-# print(len(path_list))
-# bad_target[key][min_mask][max_mask]
-# better_target[key][min_mask][max_mask]
-# sum(bad_target[key] > bad_model_min)
-# sum(better_target[key] > bad_model_min)
-
-# for path_i in path_list:
-#     split_dot = path_i.split('.')[0] # '738395f54b301d80b1f5d603f931c1aa/00001'
-#     split_slash = split_dot.split('/') # '738395f54b301d80b1f5d603f931c1aa', '00001'
-#     path_i = f'dataset/dugon/moving_camera/train/kmean0_{data_mode}/' + split_dot + '.png'
-#     target_name = path_i.split('.')[0]
-#     shutil.copyfile(path_i, parent_directory_path + split_slash[0] + '_' + split_slash[1] + '.png')
+# x_label = {'pos': 'Translation error', 
+#            'green': 'Green axis error (Deg)', 
+#            'red': 'Red axis error (Deg)', 
+#            'scale': 'Scale error (%)', 
+#            'shape': 'Depth error', }
+# for key in aaa.keys():
+#     if key in {'pos', 'green', 'red', 'scale', 'shape'}:
+#     # if key in {'shape'}:
+#         fig = pylab.figure(figsize=(4.5,3.5))
+#         ax = fig.add_subplot(1,1,1)
+#         ax.hist([
+#             aaa[key].squeeze(), 
+#             bbb[key].squeeze()], bins=50, label=[label_a, label_b], log=True)
+#         ax.legend()
+#         ax.set_xlabel(x_label[key])
+#         ax.set_ylabel('Frequency')
+#         fig.subplots_adjust(right=0.95)
+#         fig.subplots_adjust(top=0.95)
+#         fig.subplots_adjust(left=0.137)
+#         fig.subplots_adjust(bottom=0.137)
+#         fig.savefig(f"err_{key}_{data_mode}.png")
 # import pdb; pdb.set_trace()
+
+
+
+
+
+# bad_targetのエラーが大きく、
+# better_targetのエラーが小さい例。
+key = 'red'
+bad_target = bbb # base
+better_target = aaa # tra
+bad_model_min = 30
+better_model_max = 10
+
+# bad_targetだけ悪い。
+min_mask = bad_target[key] > bad_model_min 
+max_mask = better_target[key][min_mask] < better_model_max
+
+# 両方悪い。
+# min_mask = bad_target[key] > bad_model_min 
+# max_mask = better_target[key][min_mask] > bad_model_min
+
+path_list = better_target['path'][min_mask][max_mask]
+rand_P_seed = better_target['rand_P_seed'][min_mask][max_mask]
+rand_S_seed = better_target['rand_S_seed'][min_mask][max_mask]
+randn_theta_seed = better_target['randn_theta_seed'][min_mask][max_mask]
+randn_axis_idx = better_target['randn_axis_idx'][min_mask][max_mask]
+
+print(len(path_list))
+bad_target[key][min_mask][max_mask]
+better_target[key][min_mask][max_mask]
+sum(bad_target[key] > bad_model_min)
+sum(better_target[key] > bad_model_min)
+
+for path_i in path_list:
+    split_dot = path_i.split('.')[0] # '738395f54b301d80b1f5d603f931c1aa/00001'
+    split_slash = split_dot.split('/') # '738395f54b301d80b1f5d603f931c1aa', '00001'
+    path_i = f'dataset/dugon/moving_camera/train/kmean0_{data_mode}/resolution128/' + split_dot + '.png'
+    target_name = path_i.split('.')[0]
+    shutil.copyfile(path_i, parent_directory_path + split_slash[0] + '_' + split_slash[1] + '.png')
+import pdb; pdb.set_trace()
 
 
 # pickle_name = 'Rad.pickle'
