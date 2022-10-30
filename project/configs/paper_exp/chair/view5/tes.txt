@@ -1,0 +1,37 @@
+expname = DeepTaR/chair/
+fov = 50
+input_H = 128
+input_W = 128
+ddf_H_W_during_dfnet = 128
+train_instance_list_txt = /home/yyoshitake/works/DeepSDF/project/instance_lists/paper_exp/train.txt
+val_instance_list_txt   = /home/yyoshitake/works/DeepSDF/project/instance_lists/paper_exp/val.txt
+test_instance_list_txt  = /home/yyoshitake/works/DeepSDF/project/instance_lists/paper_exp/tes_unknown.txt
+train_data_dir = /d/workspace/yyoshitake/moving_camera/volumetric/tmp_2/results
+val_data_dir   = /d/workspace/yyoshitake/moving_camera/volumetric/tmp_2/results
+test_data_dir  = /d/workspace/yyoshitake/moving_camera/volumetric/tmp_1/results
+val_data_list = /home/yyoshitake/works/DeepSDF/project/randn/val_scene.pickle
+tes_data_list = /home/yyoshitake/works/DeepSDF/project/randn/tes/randn_32.pickle
+canonical_fov = 60
+canonical_data_path = /home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical/
+
+save_interval = 8
+N_epoch = 100000
+lr = 1.e-4
+total_itr = 5
+total_obs_num = 5 
+L_p = 10.
+L_s = 1.
+L_a = 1.
+L_c = 0.1
+L_d = 0.
+view_position = randn
+view_selection = simultaneous
+
+ddf_model_path = /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/chair/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000010000.ckpt
+ddf_instance_list_txt = /home/yyoshitake/works/DeepSDF/project/instance_lists/raw/instance_list.txt
+latent_size = 256
+use_3d_code = True
+voxel_ch_num = 32
+voxel_sample_num = 32
+only_latent = False
+integrate_sampling_mode = 'CAT'

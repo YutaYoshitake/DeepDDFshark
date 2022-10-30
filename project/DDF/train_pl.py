@@ -27,23 +27,23 @@ from scipy.spatial.transform import Rotation as R
 
 from parser import *
 from often_use import *
-from dataset import *
+# from dataset import *
 
 torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEBUG = False
 
-seed = 0
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-os.environ['PYTHONHASHSEED'] = str(seed)
-if device=='cuda':
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+# seed = 0
+# random.seed(seed)
+# np.random.seed(seed)
+# torch.manual_seed(seed)
+# torch.cuda.manual_seed(seed)
+# os.environ['PYTHONHASHSEED'] = str(seed)
+# if device=='cuda':
+#     torch.cuda.manual_seed_all(seed)
+#     torch.backends.cudnn.deterministic = True
+#     torch.backends.cudnn.benchmark = False
 
 
 
@@ -253,7 +253,7 @@ class DDF(pl.LightningModule):
         self.W = self.H
         self.fov = args.fov
         self.same_instances = args.same_instances
-        self.use_world_dir = args.use_world_dir
+        self.use_world_dir = True
 
         self.vec_lrate = args.vec_lrate
         self.model_lrate = args.model_lrate

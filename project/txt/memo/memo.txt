@@ -1394,3 +1394,25 @@ class df_resnet_encoder_with_gru(pl.LightningModule):
         plt.scatter(x, z)
         path = 'tes.png'
         fig.savefig(path)
+
+
+        
+        # if self.backbone_training_strategy=='scrach':
+        #     print('#####   SCRACH   #####')
+        #     optimizer = torch.optim.Adam(
+        #         list(self.df_net.parameters()) + list(self.backbone_encoder.parameters()), 
+        #     lr=self.lr, betas=(0.9, 0.999),)
+        #     return optimizer
+        
+        # elif self.backbone_training_strategy=='finetune':
+        #     print('#####   FINETUNE   #####')
+        #     optimizer = torch.optim.Adam(
+        #         [{"params": self.df_net.parameters(), "lr":self.lr}, {"params": self.backbone_encoder.parameters(), "lr":self.lr_backbone}], 
+        #     betas=(0.9, 0.999),)
+        #     return optimizer
+        
+        # elif self.backbone_training_strategy=='fixed':
+            # optimizer = torch.optim.Adam(
+                # list(self.df_net.parameters()),
+            # lr=self.lr, betas=(0.9, 0.999),)
+            # return optimizer

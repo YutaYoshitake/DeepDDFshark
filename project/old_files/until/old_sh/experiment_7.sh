@@ -1,3 +1,0 @@
-# CUDA_VISIBLE_DEVICES=5,6,7 python train_dfnet.py --config=configs/dfnet_wfd.txt --L_p=0 --L_s=0 --L_a=0 --L_c=0 --L_d=1 --exp_version=later_onlyD
-# CUDA_VISIBLE_DEVICES=5,6,7 python train_dfnet.py --config=configs/dfnet_wfd.txt --exp_version=later_wfd2AC
-CUDA_VISIBLE_DEVICES=0,1,2,3,4 python train_dfnet.py --config=configs/dfnet_wfd.txt --L_p=1e1 --L_s=1e1 --L_a=1e0 --L_c=1e1 --L_d=1e2 --exp_version=laterSD

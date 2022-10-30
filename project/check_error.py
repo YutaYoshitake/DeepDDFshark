@@ -18,269 +18,374 @@ from often_use import *
 
 
 
-label_a = "encoder"
-label_b = "mlp"
-aaa_date = '2022_09_15_22_16_39'
-bbb_date = '2022_09_15_22_13_13'
-aaa = pickle_load(f'/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/{aaa_date}/log_error.pickle')
-bbb = pickle_load(f'/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/{bbb_date}/log_error.pickle')
-data_mode = 'randn'
-target_mode = f'trans_is_better'
+label_a = "onlydec"
+label_b = "enc"
+# label_b = "autoreg"
+aaa_date = '2022_10_04_02_55_57_list0randn_res128_encoder_scrach_onlydecv2_epo0000000028'
+bbb_date = '2022_09_27_19_48_54_list0randn_res128_encoder_tes_scrach_epo0000000032'
+# bbb_date = '2022_10_04_02_55_57_list0randn_res128_autoreg_scrach_enc5dec5_FixUp01_epo0000000028'
+aaa = pickle_load(f'/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/old/list0/{aaa_date}/log_error.pickle')
+bbb = pickle_load(f'/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/old/list0/{bbb_date}/log_error.pickle')
+data_mode = 'tes'
+target_mode = f'dec_is_bad'
 parent_directory_path = f'sample_images/list0randn/{data_mode}/{target_mode}/'
 os.makedirs(parent_directory_path, exist_ok=True)
 
-# label_a = "trans_avg"
-# label_b = "baseline"
-# aaa_date = '2022_08_30_03_24_04'
-# bbb_date = '2022_08_30_01_39_42'
-# aaa = pickle_load(f'/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/{aaa_date}/log_error.pickle')
-# bbb = pickle_load(f'/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/{bbb_date}/log_error.pickle')
-# data_mode = 'fixed'
-# target_mode = f'trans_is_better'
-# parent_directory_path = f'sample_images/list0randn/{data_mode}/{target_mode}/'
-# os.makedirs(parent_directory_path, exist_ok=True)
 
-# x_label = {'pos': 'Translation error', 
-#            'green': 'Green axis error (Deg)', 
-#            'red': 'Red axis error (Deg)', 
-#            'scale': 'Scale error (%)', 
-#            'shape': 'Depth error', }
-# for key in aaa.keys():
-#     if key in {'pos', 'green', 'red', 'scale', 'shape'}:
-#     # if key in {'shape'}:
-#         fig = pylab.figure(figsize=(4.5,3.5))
-#         ax = fig.add_subplot(1,1,1)
-#         ax.hist([
-#             aaa[key].squeeze(), 
-#             bbb[key].squeeze()], bins=50, label=[label_a, label_b], log=True)
-#         ax.legend()
-#         ax.set_xlabel(x_label[key])
-#         ax.set_ylabel('Frequency')
-#         fig.subplots_adjust(right=0.95)
-#         fig.subplots_adjust(top=0.95)
-#         fig.subplots_adjust(left=0.137)
-#         fig.subplots_adjust(bottom=0.137)
-#         fig.savefig(f"err_{key}_{data_mode}.png")
-# import pdb; pdb.set_trace()
+for data in [aaa, bbb]:
+    if 'depth' in data.keys():
+        data['shape'] = data['depth']
 
-
-
-
-
-# bad_targetのエラーが大きく、
-# better_targetのエラーが小さい例。
-key = 'red'
-bad_target = bbb # base
-better_target = aaa # tra
-bad_model_min = 30
-better_model_max = 10
-
-# bad_targetだけ悪い。
-min_mask = bad_target[key] > bad_model_min 
-max_mask = better_target[key][min_mask] < better_model_max
-
-# 両方悪い。
-# min_mask = bad_target[key] > bad_model_min 
-# max_mask = better_target[key][min_mask] > bad_model_min
-
-path_list = better_target['path'][min_mask][max_mask]
-rand_P_seed = better_target['rand_P_seed'][min_mask][max_mask]
-rand_S_seed = better_target['rand_S_seed'][min_mask][max_mask]
-randn_theta_seed = better_target['randn_theta_seed'][min_mask][max_mask]
-randn_axis_idx = better_target['randn_axis_idx'][min_mask][max_mask]
-
-print(len(path_list))
-bad_target[key][min_mask][max_mask]
-better_target[key][min_mask][max_mask]
-sum(bad_target[key] > bad_model_min)
-sum(better_target[key] > bad_model_min)
-
-for path_i in path_list:
-    split_dot = path_i.split('.')[0] # '738395f54b301d80b1f5d603f931c1aa/00001'
-    split_slash = split_dot.split('/') # '738395f54b301d80b1f5d603f931c1aa', '00001'
-    path_i = f'dataset/dugon/moving_camera/train/kmean0_{data_mode}/resolution128/' + split_dot + '.png'
-    target_name = path_i.split('.')[0]
-    shutil.copyfile(path_i, parent_directory_path + split_slash[0] + '_' + split_slash[1] + '.png')
+x_label = {'pos': 'Translation error', 
+           'green': 'Green axis error (Deg)', 
+           'red': 'Red axis error (Deg)', 
+           'scale': 'Scale error (%)', 
+           'shape': 'Depth error', }
+for key in aaa.keys():
+    if key in {'pos', 'green', 'red', 'scale', 'shape'}:
+    # if key in {'shape'}:
+        fig = pylab.figure(figsize=(4.5,3.5))
+        ax = fig.add_subplot(1,1,1)
+        ax.hist([
+            aaa[key].squeeze(), 
+            bbb[key].squeeze()], bins=50, label=[label_a, label_b], log=True)
+        ax.legend()
+        ax.set_xlabel(x_label[key])
+        ax.set_ylabel('Frequency')
+        fig.subplots_adjust(right=0.95)
+        fig.subplots_adjust(top=0.95)
+        fig.subplots_adjust(left=0.137)
+        fig.subplots_adjust(bottom=0.137)
+        fig.savefig(f"err_{data_mode}_{key}.png")
 import pdb; pdb.set_trace()
 
 
-# pickle_name = 'Rad.pickle'
-# data_dict = {'path':path_list, 'rand_P_seed':rand_P_seed, 'rand_S_seed':rand_S_seed, 'randn_theta_seed':randn_theta_seed, 'randn_axis_idx':randn_axis_idx}
-# pickle_dump(data_dict, f'000_{target_mode}_{target_mode}.pickle')
+
+
+
+# # bad_targetのエラーが大きく、
+# # better_targetのエラーが小さい例。
+# key = 'red'
+# bad_target = aaa # base
+# better_target = bbb # tra
+# bad_model_min = 0.5
+# better_model_max = 180
+
+# # bad_targetだけ悪い。
+# min_mask = bad_target[key] < bad_model_min 
+# max_mask = better_target[key][min_mask] < better_model_max
+
+# # 両方悪い。
+# # min_mask = bad_target[key] > bad_model_min 
+# # max_mask = better_target[key][min_mask] > bad_model_min
+
+# path_list = better_target['path'][min_mask][max_mask]
+# rand_P_seed = better_target['rand_P_seed'][min_mask][max_mask]
+# rand_S_seed = better_target['rand_S_seed'][min_mask][max_mask]
+# randn_theta_seed = better_target['randn_theta_seed'][min_mask][max_mask]
+# randn_axis_idx = better_target['randn_axis_idx'][min_mask][max_mask]
+
+# target_idx = np.argsort(bbb['shape'])[50:100][12]
+# path_list = [bbb['path'][target_idx]]
+# rand_P_seed = [bbb['rand_P_seed'][target_idx]]
+# rand_S_seed = [bbb['rand_S_seed'][target_idx]]
+# randn_theta_seed = [bbb['randn_theta_seed'][target_idx]]
+# randn_axis_idx = [bbb['randn_axis_idx'][target_idx]]
+
+# print(len(path_list))
+# bad_target[key][min_mask][max_mask]
+# better_target[key][min_mask][max_mask]
+# sum(bad_target[key] > bad_model_min)
+# sum(better_target[key] > bad_model_min)
+
+# par = []
+# for path_i in path_list:
+#     split_dot = path_i.split('.')[0] # '738395f54b301d80b1f5d603f931c1aa/00001'
+#     split_slash = split_dot.split('/') # '738395f54b301d80b1f5d603f931c1aa', '00001'
+#     # path_i = f'/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/kmean_list0/kmean0_randn/resolution128/raw/' + split_dot + '.png'
+#     # target_name = path_i.split('.')[0]
+#     # shutil.copyfile(path_i, parent_directory_path + split_slash[0] + '_' + split_slash[1] + '.png')
+#     # path_i = f'/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/kmean_list0/kmean0_randn/resolution128/raw' + split_dot + '.pickle'
+#     # par.append(pickle_load(path_i)['mask'].sum() / (3*128*128))
+# # print(sum(par)/len(par))
 # import pdb; pdb.set_trace()
 
 
+pickle_name = 'Rad.pickle'
+data_dict = {'path':path_list, 'rand_P_seed':rand_P_seed, 'rand_S_seed':rand_S_seed, 'randn_theta_seed':randn_theta_seed, 'randn_axis_idx':randn_axis_idx}
+pickle_dump(data_dict, f'000_{target_mode}_{target_mode}.pickle')
+import pdb; pdb.set_trace()
 
 
 
-# label_a = "Poseformer (??sec/itr)"
-# label_b = "Baseline (??sec/itr)"
+
+
+# label_a = "enc: obs, dec: est (+dif)"
+# label_b = "enc: obs, dec: all"
+# label_c = "enc: all, dec: all"
+# exp_title = 'autreg_input_med'
 
 # aaa_avg_log = {
-#     'pos' : np.array([0.15056264, 0.041626837, 0.020613406, 0.01565276, 0.01430345, 0.013998766]), 
-#     'green' : np.array([35.05945, 9.837852, 4.0477667, 2.9562793, 2.784236, 2.777223]), 
-#     'red' : np.array([34.601006, 14.917136, 5.514079, 3.2407093, 2.7908962, 2.6284115]), 
-#     'scale' : np.array([0.14908247, 0.09709674, 0.045342874, 0.043955114, 0.04671287, 0.048863348]), 
-#     'shape' : np.array([0.11309633, 0.11423056, 0.09505049, 0.08657477, 0.08538977, 0.08539624]), 
+#     'pos'   : np.array([0.15011247992515564, 0.017292406409978867, 0.01111985370516777, 0.009890541434288025, 0.009536288678646088, 0.009439650923013687]), 
+#     'green' : np.array([35.454166412353516, 2.414836490061134e-05, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([35.07698059082031, 8.464106559753418, 6.730752468109131, 6.197470664978027, 6.042409896850586, 6.036605358123779]), 
+#     'scale' : np.array([14.777360916137695, 3.852015733718872, 3.2301061153411865, 3.0494725704193115, 2.993605613708496, 3.059018850326538]), 
+#     'shape' : np.array([0.11313033849000931, 0.09370927512645721, 0.0896506980061531, 0.08802971243858337, 0.08758313208818436, 0.08777762204408646]), 
+#     }
+# aaa_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.015644215047359467, 0.009126121178269386, 0.007890498265624046, 0.007456380873918533, 0.007418805733323097]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 4.836265563964844, 2.8243837356567383, 2.1348752975463867, 1.9308712482452393, 1.8929985761642456]), 
+#     'scale' : np.array([14.705888748168945, 3.130054473876953, 2.5348305702209473, 2.3293657302856445, 2.2714662551879883, 2.2889719009399414]), 
+#     'shape' : np.array([0.11346767097711563, 0.09166398644447327, 0.08824120461940765, 0.08618682622909546, 0.08571888506412506, 0.08613504469394684]), 
+#     }
+# bbb_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.016410991549491882, 0.010981560684740543, 0.0097840316593647, 0.009468774311244488, 0.00944152195006609]), 
+#     'green' : np.array([35.454166412353516, 0.00013141905947122723, 2.8855805794592015e-05, 2.243745984742418e-05, 8.365239409613423e-06, 1.1659862138913013e-05]), 
+#     'red'   : np.array([35.07698059082031, 8.967242240905762, 6.582681179046631, 6.017260551452637, 6.029898166656494, 6.1149187088012695]), 
+#     'scale' : np.array([14.777360916137695, 3.9663519859313965, 3.1772890090942383, 2.9975008964538574, 2.9399139881134033, 2.9114716053009033]), 
+#     'shape' : np.array([0.11313033849000931, 0.0952964574098587, 0.08930152654647827, 0.0878363847732544, 0.08804677426815033, 0.08818976581096649]), 
+#     }
+# bbb_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.014353674836456776, 0.008998934179544449, 0.00784415565431118, 0.007595845032483339, 0.007461210247129202]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 5.596833229064941, 2.947094440460205, 2.25602650642395, 2.2050018310546875, 2.256675958633423]), 
+#     'scale' : np.array([14.705888748168945, 3.046792984008789, 2.4433608055114746, 2.301318645477295, 2.2279791831970215, 2.1938319206237793]), 
+#     'shape' : np.array([0.11346767097711563, 0.09320849180221558, 0.0877085030078888, 0.0866600051522255, 0.08692941069602966, 0.0871458500623703]), 
+#     }
+# ccc_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.01629040203988552, 0.010519184172153473, 0.009449997916817665, 0.009185685776174068, 0.009118306450545788]), 
+#     'green' : np.array([35.454166412353516, 3.0978553695604205e-05, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([35.07698059082031, 8.141160011291504, 6.412634372711182, 6.041694164276123, 6.041051387786865, 6.090396404266357]), 
+#     'scale' : np.array([14.777360916137695, 3.7448954582214355, 3.1769731044769287, 2.95857572555542, 2.885289430618286, 2.8489480018615723]), 
+#     'shape' : np.array([0.11313033849000931, 0.09473327547311783, 0.08853687345981598, 0.08748192340135574, 0.08735920488834381, 0.08786604553461075]), 
+#     }
+# ccc_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.014584105461835861, 0.008695380762219429, 0.0074939243495464325, 0.007166475057601929, 0.007123518269509077]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 4.784053802490234, 2.7778773307800293, 2.2813899517059326, 2.1486740112304688, 2.1335458755493164]), 
+#     'scale' : np.array([14.705888748168945, 2.9919381141662598, 2.495558738708496, 2.35508394241333, 2.1919755935668945, 2.1653687953948975]), 
+#     'shape' : np.array([0.11346767097711563, 0.09309951961040497, 0.08624686300754547, 0.08572499454021454, 0.08564327657222748, 0.08634112030267715]), 
 #     }
 
+# label_b = "only decoder"
+# label_c = "only decoder with atten mask"
+# exp_title = 'only_dec_avg'
+# bbb_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.01563948020339012, 0.010270604863762856, 0.009260688908398151, 0.008986292406916618, 0.00903727114200592]), 
+#     'green' : np.array([35.454166412353516, 0.00011732495477190241, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([35.07698059082031, 8.580347061157227, 6.676013469696045, 6.177153587341309, 6.062382698059082, 6.122094631195068]), 
+#     'scale' : np.array([14.777360916137695, 3.781766414642334, 3.0534098148345947, 2.8625636100769043, 2.789985418319702, 2.796542167663574]), 
+#     'shape' : np.array([0.11313033849000931, 0.09209650009870529, 0.08808287233114243, 0.08742552995681763, 0.0877252072095871, 0.08799991011619568]), 
+#     }
+# bbb_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.013944998383522034, 0.00855434313416481, 0.007457880303263664, 0.007095218636095524, 0.007236741483211517]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 5.107259273529053, 2.732442855834961, 2.3353991508483887, 2.1993584632873535, 2.312026023864746]), 
+#     'scale' : np.array([14.705888748168945, 3.075467348098755, 2.3605477809906006, 2.1761415004730225, 2.1138806343078613, 2.0835304260253906]), 
+#     'shape' : np.array([0.11346767097711563, 0.0902169868350029, 0.08628161251544952, 0.0857686698436737, 0.08601236343383789, 0.0860581248998642]), 
+#     }
+# ccc_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.014225549064576626, 0.008511276915669441, 0.007514621131122112, 0.007313856855034828, 0.0071720825508236885]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 4.399661064147949, 2.5532827377319336, 2.085487127304077, 2.010469913482666, 2.0065717697143555]), 
+#     'scale' : np.array([14.705888748168945, 3.0958452224731445, 2.39646053314209, 2.2187440395355225, 2.1629483699798584, 2.234504461288452]), 
+#     'shape' : np.array([0.11346767097711563, 0.09005659818649292, 0.08572060614824295, 0.0847165510058403, 0.08457866311073303, 0.08482110500335693]), 
+#     }
+# ccc_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.01580043137073517, 0.010210183449089527, 0.009257054887712002, 0.00901796668767929, 0.00898535456508398]), 
+#     'green' : np.array([35.454166412353516, 7.998168439371511e-05, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([35.07698059082031, 7.728043079376221, 6.207275867462158, 5.879223823547363, 5.905594348907471, 5.903409957885742]), 
+#     'scale' : np.array([14.777360916137695, 3.817214012145996, 3.092801094055176, 2.880162000656128, 2.8651340007781982, 2.918530225753784]), 
+#     'shape' : np.array([0.11313033849000931, 0.09220967441797256, 0.08721891045570374, 0.08619196712970734, 0.08612145483493805, 0.08617326617240906]), 
+#     }
+
+# label_a = "encoder (2layers)"
+# label_b = "Autoreg (OnlyDec, 5layers)"
+# label_c = "Autoreg (Enc-Dec, 5-5layers)"
+# exp_title = 'main_results_avg'
 
 # aaa_med_log = {
-#     'pos' : np.array([0.15141244, 0.037736975, 0.018097376, 0.013762844, 0.012551535, 0.012287206]), 
-#     'green' : np.array([32.443924, 7.987003, 3.3821697, 2.5984201, 2.5304513, 2.5487561]), 
-#     'red' : np.array([31.590153, 10.900149, 3.5682874, 2.0715504, 1.7912761, 1.6784723]), 
-#     'scale' : np.array([0.14883542, 0.075674, 0.038639307, 0.038916737, 0.042843014, 0.04523912]), 
-#     'shape' : np.array([0.114758685, 0.11213647, 0.09303734, 0.08508292, 0.08364142, 0.083610624]), 
+#     'pos'   : np.array([0.14915843307971954, 0.014017276465892792, 0.008398210629820824, 0.0074351392686367035, 0.00731248315423727, 0.007216216530650854]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 5.005115509033203, 2.8497390747070312, 2.525728225708008, 2.3411753177642822, 2.4205880165100098]), 
+#     'scale' : np.array([14.705888748168945, 3.0033340454101562, 2.2528209686279297, 2.174859046936035, 2.1242828369140625, 2.1764755249023438]), 
+#     'shape' : np.array([0.11346767097711563, 0.0903792679309845, 0.08538655191659927, 0.08416718989610672, 0.08470311760902405, 0.08515964448451996]), 
 #     }
-
-# bbb_avg_log = {
-#     'pos' : np.array([0.15056264, 0.05596557, 0.031111112, 0.0209413, 0.016729988, 0.014851256]), 
-#     'green' : np.array([35.05945, 15.122427, 6.305102, 3.245079, 2.244779, 1.9063562]), 
-#     'red' : np.array([34.601006, 20.18334, 9.8631115, 5.8022523, 4.1355586, 3.3885996]), 
-#     'scale' : np.array([0.14908247, 0.16531149, 0.0919075, 0.060989607, 0.050514653, 0.04767442]), 
-#     'shape' : np.array([0.11309633, 0.11850956, 0.101638004, 0.0911587, 0.0863531, 0.08443022]), 
+# aaa_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.015532204881310463, 0.01019616425037384, 0.009354257956147194, 0.009243296459317207, 0.009252991527318954]), 
+#     'green' : np.array([35.454166412353516, 0.0034940463956445456, 1.4489018212771043e-05, 1.9318691556691192e-05, 9.659345778345596e-06, 1.9318691556691192e-05]), 
+#     'red'   : np.array([35.07698059082031, 8.541393280029297, 6.60913610458374, 6.336607933044434, 6.2331342697143555, 6.307775497436523]), 
+#     'scale' : np.array([14.777360916137695, 3.702075481414795, 2.997483491897583, 2.861483097076416, 2.8417105674743652, 2.865140676498413]), 
+#     'shape' : np.array([0.11313033849000931, 0.09253882616758347, 0.08711157739162445, 0.08600519597530365, 0.08646086603403091, 0.08695576339960098]), 
 #     }
-
 # bbb_med_log = {
-#     'pos' : np.array([0.15141244, 0.04883195, 0.025358409, 0.016685855, 0.013490843, 0.012084553]), 
-#     'green' : np.array([32.443924, 11.463316, 4.1068416, 2.023859, 1.5544411, 1.4232655]), 
-#     'red' : np.array([31.590153, 14.074621, 5.0661416, 2.4849858, 1.8294358, 1.6376343]), 
-#     'scale' : np.array([0.14883542, 0.13335133, 0.057513297, 0.039941877, 0.038881034, 0.038632244]), 
-#     'shape' : np.array([0.114758685, 0.115968704, 0.09927876, 0.08843007, 0.084171735, 0.082229]), 
+#     'pos'   : np.array([0.14915843307971954, 0.014225549064576626, 0.008511276915669441, 0.007514621131122112, 0.007313856855034828, 0.0071720825508236885]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 4.399661064147949, 2.5532827377319336, 2.085487127304077, 2.010469913482666, 2.0065717697143555]), 
+#     'scale' : np.array([14.705888748168945, 3.0958452224731445, 2.39646053314209, 2.2187440395355225, 2.1629483699798584, 2.234504461288452]), 
+#     'shape' : np.array([0.11346767097711563, 0.09005659818649292, 0.08572060614824295, 0.0847165510058403, 0.08457866311073303, 0.08482110500335693]), 
+#     }
+# bbb_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.01580043137073517, 0.010210183449089527, 0.009257054887712002, 0.00901796668767929, 0.00898535456508398]), 
+#     'green' : np.array([35.454166412353516, 7.998168439371511e-05, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([35.07698059082031, 7.728043079376221, 6.207275867462158, 5.879223823547363, 5.905594348907471, 5.903409957885742]), 
+#     'scale' : np.array([14.777360916137695, 3.817214012145996, 3.092801094055176, 2.880162000656128, 2.8651340007781982, 2.918530225753784]), 
+#     'shape' : np.array([0.11313033849000931, 0.09220967441797256, 0.08721891045570374, 0.08619196712970734, 0.08612145483493805, 0.08617326617240906]), 
+#     }
+# ccc_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.015644215047359467, 0.009126121178269386, 0.007890498265624046, 0.007456380873918533, 0.007418805733323097]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 4.836265563964844, 2.8243837356567383, 2.1348752975463867, 1.9308712482452393, 1.8929985761642456]), 
+#     'scale' : np.array([14.705888748168945, 3.130054473876953, 2.5348305702209473, 2.3293657302856445, 2.2714662551879883, 2.2889719009399414]), 
+#     'shape' : np.array([0.11346767097711563, 0.09166398644447327, 0.08824120461940765, 0.08618682622909546, 0.08571888506412506, 0.08613504469394684]), 
+#     }
+# ccc_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.017292406409978867, 0.01111985370516777, 0.009890541434288025, 0.009536288678646088, 0.009439650923013687]), 
+#     'green' : np.array([35.454166412353516, 2.414836490061134e-05, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([35.07698059082031, 8.464106559753418, 6.730752468109131, 6.197470664978027, 6.042409896850586, 6.036605358123779]), 
+#     'scale' : np.array([14.777360916137695, 3.852015733718872, 3.2301061153411865, 3.0494725704193115, 2.993605613708496, 3.059018850326538]), 
+#     'shape' : np.array([0.11313033849000931, 0.09370927512645721, 0.0896506980061531, 0.08802971243858337, 0.08758313208818436, 0.08777762204408646]), 
+#     }
+# aaa_sec_log = bbb_sec_log = ccc_sec_log = np.array([0, 1, 2, 3, 4, 5])
+
+# label_a = "Epo24"
+# label_b = "Epo28"
+# label_c = "Epo32"
+# exp_title = 'epo_enc_med'
+
+# ccc_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.016637075692415237, 0.01109254825860262, 0.009943298995494843, 0.009749540127813816, 0.009765669703483582]), 
+#     'green' : np.array([35.454166412353516, 0.00012462060840334743, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([35.07698059082031, 8.160750389099121, 6.490363597869873, 6.147335052490234, 6.106047630310059, 6.147302627563477]), 
+#     'scale' : np.array([14.777360916137695, 4.560845851898193, 3.1218981742858887, 2.946721315383911, 2.895282506942749, 2.912466526031494]), 
+#     'shape' : np.array([0.11313033849000931, 0.09076133370399475, 0.08738864958286285, 0.08666348457336426, 0.08745349198579788, 0.08784595876932144]), 
+#     }
+# ccc_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.015007445588707924, 0.009437279775738716, 0.008135611191391945, 0.007835328578948975, 0.007796903606504202]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 4.82042121887207, 2.9390485286712646, 2.5260772705078125, 2.406395435333252, 2.3981666564941406]), 
+#     'scale' : np.array([14.705888748168945, 3.866365671157837, 2.455437660217285, 2.2224111557006836, 2.21885347366333, 2.2098121643066406]), 
+#     'shape' : np.array([0.11346767097711563, 0.0888386070728302, 0.0860142707824707, 0.08529014885425568, 0.08619913458824158, 0.08642922341823578]), 
+#     }
+# bbb_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.015532204881310463, 0.01019616425037384, 0.009354257956147194, 0.009243296459317207, 0.009252991527318954]), 
+#     'green' : np.array([35.454166412353516, 0.0034940463956445456, 1.4489018212771043e-05, 1.9318691556691192e-05, 9.659345778345596e-06, 1.9318691556691192e-05]), 
+#     'red'   : np.array([35.07698059082031, 8.541393280029297, 6.60913610458374, 6.336607933044434, 6.2331342697143555, 6.307775497436523]), 
+#     'scale' : np.array([14.777360916137695, 3.702075481414795, 2.997483491897583, 2.861483097076416, 2.8417105674743652, 2.865140676498413]), 
+#     'shape' : np.array([0.11313033849000931, 0.09253882616758347, 0.08711157739162445, 0.08600519597530365, 0.08646086603403091, 0.08695576339960098]), 
+#     }
+# bbb_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.014017276465892792, 0.008398210629820824, 0.0074351392686367035, 0.00731248315423727, 0.007216216530650854]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 5.005115509033203, 2.8497390747070312, 2.525728225708008, 2.3411753177642822, 2.4205880165100098]), 
+#     'scale' : np.array([14.705888748168945, 3.0033340454101562, 2.2528209686279297, 2.174859046936035, 2.1242828369140625, 2.1764755249023438]), 
+#     'shape' : np.array([0.11346767097711563, 0.0903792679309845, 0.08538655191659927, 0.08416718989610672, 0.08470311760902405, 0.08515964448451996]), 
+#     }
+# aaa_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.016939962282776833, 0.011008054949343204, 0.009966964833438396, 0.009822331368923187, 0.00974154844880104]), 
+#     'green' : np.array([35.454166412353516, 0.0003045302291866392, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([35.07698059082031, 8.897950172424316, 7.12990665435791, 6.704230308532715, 6.739897727966309, 6.667978763580322]), 
+#     'scale' : np.array([14.777360916137695, 4.535251617431641, 3.12619948387146, 2.9429357051849365, 2.915255069732666, 2.927626848220825]), 
+#     'shape' : np.array([0.11313033849000931, 0.0961914211511612, 0.09014855325222015, 0.08861488848924637, 0.08873946219682693, 0.08910266309976578]), 
+#     }
+# aaa_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.015429748222231865, 0.009277764707803726, 0.008042825385928154, 0.007890233770012856, 0.007802910171449184]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 5.521639823913574, 3.347142457962036, 2.8865604400634766, 2.822789192199707, 2.7352712154388428]), 
+#     'scale' : np.array([14.705888748168945, 3.77201771736145, 2.4115002155303955, 2.2484116554260254, 2.1886448860168457, 2.185915470123291]), 
+#     'shape' : np.array([0.11346767097711563, 0.09465225040912628, 0.08902198076248169, 0.08747802674770355, 0.08735341578722, 0.08776471018791199]), 
 #     }
 
-# itr = np.array([1, 2, 3, 4, 5])
+# label_a = "Epo24"
+# label_b = "Epo28"
+# label_c = "Epo32"
+# exp_title = 'epo_onlydec_med'
+
+# ccc_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.016150573268532753, 0.0105202104896307, 0.009444991126656532, 0.009294282644987106, 0.009348796680569649]), 
+#     'green' : np.array([35.454166412353516, 0.000178746078745462, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([35.07698059082031, 8.368815422058105, 6.64949893951416, 6.320661544799805, 6.300970077514648, 6.388594627380371]), 
+#     'scale' : np.array([14.777360916137695, 4.008543968200684, 3.108635663986206, 2.946488618850708, 2.919632911682129, 2.9652066230773926]), 
+#     'shape' : np.array([0.11313033849000931, 0.09145842492580414, 0.08827285468578339, 0.087989941239357, 0.08886353671550751, 0.08959528058767319]), 
+#     }
+# ccc_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.014352886006236076, 0.008866658434271812, 0.007639316841959953, 0.007285006809979677, 0.007464067079126835]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 4.730191230773926, 2.8953638076782227, 2.3741331100463867, 2.2318220138549805, 2.282590627670288]), 
+#     'scale' : np.array([14.705888748168945, 3.354166269302368, 2.4391860961914062, 2.256340980529785, 2.232757568359375, 2.270969867706299]), 
+#     'shape' : np.array([0.11346767097711563, 0.08875323086977005, 0.08577419817447662, 0.08571865409612656, 0.08714400231838226, 0.08827365934848785]), 
+#     }
+# bbb_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.01580043137073517, 0.010210183449089527, 0.009257054887712002, 0.00901796668767929, 0.00898535456508398]), 
+#     'green' : np.array([35.454166412353516, 7.998168439371511e-05, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([35.07698059082031, 7.728043079376221, 6.207275867462158, 5.879223823547363, 5.905594348907471, 5.903409957885742]), 
+#     'scale' : np.array([14.777360916137695, 3.817214012145996, 3.092801094055176, 2.880162000656128, 2.8651340007781982, 2.918530225753784]), 
+#     'shape' : np.array([0.11313033849000931, 0.09220967441797256, 0.08721891045570374, 0.08619196712970734, 0.08612145483493805, 0.08617326617240906]), 
+#     }
+# bbb_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.014225549064576626, 0.008511276915669441, 0.007514621131122112, 0.007313856855034828, 0.0071720825508236885]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 4.399661064147949, 2.5532827377319336, 2.085487127304077, 2.010469913482666, 2.0065717697143555]), 
+#     'scale' : np.array([14.705888748168945, 3.0958452224731445, 2.39646053314209, 2.2187440395355225, 2.1629483699798584, 2.234504461288452]), 
+#     'shape' : np.array([0.11346767097711563, 0.09005659818649292, 0.08572060614824295, 0.0847165510058403, 0.08457866311073303, 0.08482110500335693]), 
+#     }
+# aaa_avg_log = {
+#     'pos'   : np.array([0.15011247992515564, 0.017806177958846092, 0.011233455501496792, 0.010060404427349567, 0.00975409708917141, 0.00962224043905735]), 
+#     'green' : np.array([35.454166412353516, 0.0007410869584418833, 2.4854774892446585e-05, 8.365239409613423e-06, 3.61125566996634e-05, 9.659345778345596e-06]), 
+#     'red'   : np.array([35.07698059082031, 9.378535270690918, 7.167557716369629, 6.761935710906982, 6.700357437133789, 6.598565101623535]), 
+#     'scale' : np.array([14.777360916137695, 4.067579746246338, 3.265465021133423, 3.090603828430176, 3.05806565284729, 3.0562872886657715]), 
+#     'shape' : np.array([0.11313033849000931, 0.09399762749671936, 0.08837924152612686, 0.08763472735881805, 0.08777374774217606, 0.08859462291002274]), 
+#     }
+# aaa_med_log = {
+#     'pos'   : np.array([0.14915843307971954, 0.015843188390135765, 0.009461927227675915, 0.008201580494642258, 0.007813364267349243, 0.007703085895627737]), 
+#     'green' : np.array([32.28759765625, 0.0, 0.0, 0.0, 0.0, 0.0]), 
+#     'red'   : np.array([32.26243591308594, 5.718408107757568, 3.5826897621154785, 2.9623680114746094, 2.721026659011841, 2.601017951965332]), 
+#     'scale' : np.array([14.705888748168945, 3.3631749153137207, 2.5572216510772705, 2.3841135501861572, 2.372901439666748, 2.36234450340271]), 
+#     'shape' : np.array([0.11346767097711563, 0.09259855002164841, 0.0865916907787323, 0.0862530767917633, 0.08626062422990799, 0.08703188598155975]), 
+#     }
+# aaa_sec_log = bbb_sec_log = ccc_sec_log = np.array([0, 1, 2, 3, 4, 5])
+
+# ##################################################
+# # aaa_sec_log[0] = bbb_sec_log[0] = 0
+# # aaa_sec_log = np.cumsum(aaa_sec_log)
+# # bbb_sec_log = np.cumsum(bbb_sec_log)
+# ##################################################
 # y_label = {'pos': 'Translation error', 
 #            'green': 'Green axis error (Deg)', 
 #            'red': 'Red axis error (Deg)', 
 #            'scale': 'Scale error (%)', 
 #            'shape': 'Depth error', }
-# for key in aaa_avg_log.keys():
-#     if key in {'pos', 'green', 'red', 'scale', 'shape'}:
+# for key in ['pos', 'red', 'scale', 'shape']: #, 'green'
+#     # import matplotlib
+#     # del matplotlib.font_manager.weight_dict['roman']
+#     # matplotlib.font_manager._rebuild()
+#     plt.rcParams["font.family"] = "Times New Roman"
+#     if key in {'pos', 'red', 'scale', 'shape'}: #, 'green'
+#         # plt.rcParams["font.family"] = "DejaVu Serif"
 #         # fig = pylab.figure()
 #         fig = pylab.figure(figsize=(4.5,3.5))
 #         ax = fig.add_subplot(1,1,1)
-#         ax.plot(itr, aaa_med_log[key].squeeze()[1:], label=label_a)
-#         ax.plot(itr, bbb_med_log[key].squeeze()[1:], label=label_b)
+#         ax.plot(aaa_sec_log[1:], aaa_med_log[key][1:].squeeze(), label=label_a, marker='o', markersize=5)
+#         ax.plot(bbb_sec_log[1:], bbb_med_log[key][1:].squeeze(), label=label_b, marker='o', markersize=5)
+#         ax.plot(ccc_sec_log[1:], ccc_med_log[key][1:].squeeze(), label=label_c, marker='o', markersize=5)
 #         # plt.yscale("log")
+#         # plt.xlim(0,
+#         # plt.ylim(0,
 #         ax.legend()
-#         ax.set_ylabel('error')
-#         ax.set_xlabel('Iteration')
+#         ax.set_xlabel('Steps')# ('Time (Sec)')
 #         ax.set_ylabel(y_label[key])
 #         ax = plt.gca()
-#         from matplotlib.ticker import *
-#         ax.xaxis.set_major_locator(MultipleLocator(1))
+#         # from matplotlib.ticker import *
+#         # # ax.xaxis.set_major_locator(MultipleLocator(1))
 #         fig.subplots_adjust(right=0.95)
 #         fig.subplots_adjust(top=0.95)
-#         if key in {'pos', 'shape'}:
-#             fig.subplots_adjust(left=0.18)
-#         elif key in {'scale'}:
-#             fig.subplots_adjust(left=0.16)
-#         else:
-#             fig.subplots_adjust(left=0.136)
-#         fig.subplots_adjust(bottom=0.137)
-#         fig.savefig(f"log_{key}_{data_mode}.png")
+#         if key=='pos'  : fig.subplots_adjust(left=0.18)
+#         if key=='green': fig.subplots_adjust(left=0.136)
+#         if key=='red'  : fig.subplots_adjust(left=0.136)
+#         if key=='scale': fig.subplots_adjust(left=0.16)
+#         if key=='shape': fig.subplots_adjust(left=0.18)
+#         fig.subplots_adjust(bottom=0.138)
+#         fig.savefig(f"itr_{exp_title}_{key}.png", dpi=300)
 
-
-
-
-
-
-
-# origin = aaa
-# target = bbb
-# result_path_list = []
-# original_value_list = []
-# target_value_list = []
-# err_key = 'red'
-
-# target_idx_list = np.flipud(np.argsort(origin[err_key])) # 誤差の大きい順で並べる
-# origin_threshold = 70
-# original_num = 128
-# mask = origin[err_key][target_idx_list] > origin_threshold
-# target_idx_list = target_idx_list[mask][:original_num] # しきい値以上のインデックスを取得
-# # print(origin[err_key][target_idx_list]) # エラーを表示
-
-# threshold = 5
-# for idx in target_idx_list:
-#     origin_value = origin[err_key][idx]
-#     target_value = target[err_key][idx]
-#     if target_value < threshold:
-#         if target_value < origin_value:
-#             result_path = '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/' + origin['path'][idx]
-#             result_path_list.append(result_path)
-#             print(f'origin : {origin[err_key][idx]:.1f}, target : {target[err_key][idx]:.1f}')
-#             # original_value_list.append(origin[err_key][idx])
-#             # target_value_list.append(target[err_key][idx])
-
-# # print(original_value_list)
-# # print(target_value_list)
-# print('###     ' + str(len(result_path_list)) + '     ###')
-
-# pickle_dump(result_path_list, pickle_name)
 # import pdb; pdb.set_trace()
-
-
-
-# mmm = []
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_13_03_02_05/log.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_13_03_02_11/log.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_13_03_02_14/log.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_13_03_02_18/log.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_13_03_02_21/log.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_13_03_02_24/log.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_13_03_02_27/log.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_13_03_02_31/log.pickle'))
-
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_12_21_16_27/log_error.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_12_21_16_32/log_error.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_12_21_16_35/log_error.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_12_21_16_40/log_error.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_12_21_16_43/log_error.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_12_21_16_46/log_error.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_12_21_16_49/log_error.pickle'))
-# mmm.append(pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/total/until/adams/2022_06_12_21_16_52/log_error.pickle'))
-
-# ooo = {}
-# for key in mmm[0].keys():
-#     nnn = []
-#     for mmm_i in mmm:
-#         nnn.append(mmm_i[key])
-#     nnn = np.concatenate(nnn)
-#     ooo[key] = nnn
-# pickle_dump(ooo, f'adam_ind_update.pickle')
-# import pdb; pdb.set_trace()
-
-
-
-# df = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_06_08_23_07_18/log_error.pickle')
-# adam = pickle_load('/home/yyoshitake/works/DeepSDF/project/txt/experiments/log/2022_06_07_12_16_00/log_error.pickle')
-
-# for key in df.keys():
-#     # x = df[key]
-#     # y = adam[key]
-
-#     # fig = pylab.figure()
-#     # ax = fig.add_subplot(1,1,1)
-#     # ax.set_title(f'{key}')
-#     # ax.hist(x, bins=50)
-#     # ax.hist(y, bins=50)
-#     # fig.savefig(f"err_{key}.png")
-
-#     if key != 'path':
-#         for path in enumerate(adam['path'][np.argsort(adam[key])]):
-#             with open(f'adam_{key}.txt', 'a') as f:
-#                 f.writelines(f'{path[-1]}\n')
-        
-#         for path in enumerate(df['path'][np.argsort(df[key])]):
-#             with open(f'df_{key}.txt', 'a') as f:
-#                 f.writelines(f'{path[-1]}\n')
-#     import pdb; pdb.set_trace()
-
-
-
-# pickle_name = 'adam_vs_deep_kmeans0_test.pickle'
-# mmm = pickle_load('/home/yyoshitake/works/DeepSDF/project/adam_vs_deep_kmeans0_test.pickle')
-# for idx in range(len(mmm)):
-#     mmm[idx] = '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/views64/' + mmm[idx]
-# pickle_dump(mmm, pickle_name)

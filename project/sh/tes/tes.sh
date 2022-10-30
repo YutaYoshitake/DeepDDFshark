@@ -1,0 +1,8 @@
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=onlymlp_enc1dec0_woFix                         --N_batch=8 --val_model_epoch=360
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=onlymlp_enc3dec0_woFix                         --N_batch=8 --val_model_epoch=384 # 328
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=encoder_enc3dec0_woFix                         --N_batch=8 --val_model_epoch=328
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=encoder_enc3dec0_Fix                           --N_batch=8 --val_model_epoch=352
+# CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=encoder_enc5dec0_woFix                         --N_batch=8 --val_model_epoch=352
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=encoder_enc5dec0_Fix                           --N_batch=8 --val_model_epoch=376 # 336
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=autoreg_enc3dec3_Fix                           --N_batch=8 --val_model_epoch=296 # 352
+# CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=autoreg_enc5dec5_Fix                           --N_batch=8 --val_model_epoch=352

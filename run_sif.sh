@@ -1,13 +1,6 @@
 export LC_ALL=C
 
-if [ -e /disks ]; then
-    SINGULARITY_OPTIONS="--bind /disks:/disks"
-else
-    SINGULARITY_OPTIONS=""
-fi
-if [ -e /mnt ]; then
-    SINGULARITY_OPTIONS="--bind /mnt:/mnt "${SINGULARITY_OPTIONS}
-fi
+SINGULARITY_OPTIONS="--bind /d/workspace/yyoshitake" # /disks:/disks 
 
 echo "Container was created $(date)"
 
@@ -20,4 +13,3 @@ ${SINGULARITY_OPTIONS} \
 --env HISTFILE="$(cd $(dirname $0); pwd)/singularity_bash_history" \
 --nv \
 $(cd $(dirname $0); pwd)/deepsdf.sif bash
-# --env PS1='${debian_chroot:+($debian_chroot)}\[\033[01;35m\]\u@\h\[\033[00m\]-singularity:\[\033[01;34m\]\w\[\033[00m\]\$ ' \

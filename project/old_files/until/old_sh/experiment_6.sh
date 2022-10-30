@@ -1,1 +1,0 @@
-CUDA_VISIBLE_DEVICES=1,3,4 python train_dfnet.py --config=configs/dfnet_wfd.txt --exp_version=later

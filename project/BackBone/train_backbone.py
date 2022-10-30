@@ -341,10 +341,6 @@ class backbone_encoder_decoder(pl.LightningModule):
         super(backbone_encoder_decoder, self).__init__()
 
         # Configs.
-        self.map_H = 128
-        self.map_W = 128
-        self.map_channel = 4
-        self.embedding_dim = 512
         self.lr = args.lr_backbone
         self.L_reg = 1.e-3
         self.L_recon_map = 1.0
@@ -354,12 +350,19 @@ class backbone_encoder_decoder(pl.LightningModule):
         if args.gpu_num > 1:
             print('only single gpu')
             sys.exit()
+        self.map_H = 128
+        self.map_W = 128
+        if args.input_type == 'depthmap':
+            self.map_channel = 2
+        elif args.input_type == 'osmap':
+            self.map_channel = 4
+        self.embedding_dim = 512
 
         # Models.
-        if args.backbone_norms=='with_norm':
-            self.encoder_2dcnn = encoder_2dcnn(self.map_channel)
-        elif args.backbone_norms=='with_out_norm':
+        if args.backbone_norms=='with_out_norm':
             self.encoder_2dcnn = encoder_2dcnn_wonorms(self.map_channel)
+        elif args.backbone_norms=='with_norm':
+            self.encoder_2dcnn = encoder_2dcnn(self.map_channel)
         self.decoder_2dcnn = decoder_2dcnn(self.embedding_dim, self.map_channel).apply(weights_init)
         self.mask_act = nn.Sigmoid()
 
