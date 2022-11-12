@@ -4,8 +4,6 @@ from often_use import txt2list
 
 
 
-
-
 def get_args():
 
     parser = config_parser()
@@ -22,7 +20,7 @@ def get_args():
                 elif args.integrate_TransFormer_mode == 'tf_cat':
                     args.latent_3d_size = args.voxel_ch_num * args.voxel_sample_num
                 args.voxel_scale = 0.5
-
+    args.convergence_thr = args.convergence_thr_shape = 0
     return args
 
 
@@ -68,6 +66,13 @@ def reload_args(args, sys_argv):
         if not ori_args_key in args_log_key_list:
             print(f'   Reloaded args donot have {ori_args_key} ->  {getattr(args, ori_args_key)}')
     print('')
+
+    if args.view_selection == 'simultaneous':
+        args.convergence_thr = 5
+        args.convergence_thr_shape = 25
+    if args.view_selection == 'sequential':
+        args.convergence_thr = 30
+        args.convergence_thr_shape = 50
     return args
 
 
@@ -116,19 +121,17 @@ def config_parser():
                         help='')
     parser.add_argument("--train_data_dir", type=str, default='non', 
                         help='')
-    parser.add_argument("--train_N_views", type=int, # 不要
-                        help='')
     parser.add_argument("--train_instance_list_txt", type=str, 
                         help='')
     parser.add_argument("--val_data_dir", type=str, default='non', 
                         help='')
-    parser.add_argument("--val_N_views", type=int, # 不要
+    parser.add_argument("--layer_wise_attention", type=str, default='no', 
+                        help='')
+    parser.add_argument("--use_cls", type=str, default='no', 
                         help='')
     parser.add_argument("--val_instance_list_txt", type=str, default='non', 
                         help='')
     parser.add_argument("--test_data_dir", type=str, default='non', 
-                        help='')
-    parser.add_argument("--test_N_views", type=int, # 不要
                         help='')
     parser.add_argument("--test_instance_list_txt", type=str, default='non', 
                         help='')
@@ -180,7 +183,18 @@ def config_parser():
                         help='')
     parser.add_argument("--view_selection", type=str, default='simultaneous',
                         help='')
-
+    parser.add_argument("--until_convergence", type=str, default='no',
+                        help='')
+    parser.add_argument("--itr_per_frame", type=int, default=1, 
+                        help='')
+    parser.add_argument("--train_N_views", type=int, # 不要
+                        help='')
+    parser.add_argument("--val_N_views", type=int, # 不要
+                        help='')
+    parser.add_argument("--test_N_views", type=int, # 不要
+                        help='')
+    parser.add_argument("--fine_tune", type=str, default='no', 
+                        help='')
 
     # training options
     parser.add_argument("--input_H", type=int, default=256, 
@@ -294,8 +308,6 @@ def config_parser():
                         help='')
     parser.add_argument("--pixel_diff_ratio", type=float, default=1e-3,
                         help='')
-
-    
     parser.add_argument('--test_model', type=str, default='nomal',
                         help='pos or dir')
 

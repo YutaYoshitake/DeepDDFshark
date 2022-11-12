@@ -4,10 +4,7 @@ import sys
 from turtle import pd
 import numpy as np
 import random
-import pylab
 import glob
-import math
-import re
 from tqdm import tqdm, trange
 from typing import Optional, Any, Union, Callable
 import torch
@@ -20,7 +17,6 @@ from torch.utils.data import DataLoader
 from torch.autograd import grad
 import torch.utils.data as data
 from torch import Tensor
-
 from often_use import *
 from resnet import *
 from fixup_model.transformer_fixup import TransformerEncoder_FixUp, TransformerDecoder_FixUp
@@ -34,6 +30,10 @@ class optimize_former(pl.LightningModule):
         self, 
         view_selection = 'simultaneous', 
         main_layers_name = 'onlymlp', 
+        add_conf = None, 
+        use_attn_mask='no', 
+        layer_wise_attention = 'no', 
+        use_cls='no', 
         num_encoder_layers = 2, 
         num_decoder_layers = 1, 
         hidden_dim = 256, 
@@ -42,15 +42,13 @@ class optimize_former(pl.LightningModule):
         mlp_hidden_dim = 1024, 
         latent_size = 256, 
         positional_encoding_mode = 'no', 
-        add_conf = None, 
         enc_in_dim=3*512, 
         dec_in_dim=2*512, 
         dropout=0.1, 
-        use_attn_mask='no', 
         total_obs_num=1, 
-        inp_itr_num=1, 
         itr_per_frame=1, 
         total_itr=1, 
+        inp_itr_num=1, 
         dec_inp_type='dif_obs', ):
         super(optimize_former, self).__init__()
 
@@ -59,7 +57,29 @@ class optimize_former(pl.LightningModule):
         self.main_layers_name = main_layers_name
         self.use_past_map = (main_layers_name == 'autoreg') or (add_conf in {'onlydec', 'onlydecv2', 'onlydecv3', 'exp22v2'})
         self.padding_embeddings = add_conf in {'exp22v2', 'onlydecv3'}
-        if main_layers_name=='encoder':
+        if main_layers_name=='autoreg':
+            self.inp_itr_num = inp_itr_num
+            self.dec_inp_type = dec_inp_type
+            enc_in_dim = 3*512
+            dec_in_dim = 5*512 if self.dec_inp_type == 'dif_obs_est' else 3*512
+            self.main_layers = auto_regressive_model(view_selection=view_selection, 
+                                                     use_attn_mask=use_attn_mask, 
+                                                     total_itr=total_itr, 
+                                                     max_frame_num=total_obs_num, 
+                                                     itr_per_frame=itr_per_frame, 
+                                                     inp_itr_num=inp_itr_num, 
+                                                     add_conf=add_conf, 
+                                                     layer_wise_attention=layer_wise_attention, 
+                                                     use_cls=use_cls, 
+                                                     num_encoder_layers=num_encoder_layers, 
+                                                     num_decoder_layers=num_decoder_layers, 
+                                                     enc_in_dim=enc_in_dim, 
+                                                     dec_in_dim=dec_in_dim, 
+                                                     num_head=num_head, 
+                                                     hidden_dim=hidden_dim, 
+                                                     dim_feedforward=dim_feedforward, 
+                                                     dropout=dropout, )
+        elif main_layers_name=='encoder':
             self.main_layers = encoder_model(inp_embed_dim=enc_in_dim, #512, 
                                              num_encoder_layers=num_encoder_layers, 
                                              num_head=num_head, 
@@ -72,26 +92,6 @@ class optimize_former(pl.LightningModule):
                                              max_frame_num=total_obs_num, 
                                              inp_itr_num=inp_itr_num, 
                                              itr_per_frame=itr_per_frame, )
-        elif main_layers_name=='autoreg':
-            self.inp_itr_num = inp_itr_num
-            self.dec_inp_type = dec_inp_type
-            enc_in_dim = 3*512
-            dec_in_dim = 3*512
-            self.main_layers = auto_regressive_model(view_selection=view_selection, 
-                                                     use_attn_mask=use_attn_mask, 
-                                                     total_itr=total_itr, 
-                                                     max_frame_num=total_obs_num, 
-                                                     inp_itr_num=inp_itr_num, 
-                                                     itr_per_frame=itr_per_frame, 
-                                                     num_encoder_layers=num_encoder_layers, 
-                                                     num_decoder_layers=num_decoder_layers, 
-                                                     enc_in_dim=enc_in_dim, 
-                                                     dec_in_dim=dec_in_dim, 
-                                                     num_head=num_head, 
-                                                     hidden_dim=hidden_dim, 
-                                                     dim_feedforward=dim_feedforward, 
-                                                     add_conf=add_conf, 
-                                                     dropout=dropout, )
         elif main_layers_name=='onlymlp':
             self.main_layers = nn.Sequential()
             for mlp_layer_idx in range(num_encoder_layers):
@@ -185,9 +185,9 @@ class optimize_former(pl.LightningModule):
                     if self.dec_inp_type == 'dif_obs_est':
                         if print_debug:
                             print(f'--- dec_inp_typ --- : dif_obs_est')
-                        inp_dec = torch.cat([est_embed[:, -dec_inp_end:-current_frame_num, :], 
-                                             dif_embed[:, -dec_inp_end:-current_frame_num, :], 
-                                             tra_embed[:, -dec_inp_end+current_frame_num:, :]], dim=-1).permute(1, 0, 2)
+                        inp_dec = torch.cat([dif_embed[:, -dec_inp_end:-current_frame_num, :], obs_embed[:, -current_frame_num:, :], # inp_dec = torch.cat([est_embed[:, -dec_inp_end:-current_frame_num, :], 
+                                             tra_embed[:, -dec_inp_end+current_frame_num:, :], torch.cat([est_embed[:, sum(past_itr_length[:view_idx+1]):sum(past_itr_length[:view_idx+1])+past_itr_length[view_idx], :] for view_idx in range(max(0, optim_idx-self.inp_itr_num), optim_idx)], dim=1), #                      dif_embed[:, -dec_inp_end:-current_frame_num, :], 
+                                             est_embed[:, -dec_inp_end:-current_frame_num, :], ], dim=-1).permute(1, 0, 2) # tra_embed[:, -dec_inp_end+current_frame_num:, :]], dim=-1).permute(1, 0, 2)
                     elif self.dec_inp_type == 'dif_obs':
                         if print_debug:
                             print(f'--- dec_inp_typ --- : dif_obs')
@@ -197,9 +197,12 @@ class optimize_former(pl.LightningModule):
                     elif self.dec_inp_type == 'dif_est':
                         if print_debug:
                             print(f'--- dec_inp_typ --- : dif_est')
-                        inp_dec = torch.cat([torch.cat([est_embed[:, -current_frame_num:, :][:, :view_num, :] for view_num in dec_inp_frame_len_list], dim=1), 
+                        inp_dec = torch.cat([torch.cat([est_embed[:, sum(past_itr_length[:view_idx+1]):sum(past_itr_length[:view_idx+1])+past_itr_length[view_idx], :] for view_idx in range(max(0, optim_idx-self.inp_itr_num), optim_idx)], dim=1), 
                                              est_embed[:, -dec_inp_end:-current_frame_num, :], 
-                                             tra_embed[:, -dec_inp_end+current_frame_num:, :]], dim=-1).permute(1, 0, 2)
+                                             tra_embed[:, -sum(dec_inp_frame_len_list):, :]], dim=-1).permute(1, 0, 2)
+                        # inp_dec = torch.cat([torch.cat([est_embed[:, -current_frame_num:, :][:, :view_num, :] for view_num in dec_inp_frame_len_list], dim=1), 
+                        #                      est_embed[:, -dec_inp_end:-current_frame_num, :], 
+                        #                      tra_embed[:, -sum(dec_inp_frame_len_list):, :]], dim=-1).permute(1, 0, 2)
                 else:
                     dec_inp_frame_len_list = past_itr_length
                     inp_dec = None
@@ -208,7 +211,7 @@ class optimize_former(pl.LightningModule):
                 x = self.main_layers(inp, past_itr_length, pe_target, print_debug, image_decoder) # [batch, hidden_dim]
             elif self.main_layers_name == 'autoreg':
                 x = self.main_layers(inp_enc, inp_dec, past_itr_length, pe_target, print_debug, image_decoder) # [batch, hidden_dim]
-            
+
             # Make pre_est.
             pre_green_obj = torch.tensor([[0.0, 1.0, 0.0]]).expand(batch, -1).to(x)
             pre_red_obj = torch.tensor([[1.0, 0.0, 0.0]]).expand(batch, -1).to(x)
@@ -245,6 +248,8 @@ class auto_regressive_model(pl.LightningModule):
         inp_itr_num=1, 
         itr_per_frame=1, 
         add_conf='Nothing', 
+        layer_wise_attention='no', 
+        use_cls='no', 
         num_encoder_layers=2, 
         num_decoder_layers=2, 
         enc_in_dim=512, 
@@ -262,16 +267,16 @@ class auto_regressive_model(pl.LightningModule):
                             nhead=num_head, 
                             dim_feedforward=dim_feedforward, 
                             dropout=dropout, 
-                            activation='relu', 
-                            T_Fixup=add_conf=='T_Fixup')
+                            T_Fixup=add_conf=='T_Fixup', 
+                            layer_wise_attention=layer_wise_attention=='yes', )
         self.decoder = TransformerDecoder_FixUp(
                             decoder_layers=num_decoder_layers, 
                             d_model=hidden_dim, 
                             nhead=num_head, 
                             dim_feedforward=dim_feedforward, 
                             dropout=dropout, 
-                            activation='relu', 
-                            T_Fixup=add_conf=='T_Fixup')
+                            T_Fixup=add_conf=='T_Fixup', 
+                            layer_wise_attention=layer_wise_attention=='yes', )
         print('##########   ENCODER   ##########')
         print(self.encoder.layers[0].fc1.weight[0, :5])
         print('##########   DECODER   ##########')
@@ -281,16 +286,16 @@ class auto_regressive_model(pl.LightningModule):
         self.add_conf = add_conf
         self.enc_align_mlp = nn.Linear(enc_in_dim, hidden_dim)
         self.align_mlp = nn.Linear(dec_in_dim, hidden_dim)
-        self.max_frame_num = max_frame_num
         if view_selection=='simultaneous':
             init_inp = torch.normal(mean=0.0, std=hidden_dim**(-1/2), size=(max_frame_num, 1, hidden_dim))
-        elif view_selection=='sequencial':
+        elif view_selection=='sequential':
             init_inp = torch.normal(mean=0.0, std=hidden_dim**(-1/2), size=(1, 1, hidden_dim))
         if add_conf=='T_Fixup':
             init_inp *= (9 * num_decoder_layers) ** (- 1. / 4.) 
         self.init_inp = nn.Parameter(init_inp)
         self.inp_itr_num = inp_itr_num
-        self.ie = IterationEncoding(hidden_dim)
+        if self.inp_itr_num > 1:
+            self.ie = IterationEncoding(hidden_dim)
         if use_attn_mask=='yes':
             if view_selection=='simultaneous':
                 q_seq_len = max_frame_num * (total_itr - 1)
@@ -304,7 +309,7 @@ class auto_regressive_model(pl.LightningModule):
                     start = max(itr_idx - self.inp_itr_num, 0) * max_frame_num
                     end = itr_idx * max_frame_num
                     self.atten_mask.append(total_atten_mask[start:end, start:end])
-            if view_selection=='sequencial':
+            if view_selection=='sequential':
                 q_seq_len = sum(range(1, max_frame_num + 1)) * itr_per_frame - max_frame_num
                 frame_idx = torch.cat(
                                 [torch.cat([torch.arange(frame_num)]*itr_per_frame, dim=0) for frame_num in range(1, max_frame_num+1)], 
@@ -323,16 +328,22 @@ class auto_regressive_model(pl.LightningModule):
         elif use_attn_mask=='no':
             self.atten_mask = None
             print('### wo_atten_mask ###')
+        self.use_cls = use_cls # 'yes'
+        if self.use_cls=='yes':
+            cls_token = torch.normal(mean=0.0, std=hidden_dim**(-1/2), size=(1, 1, hidden_dim))
+            if add_conf=='T_Fixup':
+                init_inp *= (9 * num_decoder_layers) ** (- 1. / 4.)
+            self.cls_token = nn.Parameter(cls_token)
 
 
     def forward(self, src, tgt, past_itr_length, pe_target, print_debug=False, image_decoder=None):
-        # check_map_torch(image_decoder(src[:, 0,    0: 512][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'src_obs.png')
-        # check_map_torch(image_decoder(src[:, 0,  512:1024][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'src_est.png')
-        # check_map_torch(image_decoder(src[:, 0, 1024:1536][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'src_dif.png')
+        # check_map_torch(image_decoder(src[:, 0,    0: 512][:, :, None, None])[:, 1].reshape(-1, 128), 'src_obs.png')
+        # check_map_torch(image_decoder(src[:, 0,  512:1024][:, :, None, None])[:, 1].reshape(-1, 128), 'src_est.png')
+        # check_map_torch(image_decoder(src[:, 0, 1024:1536][:, :, None, None])[:, 1].reshape(-1, 128), 'src_dif.png')
         # if not tgt is None:
-        #     check_map_torch(image_decoder(tgt[:, 0,    0: 512][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'tgt_obs.png')
-        #     check_map_torch(image_decoder(tgt[:, 0,  512:1024][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'tgt_est.png')
-        #     check_map_torch(image_decoder(tgt[:, 0, 1024:1536][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'tgt_dif.png')
+        #     check_map_torch(image_decoder(tgt[:, 0,    0: 512][:, :, None, None])[:, 1].reshape(-1, 128), 'tgt_obs.png')
+        #     check_map_torch(image_decoder(tgt[:, 0,  512:1024][:, :, None, None])[:, 1].reshape(-1, 128), 'tgt_est.png')
+        #     check_map_torch(image_decoder(tgt[:, 0, 1024:1536][:, :, None, None])[:, 1].reshape(-1, 128), 'tgt_dif.png')
 
         # encorder part.
         src = self.enc_align_mlp(src) # [seq_e, batch, inp_embed_dim] -> [seq_e, batch, hidden_dim]
@@ -341,7 +352,7 @@ class auto_regressive_model(pl.LightningModule):
         memory = self.encoder(src)
         if print_debug:
             print(f'---   ec_src    --- : {src.shape}')
-            print(f'---   ec_mem    --- : {memory.shape}')
+            # print(f'---   ec_mem    --- : {memory.shape}')
 
         # decorder part.
         if tgt is not None:
@@ -355,16 +366,27 @@ class auto_regressive_model(pl.LightningModule):
                 pe_start = - sum(past_itr_length[-max(0, (self.inp_itr_num+1)):])
                 pe_end = - past_itr_length[-1]
                 tgt = tgt + pe_target[:, pe_start:pe_end, :].permute(1, 0, 2)
+            if self.use_cls == 'yes':
+                tgt = torch.cat([tgt, self.cls_token.expand(-1, src.shape[1], -1)], dim=0)
         else:
             atten_mask = None
             tgt = self.init_inp.expand(-1, src.shape[1], -1)
+            if self.use_cls == 'yes':
+                tgt = torch.cat([tgt, self.cls_token.expand(-1, src.shape[1], -1)], dim=0)
         out = self.decoder(tgt=tgt, memory=memory, atten_mask=atten_mask)
-        out_size = past_itr_length[-min(len(past_itr_length), 2)]
-        if print_debug:
-            print(f'---   dc_tgt    --- : {tgt.shape}')
-            print(f'---   dc_out    --- : {out.shape}')
-            print(f'--- dc_bf_mean  --- : {out[-out_size:, :, :].shape}')
-        return out[-out_size:, :, :].mean(0)
+        if  self.use_cls == 'yes':
+            if print_debug:
+                print(f'---   dc_tgt    --- : {tgt.shape}')
+                print(f'---   dc_out    --- : {out.shape}')
+                print(f'--- dc_bf_mean  --- : cls_token')
+            return out[-1]
+        else:
+            out_size = past_itr_length[-min(len(past_itr_length), 2)]
+            if print_debug:
+                print(f'---   dc_tgt    --- : {tgt.shape}')
+                print(f'---   dc_out    --- : {out.shape}')
+                print(f'--- dc_bf_mean  --- : {out[-out_size:, :, :].shape}')
+            return out[-out_size:, :, :].mean(0)
 
 
 
@@ -429,7 +451,7 @@ class encoder_model(pl.LightningModule):
                         start = max(itr_idx + 1 - self.inp_itr_num, 0) * max_frame_num
                         end = (itr_idx + 1) * max_frame_num
                         self.atten_mask.append(total_atten_mask[start:end, start:end])
-                if view_selection=='sequencial':
+                if view_selection=='sequential':
                     seq_len = sum(range(1, max_frame_num + 1)) * itr_per_frame
                     frame_idx = torch.cat(
                                     [torch.cat([torch.arange(frame_num)]*itr_per_frame, dim=0) for frame_num in range(1, max_frame_num+1)], 

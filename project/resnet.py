@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional, Any, Union, Callable
 import copy
-from sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
+# from sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 from torch import Tensor
 
 

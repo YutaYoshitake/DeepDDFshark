@@ -1,358 +1,3 @@
-sh sh/val00.sh 
-sh sh/val00.sh 
-sh sh/val00.sh 
-sh sh/val00.sh 
-sh sh/val00.sh 
-sh sh/val00.sh 
-sh sh/val00.sh 
-nvidia-smi
-tmux a
-cd works/DeepSDF/project/
-python check_error.py 
-python check_error.py 
-python check_error.py 
-python check_error.py 
-cd works/DeepSDF/project/
-sh sh/val00.sh 
-cd works/DeepSDF/project/
-sh sh/val00.sh 
-cd works/DeepSDF/project/
-sh sh/val00.sh 
-python check_error.py 
-python check_error.py 
-cd works/DeepSDF/project/
-python check_error.py 
-python check_error.py 
-python check_error.py 
-python check_error.py 
-python check_error.py 
-python check_error.py 
-python check_error.py 
-python check_error.py 
-python check_error.py 
-python check_error.py 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh
-sh sh/train.sh
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/BackBone/
-sh sh/make_data.sh 
-sh sh/make_data.sh 
-sh sh/make_data.sh 
-sh sh/make_data.sh 
-rm dataset/03001627/randn/dif/*
-rm dataset/03001627/randn/dif/*
-rm -rf dataset/03001627/randn/dif/*
-rm -rf dataset/03001627/randn/gt/*
-rm -rf dataset/03001627/randn/pre/*
-sh sh/make_data.sh 
-sh sh/make_data.sh 
-sh sh/make_data.sh 
-sh sh/make_data.sh 
-rm dataset/03001627/randn/dif/*
-rm -rf dataset/03001627/randn/dif/*
-rm -rf dataset/03001627/randn/gt/*
-rm -rf dataset/03001627/randn/pre/*
-nvidia-smi
-nvidia-smi
-htop
-sh sh/make_data.sh 
-sh sh/make_data.sh 
-cd works/DeepSDF/project/
-cd BackBone/
-ls
-sh sh/
-sh sh/make_data.sh 
-cd works/DeepSDF/project/BackBone/
-sh sh/backbone_gt_pre.sh 
-sh sh/backbone_gt_pre.sh 
-sh sh/backbone_gt_pre.sh 
-cd works/DeepSDF/project/BackBone/
-sh sh/backbone_gt_pre.sh 
-cd works/DeepSDF/project/
-cd works/DeepSDF/project/BackBone/
-sh sh/backbone.sh 
-cd works/DeepSDF/project/BackBone/
-sh sh/backbone.sh 
-sh sh/backbone.sh 
-sh sh/backbone.sh 
-sh sh/backbone.sh 
-cd works/DeepSDF/project/BackBone/
-sh sh/backbone.sh 
-cd works/DeepSDF/project/BackBone/
-sh sh/backbone.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/BackBone/lightning_logs --port 7788
-cd works/DeepSDF/project/BackBone/
-sh sh/backbone.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs --port 7788
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair --port 7788
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/BackBone/lightning_logs --port 7788
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-nvidia-smi
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair --port 7788
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair --port 7788
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-# python dataset.py --config=configs/list_0/randn/covertdata/128to128.txt
-python dataset.py --config=configs/list_0/randn/covertdata/256to128.txt
-python dataset.py --config=configs/list_0/randn/covertdata/256to128.txt --N_batch=32
-python dataset.py --config=configs/list_0/randn/covertdata/256to128.txt --N_batch=32
-rm -rf '/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/train/kmean0_randn/resolution128/clopped/'
-python dataset.py --config=configs/list_0/randn/covertdata/256to128.txt
-python dataset.py --config=configs/list_0/randn/covertdata/256to128.txt
-python dataset.py --config=configs/list_0/randn/covertdata/256to128.txt
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-cd works/DeepSDF/project/
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/paper_fig/
-python renderer.py --config=../configs/list_0/randn/resolution128/new_data/encoder.txt
-cd works/DeepSDF/project/paper_fig/
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-nvidia-smi
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair --port 7788
-ls
-rm -rf howto/
-whoami
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair --port 7788
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
 sh sh/train.sh 
 cd works/DeepSDF/project/
 sh sh/train.sh 
@@ -498,3 +143,358 @@ python dataset.py
 python dataset.py
 python dataset.py
 python 
+cd works/DeepSDF/project/
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+cd works/DeepSDF/project/
+ls
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+python dataset.py 
+sh sh/check/debug.sh 
+python dataset.py 
+python dataset.py 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python dataset.py 
+sh tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/check/debug.sh 
+sh sh/check/debug.sh 
+sh sh/tes/tes.sh
+sh sh/train/27.sh 
+sh sh/train/27.sh 
+sh sh/tes/tes.sh
+ls
+cd odam/
+ls
+cd ODAM/
+ls
+ls
+cd data2/
+ls
+python reader.py --filename scans/scene0000_00/scene0000_00.sens SensReader/tes
+ls
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens SensReader/tes
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens SensReader/tes
+pip install pypng
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens SensReader/tes
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
+ls
+vim \lib\site-packages\pydot__init__.py
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
+ls
+python SensReader/dataset.py 
+~cd SensReader/
+ls
+cd SensReader/
+ls
+python dataset.py 
+python dataset.py 
+python dataset.py 
+python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2/scans --save_name all_tsdf_9 --window_size 9
+cd ../../
+python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2/scans --save_name all_tsdf_9 --window_size 9
+pip install numba
+python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2/scans --save_name all_tsdf_9 --window_size 9
+pip install ray
+python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2/scans --save_name all_tsdf_9 --window_size 9
+python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2/scans --save_name all_tsdf_9 --window_size 9
+python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2 --save_name all_tsdf_9 --window_size 9
+python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2 --save_name all_tsdf_9 --window_size 9
+python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2 --save_name all_tsdf_9 --window_size 9
+python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2 --save_name all_tsdf_9 --window_size 9
+python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2 --save_name all_tsdf_9 --window_size 9
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
+cd data2/
+ls
+python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
+ls
+cd SensReader/
+ls
+python
+ls
+ls
+ls
+cd ../
+ls
+cd SensReader/tes/* scans/scene0000_00/
+mv SensReader/tes/* scans/scene0000_00/
+python 
+ls
+cd ../../
+;s
+ls
+cd ODAM/
+ls
+python download-scannet.py -o ./data2 -scene_id = 
+python download-scannet.py -o ./data2 -scene_id scene0000_01
+python download-scannet.py -o ./data2 -id scene0000_01
+python download-scannet.py -o ./data2 --id scene0000_01
+cd data2/
+ls
+cd c
+cd SensReader/
+ls
+python reader.py --filename ../scans/scene0000_01 --output_path tes01
+python reader.py --filename ../scans/scene0000_01/scene0000_01.sens --output_path tes01
+ls
+cd ../
+ls
+cd ../
+;s
+ls
+rm -r tools/
+python src/scripts/run_processor.py --config_path ./configs/detr_scan_net.yaml --no_code --use_prior --out_dir ./result/e2e --representation super_quadric
+export PYTHONPATH=$PYTHONPATH:$PWD
+python src/scripts/run_processor.py --config_path ./configs/detr_scan_net.yaml --no_code --use_prior --out_dir ./result/e2e --representation super_quadric
+python src/scripts/run_processor.py --config_path ./configs/detr_scan_net.yaml --no_code --use_prior --out_dir ./result/e2e --representation super_quadric
+python src/scripts/run_processor.py --config_path ./configs/detr_scan_net.yaml --no_code --use_prior --out_dir ./result/e2e --representation super_quadric
+cd ../
+ls
+cd ODAM/
+ls
+python 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+pip install quaternion
+pip install quaternion
+python check_rendering.py 
+python check_rendering.py 
+pip install plyfile
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+python check_rendering.py 
+point.shape
+cd works/DeepSDF/project/odam/ODAM
+python check_rendering.py
+cd works/DeepSDF/project/odam/ODAM
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+pip install PyWavefront
+pip install PyWavefront
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+~
+python check_rendering.py
+python check_rendering.py\
+python check_rendering.py\
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python
+python
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+rm -rf data2/SensReader
+mkdir data2/meta_data
+cd ../
+git clone https://github.com/facebookresearch/votenet.git
+cd ODAM/
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python check_rendering.py
+python reader.py --filename data2/scans/scene0000_00/scene0000_00.sens --out_path tes
+python reader.py --filename data2/scans/scene0000_00/scene0000_00.sens --output_path tes
+python reader.py --filename data2/scans/scene0000_00/scene0000_00.sens --output_path tes
+cd works/DeepSDF/project/
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+nvidia-smi
+nvidia-smi
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+ls
+cd project/
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+python
+python
+python
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/train/15.sh
+sh sh/train/15.sh
+sh sh/train/15.sh
+sh sh/train/15.sh
+sh sh/train/15.sh
+sh sh/train/15.sh
+sh sh/train/15.sh
+python
+sh sh/train/15.sh
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+nvidia-smi
+nvidia-smi

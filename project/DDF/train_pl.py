@@ -447,20 +447,11 @@ class DDF(pl.LightningModule):
             loss = depth_loss + 0.01 * normal_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
             # loss = depth_loss + 0.0001 * normal_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
             if torch.isnan(loss):
-                print('##################################################')
-                print('####################depth#########################')
-                print('##################################################')
                 print(depth_loss)
                 print(normal_loss)
-                print('##################################################')
-                print('####################depth#########################')
-                print('##################################################')
                 print(est_depth.min(), est_depth.max())
                 print(est_depth_r.min(), est_depth_r.max())
                 print(est_depth_u.min(), est_depth_u.max())
-                print('#####################################################')
-                print('####################invdepth#########################')
-                print('#####################################################')
                 print(est_inverced_depth.min(), est_inverced_depth.max())
                 print(est_inverced_depth_r.min(), est_inverced_depth_r.max())
                 print(est_inverced_depth_u.min(), est_inverced_depth_u.max())

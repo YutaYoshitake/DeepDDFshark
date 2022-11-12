@@ -1,8 +1,8 @@
+print('start')
 import os
-import pdb
 import sys
-from turtle import pd
 import numpy as np
+import cv2
 import random
 import pylab
 import glob
@@ -16,10 +16,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as data_utils
 from torch.utils.data import DataLoader
-from torch.autograd import grad
 import torch.utils.data as data
 import time
-
 from BackBone.train_backbone import *
 from resnet import *
 from parser_get_arg import *
@@ -27,7 +25,6 @@ from dataset import *
 from often_use import *
 from DDF.train_pl import DDF
 from model import optimize_former
-
 torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 
 
@@ -63,8 +60,8 @@ class original_optimizer(pl.LightningModule):
         self.total_itr = args.total_itr
         if self.view_selection == 'simultaneous':
             self.itr_per_frame = self.total_itr
-        if self.view_selection == 'sequencial':
-            self.itr_per_frame = self.total_itr // self.total_obs_num
+        if self.view_selection == 'sequential':
+            self.itr_per_frame = args.itr_per_frame # self.total_itr // self.total_obs_num
 
         # Make model
         self.main_layers_name = args.main_layers_name
@@ -75,6 +72,9 @@ class original_optimizer(pl.LightningModule):
                                       num_encoder_layers = args.num_encoder_layers, 
                                       num_decoder_layers = args.num_decoder_layers, 
                                       add_conf=args.add_conf, 
+                                      layer_wise_attention = args.layer_wise_attention, 
+                                      use_cls=args.use_cls, 
+                                      latent_size = args.latent_size, 
                                       use_attn_mask=args.use_attn_mask, 
                                       total_obs_num=self.total_obs_num, 
                                       inp_itr_num=args.inp_itr_num, 
@@ -94,9 +94,15 @@ class original_optimizer(pl.LightningModule):
         self.random_axis_num = 1024
         self.random_axis_list = torch.from_numpy(sample_fibonacci_views(self.random_axis_num).astype(np.float32)).clone()
         self.gt_scale_range = 0.2
+        if self.main_layers_name == 'autoreg':
+            self.total_inp_itr = args.inp_itr_num + 1
+        elif self.main_layers_name in {'only_mlp', 'encoder'}:
+            self.total_inp_itr = args.inp_itr_num
+        self.until_convergence = args.until_convergence
+        self.convergence_thr = args.convergence_thr
+        self.convergence_thr_shape = args.convergence_thr_shape
 
         # loss func.
-        self.automatic_optimization = False
         self.min_loss = float('inf')
         self.min_epoch = 0
         self.L_p = args.L_p
@@ -109,10 +115,7 @@ class original_optimizer(pl.LightningModule):
         self.cossim = nn.CosineSimilarity(dim=-1)
         self.cosssim_min = - 1 + 1e-8
         self.cosssim_max = 1 - 1e-8
-        self.randn_from_pickle = True
-        self.rand_idx = {'train':0, 'val':0, 'tes':0}
-        self.rand_idx_max = {'train':1e6, 'val':1e5, 'tes':1e5}
-        self.loss_timing = args.loss_timing
+        self.automatic_optimization = False
 
 
 
@@ -120,7 +123,7 @@ class original_optimizer(pl.LightningModule):
         # Get batch data. 
         frame_mask, frame_distance_map, instance_id, frame_camera_pos_wrd, frame_w2c, frame_bbox_diagonal, bbox_list, frame_gt_obj_pos_wrd, \
         frame_gt_o2w, frame_gt_obj_green_wrd, frame_gt_obj_red_wrd, frame_gt_o2c, frame_gt_obj_green_cam, frame_gt_obj_red_cam, \
-        frame_gt_obj_scale_wrd, canonical_distance_map, canonical_camera_pos, canonical_camera_rot, path, rand_seed, scene_id = batch
+        frame_gt_obj_scale_wrd, canonical_distance_map, canonical_camera_pos, canonical_camera_rot, path, rand_seed, scene_id, gt_pc_obj = batch
         
         # Get baych size
         batch_size = len(instance_id)
@@ -196,7 +199,7 @@ class original_optimizer(pl.LightningModule):
                    frame_bbox_diagonal, frame_w2c, frame_gt_obj_green_wrd, frame_gt_obj_red_wrd, frame_camera_pos_wrd, \
                    frame_gt_obj_pos_wrd, frame_gt_obj_scale_wrd, canonical_distance_map, canonical_camera_pos, \
                    canonical_camera_rot, instance_id, path, ini_obj_pos, ini_obj_scale, ini_obj_axis_red_wrd, \
-                   ini_obj_axis_green_wrd,ini_shape_code, rand_seed, frame_gt_o2w, instance_id, scene_id
+                   ini_obj_axis_green_wrd,ini_shape_code, rand_seed, frame_gt_o2w, instance_id, scene_id, gt_pc_obj
 
 
 
@@ -232,14 +235,19 @@ class original_optimizer(pl.LightningModule):
 
             # Log current maps.
             past_itr_log['itr_length'].append(current_frame_num)
-            past_itr_log['obs_d'].append(clopped_distance_map.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H).clone())
             past_itr_log['obs_mask'].append(clopped_mask.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H).clone())
-            past_itr_log['est_d'].append(est_clopped_distance_map.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H).clone())
             past_itr_log['est_mask'].append(est_clopped_mask.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H).clone())
             past_itr_log['w2c'].append(w2c.reshape(batch_size, current_frame_num, 3, 3).clone())
             past_itr_log['cam_pos_wrd'].append(cam_pos_wrd.reshape(batch_size, current_frame_num, 3).clone())
             past_itr_log['rays_d_cam'].append(rays_d_cam.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H, 3).clone())
             past_itr_log['bbox_diagonal'].append(bbox_diagonal.reshape(batch_size, current_frame_num, 1).clone())
+            # if self.input_type == 'depthmap':
+            #     for map_idx, (map_i, mask_i) in enumerate(zip(clopped_distance_map, clopped_mask)):
+            #         avg_i = map_i[mask_i].mean()
+            #         clopped_distance_map[map_idx][clopped_mask[map_idx]] = clopped_distance_map[map_idx][clopped_mask[map_idx]] - avg_i
+            #         est_clopped_distance_map[map_idx][est_clopped_mask[map_idx]] = est_clopped_distance_map[map_idx][est_clopped_mask[map_idx]] - avg_i
+            past_itr_log['obs_d'].append(clopped_distance_map.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H).clone())
+            past_itr_log['est_d'].append(est_clopped_distance_map.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H).clone())
 
             # Get past maps.
             total_view_num = sum(past_itr_log['itr_length'])
@@ -255,38 +263,38 @@ class original_optimizer(pl.LightningModule):
             acc_latest_obj_pos_wrd = pre_obj_pos_wrd[:, None, :].expand(-1, total_view_num, -1).reshape(-1, 3)
             acc_latest_obj_scale_wrd = pre_obj_scale_wrd[:, None, :].expand(-1, total_view_num, -1).reshape(-1, 1)
             
-        # Get map.
-        past_view_num = 0
-        if len(past_itr_log['itr_length']) > 1:
-            # Expanding current est to past est shapes.
-            past_view_num = total_view_num - past_itr_log['itr_length'][-1]
-            repped_latest_distmap = torch.cat([past_itr_log['est_d'][-1][:, :view_num] for view_num in past_itr_log['itr_length'][:-1]], dim=1).reshape(-1, self.ddf_H, self.ddf_H)
-            repped_latest_mask = torch.cat([past_itr_log['est_mask'][-1][:, :view_num] for view_num in past_itr_log['itr_length'][:-1]], dim=1).reshape(-1, self.ddf_H, self.ddf_H)
-            repped_latest_o2w = pre_o2w[:, None, :, :].expand(-1, past_view_num, -1, -1).reshape(-1, 3, 3)
-            repped_latest_obj_scale_wrd = pre_obj_scale_wrd[:, None, :].expand(-1, past_view_num, -1).reshape(-1, 1)
-            # Expanding current est to past est shapes.
-            past_est_distmap = acc_est_distmap.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H)[:, :past_view_num].reshape(-1, self.ddf_H, self.ddf_H)
-            past_est_mask = acc_est_mask.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H)[:, :past_view_num].reshape(-1, self.ddf_H, self.ddf_H)
-            past_rays_d_cam = acc_rays_d_cam.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 3)[:, :past_view_num].reshape(-1, self.ddf_H, self.ddf_H, 3)
-            past_w2c = acc_w2c.reshape(batch_size, total_view_num, 3, 3)[:, :past_view_num].reshape(-1, 3, 3)
-        if self.input_type == 'osmap':
-            obs_OSMap_obj = get_OSMap_obj(acc_obs_distmap, acc_obs_mask, acc_rays_d_cam, acc_w2c, acc_cam_pos_wrd, acc_latest_o2w, acc_latest_obj_pos_wrd, acc_latest_obj_scale_wrd)
-            est_OSMap_obj = get_OSMap_obj(acc_est_distmap, acc_est_mask, acc_rays_d_cam, acc_w2c, acc_cam_pos_wrd, acc_latest_o2w, acc_latest_obj_pos_wrd, acc_latest_obj_scale_wrd)
-            dif_OSMap_obj = get_diffOSMap_obj(acc_obs_distmap, acc_est_distmap, acc_obs_mask, acc_est_mask, acc_rays_d_cam, acc_w2c, acc_latest_o2w, acc_latest_obj_scale_wrd)
+            # Get map.
+            past_view_num = 0
             if len(past_itr_log['itr_length']) > 1:
-                tra_OSMap_obj = get_diffOSMap_obj(past_est_distmap, repped_latest_distmap, past_est_mask, repped_latest_mask, past_rays_d_cam, past_w2c, repped_latest_o2w, repped_latest_obj_scale_wrd)
-            else:
-                tra_OSMap_obj = torch.tensor([])[:, None, None, None].expand(-1, self.ddf_H, self.ddf_H, 4).to(obs_OSMap_obj)
-            inp_maps = torch.cat([obs_OSMap_obj, est_OSMap_obj, dif_OSMap_obj, tra_OSMap_obj], dim=0).permute(0, 3, 1, 2).contiguous().detach()
-        elif self.input_type == 'depthmap':
-            obs_distmap = torch.stack([acc_obs_distmap, acc_obs_mask], dim=-1)
-            est_distmap = torch.stack([acc_est_distmap, acc_est_mask], dim=-1)
-            dif_distmap = torch.stack([acc_obs_distmap-acc_est_distmap, torch.logical_xor(acc_obs_mask, acc_est_mask)], dim=-1)
-            if len(past_itr_log['itr_length']) > 1:
-                tra_distmap = torch.stack([past_est_distmap - repped_latest_distmap, torch.logical_xor(past_est_mask, repped_latest_mask)], dim=-1)
-            else:
-                tra_distmap = torch.tensor([])[:, None, None, None].expand(-1, self.ddf_H, self.ddf_H, 2).to(acc_obs_distmap)
-            inp_maps = torch.cat([obs_distmap, est_distmap, dif_distmap, tra_distmap], dim=0).permute(0, 3, 1, 2).contiguous().detach()
+                # Expanding current est to past est shapes.
+                past_view_num = total_view_num - past_itr_log['itr_length'][-1]
+                repped_latest_distmap = torch.cat([past_itr_log['est_d'][view_idx+1][:, :view_num] for view_idx, view_num in enumerate(past_itr_log['itr_length'][:-1])], dim=1).reshape(-1, self.ddf_H, self.ddf_H)    # torch.cat([past_itr_log['est_d'][-1][:, :view_num] for view_num in past_itr_log['itr_length'][:-1]], dim=1).reshape(-1, self.ddf_H, self.ddf_H)    
+                repped_latest_mask    = torch.cat([past_itr_log['est_mask'][view_idx+1][:, :view_num] for view_idx, view_num in enumerate(past_itr_log['itr_length'][:-1])], dim=1).reshape(-1, self.ddf_H, self.ddf_H) # torch.cat([past_itr_log['est_mask'][-1][:, :view_num] for view_num in past_itr_log['itr_length'][:-1]], dim=1).reshape(-1, self.ddf_H, self.ddf_H) 
+                repped_latest_o2w = pre_o2w[:, None, :, :].expand(-1, past_view_num, -1, -1).reshape(-1, 3, 3)
+                repped_latest_obj_scale_wrd = pre_obj_scale_wrd[:, None, :].expand(-1, past_view_num, -1).reshape(-1, 1)
+                # Expanding current est to past est shapes.
+                past_est_distmap = acc_est_distmap.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H)[:, :past_view_num].reshape(-1, self.ddf_H, self.ddf_H)
+                past_est_mask = acc_est_mask.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H)[:, :past_view_num].reshape(-1, self.ddf_H, self.ddf_H)
+                past_rays_d_cam = acc_rays_d_cam.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 3)[:, :past_view_num].reshape(-1, self.ddf_H, self.ddf_H, 3)
+                past_w2c = acc_w2c.reshape(batch_size, total_view_num, 3, 3)[:, :past_view_num].reshape(-1, 3, 3)
+            if self.input_type == 'osmap':
+                obs_OSMap_obj = get_OSMap_obj(acc_obs_distmap, acc_obs_mask, acc_rays_d_cam, acc_w2c, acc_cam_pos_wrd, acc_latest_o2w, acc_latest_obj_pos_wrd, acc_latest_obj_scale_wrd)
+                est_OSMap_obj = get_OSMap_obj(acc_est_distmap, acc_est_mask, acc_rays_d_cam, acc_w2c, acc_cam_pos_wrd, acc_latest_o2w, acc_latest_obj_pos_wrd, acc_latest_obj_scale_wrd)
+                dif_OSMap_obj = get_diffOSMap_obj(acc_obs_distmap, acc_est_distmap, acc_obs_mask, acc_est_mask, acc_rays_d_cam, acc_w2c, acc_latest_o2w, acc_latest_obj_scale_wrd)
+                if len(past_itr_log['itr_length']) > 1:
+                    tra_OSMap_obj = get_diffOSMap_obj(past_est_distmap, repped_latest_distmap, past_est_mask, repped_latest_mask, past_rays_d_cam, past_w2c, repped_latest_o2w, repped_latest_obj_scale_wrd)
+                else:
+                    tra_OSMap_obj = torch.tensor([])[:, None, None, None].expand(-1, self.ddf_H, self.ddf_H, 4).to(obs_OSMap_obj)
+                inp_maps = torch.cat([obs_OSMap_obj, est_OSMap_obj, dif_OSMap_obj, tra_OSMap_obj], dim=0).permute(0, 3, 1, 2).contiguous().detach()
+            elif self.input_type == 'depthmap':
+                obs_distmap = torch.stack([acc_obs_distmap, acc_obs_mask], dim=-1)
+                est_distmap = torch.stack([acc_est_distmap, acc_est_mask], dim=-1)
+                dif_distmap = torch.stack([acc_obs_distmap-acc_est_distmap, torch.logical_xor(acc_obs_mask, acc_est_mask)], dim=-1)
+                if len(past_itr_log['itr_length']) > 1:
+                    tra_distmap = torch.stack([past_est_distmap - repped_latest_distmap, torch.logical_xor(past_est_mask, repped_latest_mask)], dim=-1)
+                else:
+                    tra_distmap = torch.tensor([])[:, None, None, None].expand(-1, self.ddf_H, self.ddf_H, 2).to(acc_obs_distmap)
+                inp_maps = torch.cat([obs_distmap, est_distmap, dif_distmap, tra_distmap], dim=0).permute(0, 3, 1, 2).contiguous().detach()
 
         # Get embeddings.
         inp_embed = self.backbone_encoder(inp_maps)
@@ -346,27 +354,27 @@ class original_optimizer(pl.LightningModule):
         #         ax.view_init(elev=45, azim=45)
         #         fig.savefig(f"{sample_id}_45_45.png")
         #         plt.close()
+        #         import pdb; pdb.set_trace()
         # ##################################################
-        # if model_mode=='train' and optim_idx==0:
+        # # if model_mode=='train' and optim_idx==0:
         # gt = clopped_distance_map
         # est = est_clopped_distance_map
         # str_batch_idx = str(batch_idx).zfill(5)
         # str_optim_idx = str(optim_idx).zfill(2)
         # check_map = torch.cat([gt, est, torch.abs(gt-est)], dim=-1)
         # check_map = torch.cat([map_i for map_i in check_map], dim=0)
-        # check_map_torch(check_map, f'tes_{str_batch_idx}_{str_optim_idx}.png')
         # import pdb; pdb.set_trace()
+        # check_map_torch(check_map, f'tes_{str_batch_idx}_{str_optim_idx}.png')
         # ##################################################
         # batch_i = 0
-        # str_batch_i = str(batch_i).zfill(5)
         # gt = gt.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H)[batch_i]
         # est = est.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H)[batch_i]
         # for F_i in range(current_frame_num):
         #     pickle_dump(torch.stack([gt[F_i], est[F_i]], dim=0).to('cpu').detach().numpy().copy(), 
-        #                 f'paper_fig/depth_map/raw_gt_est/{str_batch_i}_{F_i}_{str_optim_idx}.pickle')
+        #                 f'paper_fig/depth_map/raw_gt_est/{str(batch_idx).zfill(5)}_{F_i}_{str(optim_idx).zfill(2)}.pickle')
+        # import pdb; pdb.set_trace()
         # self.df_net.main_layers.encoder.layers[0].attn_output_weights
         # ##################################################
-        
         return est_obj_pos_wrd, est_obj_axis_green_wrd, est_obj_axis_red_wrd, est_obj_scale, est_shape_code
 
 
@@ -401,7 +409,7 @@ class original_optimizer(pl.LightningModule):
         frame_optim_idx = 0
         if self.view_selection == 'simultaneous':
             current_frame_num = self.total_obs_num
-        elif self.view_selection == 'sequencial':
+        elif self.view_selection == 'sequential':
             current_frame_num = 1
         
         past_itr_log = {'itr_length': [], 'obs_d': [], 'est_d': [], 'obs_mask': [], 'est_mask': [], 'w2c': [], 'cam_pos_wrd': [], 'rays_d_cam': [], 'bbox_diagonal': []}
@@ -432,7 +440,7 @@ class original_optimizer(pl.LightningModule):
                     print(f'---   gtscale   --- : {frame_gt_obj_scale_wrd[:5, 0, 0]}')
                     print(f'---   ini_red   --- : {ini_obj_axis_red_wrd[:5, 0]}')
                     print(f'---   nearpos   --- : {(torch.norm(frame_camera_pos_wrd[:, :-1]-frame_camera_pos_wrd[:, 1:], dim=-1)/frame_gt_obj_scale_wrd[:, :-1, 0]).max()<1.04}')
-                print(f'#-- current_itr --# : {optim_idx} / {self.total_itr}')
+                print(f'#-- current_itr --# : {optim_idx+1} / {self.total_itr}')
                 print(f'---  itr_frame  --- : {frame_idx_list}')
             # pre_obj_pos_wrd = frame_gt_obj_pos_wrd[:, 0].clone().detach()
             # pre_obj_pos_wrd = frame_gt_obj_pos_wrd[:, 0].clone().detach() + \
@@ -470,8 +478,9 @@ class original_optimizer(pl.LightningModule):
             if optim_idx >= 0:
                 frame_optim_idx += 1
             if frame_optim_idx >= self.itr_per_frame:
-                current_frame_num += 1
-                frame_optim_idx = 0
+                if current_frame_num < self.total_obs_num:
+                    current_frame_num += 1
+                    frame_optim_idx = 0
 
             # Save pre estimation.
             with torch.no_grad():
@@ -480,7 +489,6 @@ class original_optimizer(pl.LightningModule):
                 pre_obj_axis_green_wrd = est_obj_axis_green_wrd.clone().detach()
                 pre_obj_axis_red_wrd = est_obj_axis_red_wrd.clone().detach()
                 pre_shape_code = est_shape_code.clone().detach()
-
 
         # Return loss.
         return {'pos':   loss_pos.detach(), 
@@ -521,7 +529,7 @@ class original_optimizer(pl.LightningModule):
         frame_bbox_diagonal, frame_w2c, frame_gt_obj_green_wrd, frame_gt_obj_red_wrd, frame_camera_pos_wrd, \
         frame_gt_obj_pos_wrd, frame_gt_obj_scale_wrd, canonical_distance_map, canonical_camera_pos, \
         canonical_camera_rot, instance_id, path, ini_obj_pos, ini_obj_scale, ini_obj_axis_red_wrd, \
-        ini_obj_axis_green_wrd,ini_shape_code, rand_seed, frame_gt_o2w, instance_id, scene_id = self.preprocess(batch, step_mode)
+        ini_obj_axis_green_wrd,ini_shape_code, rand_seed, frame_gt_o2w, instance_id, scene_id, gt_pc_obj = self.preprocess(batch, step_mode)
 
 
         ###################################
@@ -530,16 +538,16 @@ class original_optimizer(pl.LightningModule):
         frame_optim_idx = 0
         if self.view_selection == 'simultaneous':
             current_frame_num = self.total_obs_num
-        elif self.view_selection == 'sequencial':
+        elif self.view_selection == 'sequential':
             current_frame_num = 1 # 2
         
         past_itr_log = {'itr_length': [], 'obs_d': [], 'est_d': [], 'obs_mask': [], 'est_mask': [], 'w2c': [], 'cam_pos_wrd': [], 'rays_d_cam': [], 'bbox_diagonal': []}
-        itr_err_list = {'pos':[], 'scale':[], 'red':[], 'green':[], 'shape':[], 'sec':[]}
+        itr_err_list = {'pos':[], 'scale':[], 'red':[], 'green':[], 'shape':[], 'chm_obj':[], 'chm_wrd':[], 'chm_wrd_s':[], 'sec':[], 'cnv':[]}
         loss_list = {'total':[], 'pos':[], 'scale':[], 'red':[], 'green':[], 'shape':[]}
-        
+
         for optim_idx in range(-1, self.total_itr):
             # Get frame index info.
-            if optim_idx < 0 and self.view_selection == 'sequencial':
+            if optim_idx < 0 and self.view_selection == 'sequential':
                 frame_idx_list = [0]
             else:
                 frame_idx_list = list(range(current_frame_num))
@@ -551,7 +559,7 @@ class original_optimizer(pl.LightningModule):
             w2c = frame_w2c[:, frame_idx_list].reshape(-1, 3, 3).detach()
             cam_pos_wrd = frame_camera_pos_wrd[:, frame_idx_list].reshape(-1, 3).detach()
             bbox_diagonal = frame_bbox_diagonal[:, frame_idx_list].reshape(-1, 1)
-            print_debug = self.current_epoch == 0 and batch_idx == 0 and optim_idx in {0, 2}
+            print_debug = (self.current_epoch==0 or step_mode=='tes') and batch_idx == 0 and optim_idx in {0, 2}
             if print_debug:
                 if optim_idx == 0:
                     print('########## VAL ##########')
@@ -560,7 +568,7 @@ class original_optimizer(pl.LightningModule):
                     print(f'---   gtscale   --- : {frame_gt_obj_scale_wrd[:5, 0, 0]}')
                     print(f'---   ini_red   --- : {ini_obj_axis_red_wrd[:5, 0]}')
                     print(f'---   nearpos   --- : {(torch.norm(frame_camera_pos_wrd[:, :-1]-frame_camera_pos_wrd[:, 1:], dim=-1)/frame_gt_obj_scale_wrd[:, :-1, 0]).max()<1.04}')
-                print(f'#-- current_itr --# : {optim_idx} / {self.total_itr}')
+                print(f'#-- current_itr --# : {optim_idx+1} / {self.total_itr}')
                 print(f'---  itr_frame  --- : {frame_idx_list}')
 
             # Set timer.
@@ -591,14 +599,68 @@ class original_optimizer(pl.LightningModule):
             torch.cuda.synchronize()
             itr_err_list['sec'].append(start.elapsed_time(end) / 1000)
 
-            # Save pre estimation.
-            pre_obj_pos_wrd = est_obj_pos_wrd.clone().detach()
-            pre_obj_axis_green_wrd = est_obj_axis_green_wrd.clone().detach()
-            pre_obj_axis_red_wrd = est_obj_axis_red_wrd.clone().detach()
-            pre_obj_scale_wrd = est_obj_scale.clone().detach()
-            pre_shape_code = est_shape_code.clone().detach()
+            # Convergence. 
+            update_mask = None
+            # print(clopped_mask.shape)
+            if self.until_convergence=='yes' and (
+                (self.view_selection=='simultaneous' and optim_idx==0) or 
+                (self.view_selection=='sequential' and 0 <= optim_idx and optim_idx < self.total_obs_num)):
+                # Save pre dif.
+                pre_dif_norm_obj_pos = torch.norm(est_obj_pos_wrd - pre_obj_pos_wrd, dim=-1) / math.sqrt(3)
+                pre_dif_norm_obj_green = torch.norm(est_obj_axis_green_wrd - pre_obj_axis_green_wrd, dim=-1) / math.sqrt(3)
+                pre_dif_norm_obj_red = torch.norm(est_obj_axis_red_wrd - pre_obj_axis_red_wrd, dim=-1) / math.sqrt(3)
+                pre_dif_norm_obj_scale = torch.norm(est_obj_scale - pre_obj_scale_wrd, dim=-1) / 1
+                pre_dif_norm_obj_shape = torch.norm(est_shape_code - pre_shape_code, dim=-1) / math.sqrt(self.ddf.latent_size)
+                # Save pre estimation.
+                pre_obj_pos_wrd = est_obj_pos_wrd.clone().detach()
+                pre_obj_axis_green_wrd = est_obj_axis_green_wrd.clone().detach()
+                pre_obj_axis_red_wrd = est_obj_axis_red_wrd.clone().detach()
+                pre_obj_scale_wrd = est_obj_scale.clone().detach()
+                pre_shape_code = est_shape_code.clone().detach()
+
+            elif self.until_convergence=='yes' and optim_idx > 0:
+                dif_norm_obj_pos = torch.norm(est_obj_pos_wrd - pre_obj_pos_wrd, dim=-1) / math.sqrt(3)
+                dif_norm_obj_axis_green = torch.norm(est_obj_axis_green_wrd - pre_obj_axis_green_wrd, dim=-1) / math.sqrt(3)
+                dif_norm_obj_axis_red = torch.norm(est_obj_axis_red_wrd - pre_obj_axis_red_wrd, dim=-1) / math.sqrt(3)
+                dif_norm_obj_scale = torch.norm(est_obj_scale - pre_obj_scale_wrd, dim=-1) / 1
+                dif_norm_obj_shape = torch.norm(est_shape_code - pre_shape_code, dim=-1) / math.sqrt(self.ddf.latent_size)
+
+                change_flg_pos = 100 * torch.abs(dif_norm_obj_pos / pre_dif_norm_obj_pos) > self.convergence_thr
+                change_flg_green = 100 * torch.abs(dif_norm_obj_axis_green / pre_dif_norm_obj_green) > self.convergence_thr
+                change_flg_red = 100 * torch.abs(dif_norm_obj_axis_red / pre_dif_norm_obj_red) > self.convergence_thr
+                change_flg_scale = 100 * torch.abs(dif_norm_obj_scale / pre_dif_norm_obj_scale) > self.convergence_thr
+                change_flg_shape = 100 * torch.abs(dif_norm_obj_shape / pre_dif_norm_obj_shape) > self.convergence_thr_shape
+
+                # print(100 * torch.abs(dif_norm_obj_pos / pre_dif_norm_obj_pos))
+                # print(100 * torch.abs(dif_norm_obj_axis_green / pre_dif_norm_obj_green))
+                # print(100 * torch.abs(dif_norm_obj_axis_red / pre_dif_norm_obj_red))
+                # print(100 * torch.abs(dif_norm_obj_scale / pre_dif_norm_obj_scale))
+                # print(100 * torch.abs(dif_norm_obj_shape / pre_dif_norm_obj_shape))
+                update_mask = torch.stack([change_flg_pos, change_flg_green, change_flg_red, change_flg_scale, change_flg_shape], dim=-1).any(dim=-1)
+                # print(update_mask)
+                # import pdb; pdb.set_trace()
+
+                pre_dif_norm_obj_pos[torch.logical_not(update_mask)] = torch.full_like(pre_dif_norm_obj_pos[torch.logical_not(update_mask)], 1e5)
+                pre_dif_norm_obj_green[torch.logical_not(update_mask)] = torch.full_like(pre_dif_norm_obj_green[torch.logical_not(update_mask)], 1e5)
+                pre_dif_norm_obj_red[torch.logical_not(update_mask)] = torch.full_like(pre_dif_norm_obj_red[torch.logical_not(update_mask)], 1e5)
+                pre_dif_norm_obj_scale[torch.logical_not(update_mask)] = torch.full_like(pre_dif_norm_obj_scale[torch.logical_not(update_mask)], 1e5)
+                pre_dif_norm_obj_shape[torch.logical_not(update_mask)] = torch.full_like(pre_dif_norm_obj_shape[torch.logical_not(update_mask)], 1e5)
+
+                pre_obj_pos_wrd[update_mask] = est_obj_pos_wrd[update_mask].clone().detach()
+                pre_obj_axis_green_wrd[update_mask] = est_obj_axis_green_wrd[update_mask].clone().detach()
+                pre_obj_axis_red_wrd[update_mask] = est_obj_axis_red_wrd[update_mask].clone().detach()
+                pre_obj_scale_wrd[update_mask] = est_obj_scale[update_mask].clone().detach()
+                pre_shape_code[update_mask] = est_shape_code[update_mask].clone().detach()
+
+            else:
+                # Save pre estimation.
+                pre_obj_pos_wrd = est_obj_pos_wrd.clone().detach()
+                pre_obj_axis_green_wrd = est_obj_axis_green_wrd.clone().detach()
+                pre_obj_axis_red_wrd = est_obj_axis_red_wrd.clone().detach()
+                pre_obj_scale_wrd = est_obj_scale.clone().detach()
+                pre_shape_code = est_shape_code.clone().detach()
             # pre_obj_pos_wrd = frame_gt_obj_pos_wrd[:, 0].clone().detach() + \
-            #     (1. - ((optim_idx+1) / self.total_itr)) * torch.sum((torch.tensor([0.3, 0, 0]).to(ini_obj_pos))[None, None, :].expand(batch_size, -1, -1)*frame_gt_o2w[:, 0], dim=-1)
+            #     (1. - ((optim_idx+1) / self.total_itr)) * torch.sum((torch.tensor([0.5, 0, 0]).to(ini_obj_pos))[None, None, :].expand(batch_size, -1, -1)*frame_gt_o2w[:, 0], dim=-1)
             # pre_obj_pos_wrd = frame_gt_obj_pos_wrd[:, 0].clone().detach()
             # pre_obj_axis_green_wrd = frame_gt_obj_green_wrd[:, 0].clone().detach()
             # pre_obj_axis_red_wrd = frame_gt_obj_red_wrd[:, 0].clone().detach()
@@ -606,7 +668,7 @@ class original_optimizer(pl.LightningModule):
             # pre_shape_code = gt_shape_code.clone().detach()
 
             # Cal err at each iteration.
-            if step_mode=='tes' or optim_idx==(self.total_itr-1):
+            if optim_idx==(self.total_itr-1): # step_mode=='tes' or optim_idx==(self.total_itr-1):
                 itr_err_list['pos'].append(torch.abs(pre_obj_pos_wrd - frame_gt_obj_pos_wrd[:, 0]).mean(dim=-1))
                 err_axis_green_cos_sim_i = self.cossim(pre_obj_axis_green_wrd, frame_gt_obj_green_wrd[:, 0]).clamp(min=self.cosssim_min, max=self.cosssim_max)
                 itr_err_list['green'].append(torch.acos(err_axis_green_cos_sim_i) * 180 / torch.pi)
@@ -614,11 +676,18 @@ class original_optimizer(pl.LightningModule):
                 itr_err_list['red'].append(torch.acos(err_axis_red_cos_sim_i) * 180 / torch.pi)
                 itr_err_list['scale'].append(100 * torch.abs(pre_obj_scale_wrd[:, 0] - frame_gt_obj_scale_wrd[:, 0, 0]) / frame_gt_obj_scale_wrd[:, 0, 0])
                 depth_error = []
+                if step_mode=='tes':
+                    est_pc_wrd_list = []
+                    est_pc_obj_list = []
+                    for i_ in range(batch_size):
+                        est_pc_wrd_list.append([])
+                        est_pc_obj_list.append([])
                 for gt_distance_map, cam_pos_wrd, w2c in zip(canonical_distance_map.permute(1, 0, 2, 3), 
                                                             canonical_camera_pos.permute(1, 0, 2), 
                                                             canonical_camera_rot.permute(1, 0, 2, 3)):
+                    # Rendering
                     rays_d_cam = self.canonical_rays_d_cam.expand(batch_size, -1, -1, -1)
-                    _, est_distance_map = get_canonical_map(
+                    est_mask, est_distance_map = get_canonical_map(
                                                 H = self.ddf_H, 
                                                 cam_pos_wrd = cam_pos_wrd, 
                                                 rays_d_cam = rays_d_cam, 
@@ -627,28 +696,69 @@ class original_optimizer(pl.LightningModule):
                                                 ddf = self.ddf, )
                     depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1))
                     # check_map_torch(torch.abs(gt_distance_map-est_distance_map).reshape(-1, 128), 'tes.png')
+                    # Get est pt
+                    if step_mode=='tes':
+                        est_mask = torch.logical_and(est_mask, est_distance_map < 1.25) # ?
+                        b_est_mask = est_mask.clone()
+                        b_mask_thr = 1
+                        b_est_mask[:, b_mask_thr:, :] = torch.logical_and(b_est_mask[:, b_mask_thr:, :], est_mask[:, :-b_mask_thr, :])
+                        b_est_mask[:, :-b_mask_thr, :] = torch.logical_and(b_est_mask[:, :-b_mask_thr, :], est_mask[:, b_mask_thr:, :])
+                        b_est_mask[:, :, b_mask_thr:] = torch.logical_and(b_est_mask[:, :, b_mask_thr:], est_mask[:, :, :-b_mask_thr])
+                        b_est_mask[:, :, :-b_mask_thr] = torch.logical_and(b_est_mask[:, :, :-b_mask_thr], est_mask[:, :, b_mask_thr:])
+                        est_pc_cam = rays_d_cam * est_distance_map[..., None]
+                        est_pc_obj_cnc_i = torch.sum(est_pc_cam[..., None, :]*w2c.permute(0, 2, 1)[:, None, None, :, :], dim=-1) + cam_pos_wrd[:, None, None, :]
+                        pre_o2w = axis2rotation(pre_obj_axis_green_wrd, pre_obj_axis_red_wrd)
+                        est_pc_wrd_cnc_i = torch.sum(est_pc_obj_cnc_i.clone()[..., None, :]*pre_o2w[..., None, None, :, :], dim=-1) * pre_obj_scale_wrd[..., None, None, :] + pre_obj_pos_wrd[..., None, None, :]
+                        for c_btc_idx, (pt_obj_i, pt_wrd_i, mask_i) in enumerate(zip(est_pc_obj_cnc_i, est_pc_wrd_cnc_i, b_est_mask)):
+                            est_pc_obj_list[c_btc_idx].append(pt_obj_i[mask_i].to('cpu').detach().numpy().copy())
+                            est_pc_wrd_list[c_btc_idx].append(pt_wrd_i[mask_i].to('cpu').detach().numpy().copy())
                 itr_err_list['shape'].append(torch.stack(depth_error, dim=-1).mean(dim=-1))
+
+                if step_mode=='tes' and optim_idx==(self.total_itr-1):
+                    # Get est pt.
+                    est_pc_obj = [np.concatenate(pt_list) for pt_list in est_pc_obj_list]
+                    est_pc_wrd = [np.concatenate(pt_list) for pt_list in est_pc_wrd_list]
+                    # Get gt pt.
+                    gt_pc_wrd = torch.sum(gt_pc_obj[..., None, :]*frame_gt_o2w[:, 0][:, None, :, :], dim=-1) * frame_gt_obj_scale_wrd[:, 0][:, None, :] + frame_gt_obj_pos_wrd[:, 0][:, None, :]
+                    gt_pc_obj_np = gt_pc_obj.to('cpu').detach().numpy().copy()
+                    gt_pc_wrd_np = gt_pc_wrd.to('cpu').detach().numpy().copy()
+                    # Cal Chamfer.
+                    chm_dist_obj = []
+                    for btc_id, (est_pc_i, gt_pc_i) in enumerate(zip(est_pc_obj, gt_pc_obj_np)):
+                        chm_dist_obj.append(compute_trimesh_chamfer(est_pc_i, gt_pc_i))
+                    itr_err_list['chm_obj'].append(torch.tensor(chm_dist_obj).to(pre_obj_pos_wrd))
+                    chm_dist_wrd = []
+                    for btc_id, (est_pc_i, gt_pc_i) in enumerate(zip(est_pc_wrd, gt_pc_wrd_np)):
+                        chm_dist_wrd.append(compute_trimesh_chamfer(est_pc_i, gt_pc_i))
+                    itr_err_list['chm_wrd'].append(torch.tensor(chm_dist_wrd).to(pre_obj_pos_wrd))
+                    itr_err_list['chm_wrd_s'].append(torch.tensor(chm_dist_wrd).to(pre_obj_pos_wrd) / frame_gt_obj_scale_wrd[:, 0, 0])
+
+            # Save steps.
+            if update_mask is not None:
+                itr_err_list['cnv'].append(update_mask.to(pre_shape_code))
+            else:
+                itr_err_list['cnv'].append(torch.ones(batch_size).to(pre_shape_code))
 
             # Update frame infos.
             if optim_idx >= 0:
                 frame_optim_idx += 1
             if frame_optim_idx >= self.itr_per_frame:
-                current_frame_num += 1
-                frame_optim_idx = 0
-        
+                if current_frame_num < self.total_obs_num:
+                    current_frame_num += 1
+                    frame_optim_idx = 0
+
         # ##################################################
         # batch_i = 0
         # pickle_dump({'gt_pos'   : frame_gt_obj_pos_wrd[batch_i, 0, :].to('cpu').detach().numpy().copy(), 
         #              'gt_o2w'   : frame_gt_o2w[batch_i, 0, :, :].to('cpu').detach().numpy().copy(), 
         #              'gt_scale' : frame_gt_obj_scale_wrd[batch_i, 0, :].to('cpu').detach().numpy().copy(), 
-        #              'gt_shape' : gt_shape_code[batch_i, :].to('cpu').detach().numpy().copy(), 
         #              'est_pos'  : est_obj_pos_wrd[batch_i, :].to('cpu').detach().numpy().copy(), 
         #              'est_o2w'  : axis2rotation(est_obj_axis_green_wrd, est_obj_axis_red_wrd)[batch_i, :, :].to('cpu').detach().numpy().copy(), 
         #              'est_scale': est_obj_scale[batch_i, :].to('cpu').detach().numpy().copy(), 
         #              'est_shape': est_shape_code[batch_i, :].to('cpu').detach().numpy().copy()}, 
-        #             f'paper_fig/normal_map/latvec/{str(batch_i).zfill(5)}_{str(optim_idx).zfill(5)}.pickle')
+        #             f'paper_fig/normal_map/src/autoreg/{str(batch_idx).zfill(5)}_{instance_id[batch_i]}.pickle')
+        # import pdb; pdb.set_trace()
         # ##################################################
-
 
         # Cal loss to monitor performance.
         if step_mode == 'val':
@@ -661,6 +771,7 @@ class original_optimizer(pl.LightningModule):
                                 self.L_s * loss_list['scale'] + self.L_c * loss_list['shape']).detach()
 
         # Return.
+        itr_err_list['cnv'] = sum(itr_err_list['cnv']) - 1.
         return {'loss_list': loss_list, 
                 'itr_err_list': itr_err_list, 
                 'path': np.array(path).T, 
@@ -674,13 +785,16 @@ class original_optimizer(pl.LightningModule):
 
     def test_epoch_end(self, outputs):
         log_dict = {}
-        sec_start, avg_start, med_start = -1, 1, 8
+        sec_start, avg_start, med_start = -1, 1, 11
         log_txt = ['???_avg_log = {', 
                    '    \'pos\'   : np.array([', # ]), 
                    '    \'green\' : np.array([', # ]), 
                    '    \'red\'   : np.array([', # ]), 
                    '    \'scale\' : np.array([', # ]), 
                    '    \'shape\' : np.array([', # ]), 
+                   '    \'chm_obj\' : np.array([', # ]), 
+                   '    \'chm_wrd\' : np.array([', # ]), 
+                   '    \'chm_wrd_s\' : np.array([', # ]), 
                    '    }', 
                    '???_med_log = {', 
                    '    \'pos\'   : np.array([', # ]), 
@@ -688,23 +802,33 @@ class original_optimizer(pl.LightningModule):
                    '    \'red\'   : np.array([', # ]), 
                    '    \'scale\' : np.array([', # ]), 
                    '    \'shape\' : np.array([', # ]), 
+                   '    \'chm_obj\' : np.array([', # ]), 
+                   '    \'chm_wrd\' : np.array([', # ]), 
+                   '    \'chm_wrd_s\' : np.array([', # ]), 
                    '    }', 
                    '???_sec_log = np.array([', # ])
                    ]
 
-        itr_sec = np.stack([x['itr_err_list']['sec'] for x in outputs], axis=0)
-        itr_sec_txt = (', ').join([str(n) for n in itr_sec[:-1].mean(0).tolist()])
-        log_txt[sec_start] += itr_sec_txt + '])'
-        for idx, key_i in enumerate(['pos', 'green', 'red', 'scale', 'shape']):
+        # itr_sec = np.stack([x['itr_err_list']['sec'] for x in outputs], axis=0)
+        # itr_sec_txt = (', ').join([str(n) for n in itr_sec[:-1].mean(0).tolist()])
+        # log_txt[sec_start] += itr_sec_txt + '])'
+        for idx, key_i in enumerate(['pos', 'green', 'red', 'scale', 'shape', 'chm_obj', 'chm_wrd', 'chm_wrd_s']):
             itr_err = torch.cat([torch.stack(x['itr_err_list'][key_i], dim=-1) for x in outputs], dim=0)
             itr_err = itr_err.to('cpu').detach().numpy().copy()
             itr_err_med = np.median(itr_err, axis=0).tolist()
             itr_err_avg = np.mean(itr_err, axis=0).tolist()
-            log_dict[key_i] = itr_err[:, -1]
+            log_dict[key_i] = itr_err # itr_err[:, -1]
             log_txt[avg_start+idx] += (', ').join([str(n) for n in itr_err_avg]) + ']), '
             log_txt[med_start+idx] += (', ').join([str(n) for n in itr_err_med]) + ']), '
             with open(self.test_log_path, 'a') as file:
                 file.write(f'{key_i}, {str(itr_err_avg[-1])}, {str(itr_err_med[-1])}\n')
+        itr_cnv = torch.cat([x['itr_err_list']['cnv'] for x in outputs], dim=0)
+        itr_cnv = itr_cnv.to('cpu').detach().numpy().copy()
+        itr_cnv_med = np.median(itr_cnv)
+        itr_cnv_avg = np.average(itr_cnv)
+        log_dict['cnv'] = itr_cnv # itr_err[:, -1]
+        with open(self.test_log_path, 'a') as file:
+            file.write(f'cnv, {str(itr_cnv_avg)}, {str(itr_cnv_med)}\n')
 
         # Check logs.
         with open(self.test_log_path, 'a') as file:
@@ -764,10 +888,12 @@ if __name__=='__main__':
     args.check_val_every_n_epoch = args.save_interval
     ckpt_base_dir = 'lightning_logs/DeepTaR/chair/'
     val_model_name = args.expname.split('/')[-1] + args.exp_version
-    if args.model_ckpt_path=='non':
-        args.model_ckpt_path = f'{ckpt_base_dir}/{val_model_name}/checkpoints/{str(args.val_model_epoch).zfill(10)}.ckpt'
+    if args.fine_tune=='yes' and 'FINETUNE' in set(args.exp_version.split('_')):
+        val_model_name = args.expname.split('/')[-1] + args.exp_version.split('FINETUNE_')[-1]
     if args.initnet_ckpt_path=='non':
         args.initnet_ckpt_path = f'{ckpt_base_dir}/{args.init_net_name}/checkpoints/{str(args.init_net_epoch).zfill(10)}.ckpt'
+    if args.model_ckpt_path=='non':
+        args.model_ckpt_path = f'{ckpt_base_dir}/{val_model_name}/checkpoints/{str(args.val_model_epoch).zfill(10)}.ckpt'
 
 
     if args.code_mode == 'TRAIN':
@@ -828,7 +954,16 @@ if __name__=='__main__':
         ##############################
 
         # Start training.
-        trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, datamodule=None, ckpt_path=ckpt_path)
+        if args.fine_tune == 'no':
+            trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, datamodule=None, ckpt_path=ckpt_path)
+        elif args.fine_tune == 'yes':
+            src_model = original_optimizer(args, {'ddf':ddf, 'backbone_encoder':backbone.encoder_2dcnn})
+            src_model = src_model.load_from_checkpoint(checkpoint_path=args.model_ckpt_path, args=args, pretrain_models={'ddf':ddf, 'backbone_encoder':backbone.encoder_2dcnn})
+            model.df_net = src_model.df_net
+            model.ddf = src_model.ddf
+            model.backbone_encoder = src_model.backbone_encoder
+            ckpt_path = None
+            trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, datamodule=None, ckpt_path=ckpt_path)
 
 
     elif args.code_mode == 'TES':
@@ -874,6 +1009,7 @@ if __name__=='__main__':
             file.write('rand_S_range : ' + str(model.rand_S_range) + '\n')
             file.write('rand_R_range : ' + str(model.rand_R_range) + '\n')
             file.write('random_axis_num : ' + str(model.random_axis_num) + '\n')
+            file.write('\n')
             file.write('\n')
 
         # Test model.

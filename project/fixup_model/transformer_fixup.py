@@ -1,10 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from resnet import CustomLayerNorm
-from fixup_model.multi_head_atten import *
-
-
+from fixup_model.multi_head_atten import MultiheadAttention__, Linear__
 
 
 
@@ -20,10 +19,11 @@ class TransformerEncoder_FixUp(nn.Module):
         encoder_layers = 5, 
         two_mha = False,  
         T_Fixup = False, 
+        layer_wise_attention = False, 
         ):
         super().__init__()
 
-        self.dropout = dropout
+        self.layer_wise_attention = layer_wise_attention
         self.layers = nn.ModuleList([])
         if two_mha:
             self.layers.extend([
@@ -65,12 +65,17 @@ class TransformerEncoder_FixUp(nn.Module):
         print('##########     END     ##########')
 
     def forward(self, src, atten_mask=None, seq_padding_mask=None, itr_padding_mask=None):
+
         output = src
+        encoder_states = [] if self.layer_wise_attention else None
         for mod in self.layers:
             output = mod(output, atten_mask, seq_padding_mask, itr_padding_mask)
-        return output
-
-
+            if self.layer_wise_attention:
+                encoder_states.append(output)
+        if self.layer_wise_attention:
+            return encoder_states
+        else:
+            return output
 
 
 
@@ -85,10 +90,11 @@ class TransformerDecoder_FixUp(nn.Module):
         activation="relu", 
         decoder_layers = 5, 
         T_Fixup = False,  
+        layer_wise_attention = False, 
         ):
         super().__init__()
 
-        self.dropout = dropout
+        self.layer_wise_attention = layer_wise_attention
         self.layers = nn.ModuleList([])
         self.layers.extend([
             TransformerDecoderLayer_FixUp(
@@ -118,10 +124,16 @@ class TransformerDecoder_FixUp(nn.Module):
         print('##########     END     ##########')
 
     def forward(self, tgt, memory, atten_mask=None):
+
         output = tgt
-        for mod in self.layers:
-            output = mod(output, memory, atten_mask)
-        return output
+        if self.layer_wise_attention:
+            for mod_idx, mod in enumerate(self.layers):
+                output = mod(output, memory[mod_idx], atten_mask)
+            return output
+        else:
+            for mod in self.layers:
+                output = mod(output, memory, atten_mask)
+            return output
 
 
 

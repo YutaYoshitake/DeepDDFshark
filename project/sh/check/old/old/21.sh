@@ -1,0 +1,5 @@
+cd /home/yyoshitake/works/DeepSDF/project
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/paper_exp/chair/view5/seq.txt --exp_version=continuous_simultaneous_onlymlp_enc3dec0_woFix --N_batch=32 --num_encoder_layers=3 --num_decoder_layers=0 --main_layers_name=onlymlp
+# CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=TRAIN --config=configs/paper_exp/chair/view5/seq.txt --exp_version=continuous_simultaneous_onlymlp_enc1dec0_woFix --N_batch=32 --num_encoder_layers=1 --num_decoder_layers=0 --main_layers_name=onlymlp --N_epoch=403
+CUDA_VISIBLE_DEVICES=5 python train.py --code_mode=TRAIN --config=configs/paper_exp/chair/view5/seq.txt --exp_version=continuous_sequential_onlymlp_enc1dec0_woFix_wpe --N_batch=32 --main_layers_name=onlymlp \
+--num_encoder_layers=1 --num_decoder_layers=0 --N_epoch=403 --positional_encoding_mode=yes

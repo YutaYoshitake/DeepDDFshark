@@ -13,7 +13,7 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm, trange
 import torchvision
-
+from scipy.spatial import cKDTree as KDTree
 torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEBUG = False
@@ -51,7 +51,7 @@ def xyz2polar(x, y, z):
 
 
 
-def check_map_torch(image, path = 'sample_images/tes.png', figsize=[10,10]):
+def check_map_torch(image, path = 'tes.png', figsize=[10,10]):
     fig = pylab.figure(figsize=figsize)
 
     ax1 = fig.add_subplot(1, 1, 1)
@@ -65,7 +65,7 @@ def check_map_torch(image, path = 'sample_images/tes.png', figsize=[10,10]):
 
 
 
-def check_map_np(image, path = 'sample_images/tes.png', figsize=[10,10]):
+def check_map_np(image, path = 'tes.png', figsize=[10,10]):
     fig = pylab.figure(figsize=figsize)
 
     ax1 = fig.add_subplot(1, 1, 1)
@@ -610,6 +610,8 @@ def get_OSMap_obj(distance_map, mask, rays_d_cam, w2c, cam_pos_wrd, o2w, obj_pos
     OSMap_obj[torch.logical_not(mask)] = 0.
     OSMap_obj_wMask = torch.cat([OSMap_obj, mask.to(OSMap_obj.dtype).unsqueeze(-1)], dim=-1)
     return OSMap_obj_wMask
+    # OSMap_cam_wMask = torch.cat([OSMap_cam, mask.to(OSMap_obj.dtype).unsqueeze(-1)], dim=-1)
+    # return OSMap_cam_wMask
 
 
 
@@ -626,34 +628,38 @@ def get_diffOSMap_obj(obs_distance_map, est_distance_map, obs_mask, est_mask, ra
     diffOSMap_obj[torch.logical_not(diff_or_mask)] = 0.
     diffOSMap_obj_wMask = torch.cat([diffOSMap_obj, diff_xor_mask.to(diffOSMap_obj).unsqueeze(-1)], dim=-1)
     return diffOSMap_obj_wMask
+    # diffOSMap_cam_wMask = torch.cat([diffOSMap_cam, diff_xor_mask.to(diffOSMap_obj).unsqueeze(-1)], dim=-1)
+    # return diffOSMap_cam_wMask
 
 
 
-# def get_OSMap(distance_map, rays_d_cam, w2c, cam_pos_wrd, o2w, obj_pos_wrd, obj_scale, mask='non'):
-#     OSMap_cam = distance_map[..., None] * rays_d_cam
-#     OSMap_wrd = torch.sum(OSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
-#     OSMap_wrd = OSMap_wrd + cam_pos_wrd[..., None, None, :]
-#     OSMap_obj = OSMap_wrd - obj_pos_wrd[..., None, None, :]
-#     OSMap_obj = torch.sum(OSMap_obj[..., None, :]*o2w.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
-#     OSMap_obj = OSMap_obj / obj_scale[..., None, None, :]
-#     if mask == 'non':
-#         return OSMap_obj
-#     else:
-#         OSMap_obj[torch.logical_not(mask)] = 0.
-#         return OSMap_obj
+# def compute_trimesh_chamfer(gt_points, gen_mesh, offset, scale, num_mesh_samples=30000):
+def compute_trimesh_chamfer(gt_points_np, gen_points_sampled):
+    """
+    This function computes a symmetric chamfer distance, i.e. the sum of both chamfers.
+    gt_points: trimesh.points.PointCloud of just poins, sampled from the surface (see
+               compute_metrics.ply for more documentation)
+    gen_mesh: trimesh.base.Trimesh of output mesh from whichever autoencoding reconstruction
+              method (see compute_metrics.py for more)
+    """
 
+    # gen_points_sampled = trimesh.sample.sample_surface(gen_mesh, num_mesh_samples)[0]
+    # gen_points_sampled = gen_points_sampled / scale - offset
+    # only need numpy array of points
+    # gt_points_np = gt_points.vertices
+    # gt_points_np = gt_points.vertices
 
+    # one direction
+    gen_points_kd_tree = KDTree(gen_points_sampled)
+    one_distances, one_vertex_ids = gen_points_kd_tree.query(gt_points_np)
+    gt_to_gen_chamfer = np.mean(np.square(one_distances))
 
-# def get_diff_OSMap(diff_distance_map, rays_d_cam, w2c, o2w, obj_scale, mask='non'):
-#     diff_OSMap_cam = diff_distance_map[..., None] * rays_d_cam
-#     diff_OSMap_wrd = torch.sum(diff_OSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
-#     diff_OSMap_obj = torch.sum(diff_OSMap_wrd[..., None, :]*o2w.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
-#     diff_OSMap_obj = diff_OSMap_obj / obj_scale[..., None, None, :]
-#     if mask == 'non':
-#         return diff_OSMap_obj
-#     else:
-#         diff_OSMap_obj[torch.logical_not(mask)] = 0.
-#         return diff_OSMap_obj
+    # other direction
+    gt_points_kd_tree = KDTree(gt_points_np)
+    two_distances, two_vertex_ids = gt_points_kd_tree.query(gen_points_sampled)
+    gen_to_gt_chamfer = np.mean(np.square(two_distances))
+
+    return gt_to_gen_chamfer + gen_to_gt_chamfer
 
 
 

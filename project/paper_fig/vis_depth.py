@@ -1,3 +1,4 @@
+import pdb
 import seaborn as sns
 import matplotlib.pyplot as plt
 import sys
@@ -6,6 +7,9 @@ import numpy as np
 import glob
 import datetime
 import cv2
+import cv2
+import tqdm
+
 sys.path.append("../")
 from often_use import *
 
@@ -20,12 +24,12 @@ dt_now = datetime.datetime.now()
 time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
 os.mkdir(os.path.join(result_dir, time_log))
 
-for list_i in pickle_list:
+for list_i in tqdm(pickle_list):
     str_id = list_i.split('/')[-1].split('.')[0]
 
     gt, est = pickle_load(list_i)
-    mask_min_d = 0.7
-    mask_max_d = 1.3
+    mask_min_d = 0
+    mask_max_d = 2
     gt_mask = np.logical_and(mask_max_d > gt, gt > mask_min_d)
     est_mask = np.logical_and(mask_max_d > est, est > mask_min_d)
     gt[np.logical_not(gt_mask)] = 0.
@@ -80,7 +84,7 @@ for list_i in pickle_list:
     path_dif = os.path.join(result_dir, time_log, 'dif_' + str_id + '.png')
     cv2.imwrite(path_dif,  png)
 
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
 
     # #############################################
     # # Test

@@ -51,7 +51,7 @@ class TaR_dataset(data.Dataset):
 
         if self.mode in {'val', 'tes'}:
             self.data_list = pickle_load(scene_list_path)
-        # self.data_list = self.data_list[:3]
+        # self.data_list = self.data_list[:5000] # self.data_list[:15000]
 
         self.input_H = args.input_H
         self.input_W = args.input_W
@@ -64,9 +64,7 @@ class TaR_dataset(data.Dataset):
 
         self.randn_from_log = not args.pickle_to_check_qantitive_results=='not_given'
         if self.randn_from_log:
-            print('#########################')
             print('pickle_to_check_qantitive_results')
-            print('#########################')
             pickle_path = args.pickle_to_check_qantitive_results
             targets = pickle_load(pickle_path)
             self.data_list = [data_path.tolist() for data_path in targets['path']]
@@ -75,6 +73,9 @@ class TaR_dataset(data.Dataset):
             self.rand_S_seed = targets['rand_S_seed']
             self.randn_theta_seed = targets['randn_theta_seed']
             self.randn_axis_idx = targets['randn_axis_idx']
+        
+        # Eval point clouds.
+        self.point_cloud_path = '/home/yyoshitake/works/make_depth_image/project/tmp_point_clouds/000/'
 
 
     def __getitem__(self, index):
@@ -207,9 +208,16 @@ class TaR_dataset(data.Dataset):
             rand_seed = {}
             rand_seed['rand_P_seed'] = 'not_given'
         
+        # Eval point clouds.
+        # if self.mode in {'tes'}:
+        gt_pc_obj = np.load(os.path.join(self.point_cloud_path, instance_id+'.npy')).astype(np.float32)
+        # else:
+        #     gt_pc_obj = False
+        
         return mask, distance_map, instance_id, camera_pos_wrd, w2c, bbox_diagonal, bbox_list, obj_pos_wrd, o2w, obj_green_wrd, \
             obj_red_wrd, camera_o2c, obj_green_cam, obj_red_cam, obj_scale, canonical_distance_map, canonical_camera_pos, \
-            canonical_camera_rot, scene_path_list, rand_seed, [path[-39:-29] for path in scene_path_list]
+            canonical_camera_rot, scene_path_list, rand_seed, [path[-39:-29] for path in scene_path_list], gt_pc_obj
+
 
     def __len__(self):
         return len(self.data_list)

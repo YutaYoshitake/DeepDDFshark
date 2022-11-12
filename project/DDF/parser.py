@@ -52,6 +52,8 @@ def config_parser():
                         help='number of train train')
     parser.add_argument("--H", type=int, default=512, 
                         help='')
+    parser.add_argument("--ddf_H", type=int, default=256, 
+                        help='')
     parser.add_argument("--W", type=int, default=512, 
                         help='')
     parser.add_argument("--fov", type=float, default=60,
