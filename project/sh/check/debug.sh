@@ -1,3 +1,5 @@
-CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/paper_exp/chair/view5/seq.txt --exp_version=FINETUNE_continuous_simultaneous_encoder_enc3dec0_Fix --N_batch=8 --main_layers_name=encoder \
---num_encoder_layers=3 --num_decoder_layers=0 --add_conf=T_Fixup --N_epoch=102 --total_itr=7 --itr_per_frame=1 --val_model_epoch=320 --fine_tune=yes --num_workers=8
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=subrndnsim_autoreg_tau01 --N_batch=8 --val_model_epoch=800
+# CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/paper_exp/chair/view5/tes.txt --exp_version=tes --N_batch=8 --main_layers_name=encoder \
+# --num_encoder_layers=3 --num_decoder_layers=0 --add_conf=T_Fixup --N_epoch=102 --total_itr=7 --itr_per_frame=1 --num_workers=8 #  --val_model_epoch=320
+# CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TRAIN --config=configs/paper_exp/chair/view5/tes.txt --exp_version=tes --N_batch=8 --num_encoder_layers=3 --num_decoder_layers=0 --main_layers_name=encoder --add_conf=onlydecv3 --num_workers=8
 # CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=TRAIN --N_batch=3 --config=configs/paper_exp/chair/view5/debug.txt --num_encoder_layers=8 --num_decoder_layers=0 --main_layers_name=encoder --num_workers=0 --input_type=depthmap # --view_selection=sequencial --view_position=continuous

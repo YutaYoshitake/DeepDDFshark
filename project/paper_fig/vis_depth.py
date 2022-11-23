@@ -24,7 +24,7 @@ dt_now = datetime.datetime.now()
 time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
 os.mkdir(os.path.join(result_dir, time_log))
 
-for list_i in tqdm(pickle_list):
+for list_i in tqdm.tqdm(pickle_list):
     str_id = list_i.split('/')[-1].split('.')[0]
 
     gt, est = pickle_load(list_i)

@@ -294,14 +294,14 @@ class TransformerDecoderLayer_FixUp(nn.Module):
     def forward(self, x, encoder_out, atten_mask=None):
         residual = x
         y = x
-        x, attn = self.self_attn(query=x, key=y, value=y, key_padding_mask=None, attn_mask=atten_mask,)
+        x, self.self_attn_weights = self.self_attn(query=x, key=y, value=y, key_padding_mask=None, attn_mask=atten_mask,)
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = residual + x
         # if self.use_norm:
         #     x = self.norm1(x, optim_idx)
 
         residual = x
-        x, attn = self.encoder_attn(query=x, key=encoder_out, value=encoder_out, key_padding_mask=None, attn_mask=None,) # 異なるビューでCrossAtten取る？
+        x, self.cross_attn_weights = self.encoder_attn(query=x, key=encoder_out, value=encoder_out, key_padding_mask=None, attn_mask=None,) # 異なるビューでCrossAtten取る？
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = residual + x
         # if self.use_norm:

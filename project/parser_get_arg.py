@@ -20,7 +20,7 @@ def get_args():
                 elif args.integrate_TransFormer_mode == 'tf_cat':
                     args.latent_3d_size = args.voxel_ch_num * args.voxel_sample_num
                 args.voxel_scale = 0.5
-    args.convergence_thr = args.convergence_thr_shape = 0
+    # args.convergence_thr = args.convergence_thr_shape = 0
     return args
 
 
@@ -67,12 +67,12 @@ def reload_args(args, sys_argv):
             print(f'   Reloaded args donot have {ori_args_key} ->  {getattr(args, ori_args_key)}')
     print('')
 
-    if args.view_selection == 'simultaneous':
-        args.convergence_thr = 5
-        args.convergence_thr_shape = 25
-    if args.view_selection == 'sequential':
-        args.convergence_thr = 30
-        args.convergence_thr_shape = 50
+    # if args.view_selection == 'simultaneous':
+    #     args.convergence_thr = 25 # 5
+    #     args.convergence_thr_shape = 50 # 25
+    # if args.view_selection == 'sequential':
+    #     args.convergence_thr = 50 # 30
+    #     args.convergence_thr_shape = 80 # 50
     return args
 
 
@@ -113,8 +113,6 @@ def config_parser():
                         help='')
     parser.add_argument("--num_head", type=int, default=8, 
                         help='')
-    parser.add_argument("--reset_transformer_params", action='store_true', # 不要
-                        help='')
     parser.add_argument("--split_into_patch", type=str, default='non', # 'store_false', 
                         help='')
     parser.add_argument("--encoder_norm_type", type=str, default='LayerNorm', 
@@ -134,8 +132,6 @@ def config_parser():
     parser.add_argument("--test_data_dir", type=str, default='non', 
                         help='')
     parser.add_argument("--test_instance_list_txt", type=str, default='non', 
-                        help='')
-    parser.add_argument("--frame_num", type=int, # 不要
                         help='')
     parser.add_argument("--automatic_optimization", type=str, default='manual', 
                         help='')
@@ -187,13 +183,21 @@ def config_parser():
                         help='')
     parser.add_argument("--itr_per_frame", type=int, default=1, 
                         help='')
+    parser.add_argument("--convergence_thr", type=float, default=5, 
+                        help='')
+    parser.add_argument("--convergence_thr_shape", type=float, default=25, 
+                        help='')
+    parser.add_argument("--fine_tune", type=str, default='no', 
+                        help='')
     parser.add_argument("--train_N_views", type=int, # 不要
                         help='')
     parser.add_argument("--val_N_views", type=int, # 不要
                         help='')
     parser.add_argument("--test_N_views", type=int, # 不要
                         help='')
-    parser.add_argument("--fine_tune", type=str, default='no', 
+    parser.add_argument("--frame_num", type=int, # 不要
+                        help='')
+    parser.add_argument("--reset_transformer_params", action='store_true', # 不要
                         help='')
 
     # training options

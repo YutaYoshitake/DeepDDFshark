@@ -51,7 +51,7 @@ class TaR_dataset(data.Dataset):
 
         if self.mode in {'val', 'tes'}:
             self.data_list = pickle_load(scene_list_path)
-        # self.data_list = self.data_list[:5000] # self.data_list[:15000]
+        # self.data_list = [self.data_list[5]] # self.data_list[:15000] # import random; random.shuffle(self.data_list)
 
         self.input_H = args.input_H
         self.input_W = args.input_W
@@ -209,10 +209,10 @@ class TaR_dataset(data.Dataset):
             rand_seed['rand_P_seed'] = 'not_given'
         
         # Eval point clouds.
-        # if self.mode in {'tes'}:
-        gt_pc_obj = np.load(os.path.join(self.point_cloud_path, instance_id+'.npy')).astype(np.float32)
-        # else:
-        #     gt_pc_obj = False
+        if self.mode in {'tes'}:
+            gt_pc_obj = np.load(os.path.join(self.point_cloud_path, instance_id+'.npy')).astype(np.float32)
+        else:
+            gt_pc_obj = False
         
         return mask, distance_map, instance_id, camera_pos_wrd, w2c, bbox_diagonal, bbox_list, obj_pos_wrd, o2w, obj_green_wrd, \
             obj_red_wrd, camera_o2c, obj_green_cam, obj_red_cam, obj_scale, canonical_distance_map, canonical_camera_pos, \
@@ -229,11 +229,11 @@ class TaR_dataset(data.Dataset):
 if __name__=='__main__':
     from parser_get_arg import get_args
     args = get_args()
-    eval_mode = 'tes' # 'val'
-    args.dummy_instance_list_txt = '/home/yyoshitake/works/DeepSDF/project/instance_lists/paper_exp/tes_unknown.txt' # val.txt'
-    args.dummy_data_dir = '/d/workspace/yyoshitake/moving_camera/volumetric/tmp_1/results' # tmp_2/results'
-    args.dummy_N_scenes = 32 # 16
-    args.view_position = 'continuous' # 'randn'
+    eval_mode = 'tes' # 'val' 
+    args.dummy_instance_list_txt = '/home/yyoshitake/works/DeepSDF/project/instance_lists/paper_exp/tes_unknown.txt' # val.txt' 
+    args.dummy_data_dir = '/d/workspace/yyoshitake/moving_camera/volumetric/tmp_1/results' # tmp_2/results' 
+    args.dummy_N_scenes = 5 # 16
+    args.view_position = 'randn' # 'continuous'
     pickle_path = f'/home/yyoshitake/works/DeepSDF/project/randn/{eval_mode}/{args.view_position}_{args.dummy_N_scenes}.pickle'
 
     # Make dummy data loader

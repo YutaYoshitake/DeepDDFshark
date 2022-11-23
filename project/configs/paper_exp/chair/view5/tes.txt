@@ -10,7 +10,7 @@ train_data_dir = /d/workspace/yyoshitake/moving_camera/volumetric/tmp_2/results
 val_data_dir   = /d/workspace/yyoshitake/moving_camera/volumetric/tmp_2/results
 test_data_dir  = /d/workspace/yyoshitake/moving_camera/volumetric/tmp_1/results
 val_data_list = /home/yyoshitake/works/DeepSDF/project/randn/val_scene.pickle
-tes_data_list = /home/yyoshitake/works/DeepSDF/project/randn/tes/randn_32.pickle
+tes_data_list = /home/yyoshitake/works/DeepSDF/project/randn/tes/randn_5.pickle
 canonical_fov = 60
 canonical_data_path = /home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical/
 

@@ -80,7 +80,7 @@ class optimize_former(pl.LightningModule):
                                                      dim_feedforward=dim_feedforward, 
                                                      dropout=dropout, )
         elif main_layers_name=='encoder':
-            self.main_layers = encoder_model(inp_embed_dim=enc_in_dim, #512, 
+            self.main_layers = encoder_model(inp_embed_dim=enc_in_dim, # 512, # 
                                              num_encoder_layers=num_encoder_layers, 
                                              num_head=num_head, 
                                              hidden_dim=hidden_dim, 
@@ -171,7 +171,7 @@ class optimize_former(pl.LightningModule):
         elif self.main_layers_name in {'autoreg', 'encoder'}:
             # Make inputs.
             if self.main_layers_name == 'encoder':
-                inp = torch.cat([obs_embed, 
+                inp = torch.cat([obs_embed, # ], dim=-1).permute(1, 0, 2)
                                  est_embed, 
                                  dif_embed], dim=-1).permute(1, 0, 2)
             elif self.main_layers_name == 'autoreg':
@@ -229,11 +229,11 @@ class optimize_former(pl.LightningModule):
             diff_red_wrd = torch.sum(diff_red_obj[..., None, :]*pre_o2w, -1) * pre_scale_wrd
 
         # Get updated estimations.
-        est_pos_wrd = pre_pos_wrd.detach() + diff_pos_wrd
-        est_green_wrd = F.normalize(pre_green_wrd.detach() + diff_green_wrd, dim=-1)
-        est_red_wrd = F.normalize(pre_red_wrd.detach() + diff_red_wrd, dim=-1)
-        est_scale_wrd = pre_scale_wrd.detach() * diff_scale_wrd
-        est_shape_code = pre_shape_code.detach() + diff_shape_code
+        est_pos_wrd =pre_pos_wrd.detach() + diff_pos_wrd #  diff_pos_obj # 
+        est_green_wrd = F.normalize(pre_green_wrd.detach() + diff_green_wrd, dim=-1) # F.normalize(diff_green_obj, dim=-1) # 
+        est_red_wrd = F.normalize(pre_red_wrd.detach() + diff_red_wrd, dim=-1) # F.normalize(diff_red_obj, dim=-1) # 
+        est_scale_wrd = pre_scale_wrd.detach() * diff_scale_wrd # diff_scale_wrd # 
+        est_shape_code = pre_shape_code.detach() + diff_shape_code # diff_shape_code # 
         return est_pos_wrd, est_green_wrd, est_red_wrd, est_scale_wrd, est_shape_code
 
 
@@ -334,25 +334,26 @@ class auto_regressive_model(pl.LightningModule):
             if add_conf=='T_Fixup':
                 init_inp *= (9 * num_decoder_layers) ** (- 1. / 4.)
             self.cls_token = nn.Parameter(cls_token)
+        self.pad_mlp = nn.Linear(dec_in_dim, hidden_dim)
 
 
-    def forward(self, src, tgt, past_itr_length, pe_target, print_debug=False, image_decoder=None):
-        # check_map_torch(image_decoder(src[:, 0,    0: 512][:, :, None, None])[:, 1].reshape(-1, 128), 'src_obs.png')
-        # check_map_torch(image_decoder(src[:, 0,  512:1024][:, :, None, None])[:, 1].reshape(-1, 128), 'src_est.png')
-        # check_map_torch(image_decoder(src[:, 0, 1024:1536][:, :, None, None])[:, 1].reshape(-1, 128), 'src_dif.png')
+    def forward(self, _src_, tgt, past_itr_length, pe_target, print_debug=False, image_decoder=None):
+        # check_map_torch(image_decoder(_src_[:, 0,    0: 512][:, :, None, None])[:, 1].reshape(-1, 128), 'src_obs.png')
+        # check_map_torch(image_decoder(_src_[:, 0,  512:1024][:, :, None, None])[:, 1].reshape(-1, 128), 'src_est.png')
+        # check_map_torch(image_decoder(_src_[:, 0, 1024:1536][:, :, None, None])[:, 1].reshape(-1, 128), 'src_dif.png')
         # if not tgt is None:
         #     check_map_torch(image_decoder(tgt[:, 0,    0: 512][:, :, None, None])[:, 1].reshape(-1, 128), 'tgt_obs.png')
         #     check_map_torch(image_decoder(tgt[:, 0,  512:1024][:, :, None, None])[:, 1].reshape(-1, 128), 'tgt_est.png')
         #     check_map_torch(image_decoder(tgt[:, 0, 1024:1536][:, :, None, None])[:, 1].reshape(-1, 128), 'tgt_dif.png')
 
         # encorder part.
-        src = self.enc_align_mlp(src) # [seq_e, batch, inp_embed_dim] -> [seq_e, batch, hidden_dim]
+        src = self.enc_align_mlp(_src_) # [seq_e, batch, inp_embed_dim] -> [seq_e, batch, hidden_dim]
         if pe_target is not None:
             src = src + pe_target[:, -past_itr_length[-1]:, :].permute(1, 0, 2)
         memory = self.encoder(src)
         if print_debug:
             print(f'---   ec_src    --- : {src.shape}')
-            # print(f'---   ec_mem    --- : {memory.shape}')
+            print(f'---   ec_mem    --- : {memory.shape}')
 
         # decorder part.
         if tgt is not None:
@@ -368,25 +369,23 @@ class auto_regressive_model(pl.LightningModule):
                 tgt = tgt + pe_target[:, pe_start:pe_end, :].permute(1, 0, 2)
             if self.use_cls == 'yes':
                 tgt = torch.cat([tgt, self.cls_token.expand(-1, src.shape[1], -1)], dim=0)
+            if tgt.shape[0] != src.shape[0]:
+                tgt = torch.cat([tgt, self.pad_mlp(_src_[-1:])], dim=0) # 別のmlpを通したsrcで単純に埋める
+            #     tgt = torch.cat([tgt, src[-1:]], dim=0) # srcで単純に埋める
         else:
             atten_mask = None
-            tgt = self.init_inp.expand(-1, src.shape[1], -1)
+            tgt = self.init_inp.expand(-1, src.shape[1], -1) # src
             if self.use_cls == 'yes':
                 tgt = torch.cat([tgt, self.cls_token.expand(-1, src.shape[1], -1)], dim=0)
         out = self.decoder(tgt=tgt, memory=memory, atten_mask=atten_mask)
-        if  self.use_cls == 'yes':
-            if print_debug:
-                print(f'---   dc_tgt    --- : {tgt.shape}')
-                print(f'---   dc_out    --- : {out.shape}')
-                print(f'--- dc_bf_mean  --- : cls_token')
-            return out[-1]
-        else:
+        if self.use_cls != 'yes':
             out_size = past_itr_length[-min(len(past_itr_length), 2)]
             if print_debug:
                 print(f'---   dc_tgt    --- : {tgt.shape}')
                 print(f'---   dc_out    --- : {out.shape}')
                 print(f'--- dc_bf_mean  --- : {out[-out_size:, :, :].shape}')
             return out[-out_size:, :, :].mean(0)
+        else: return out[-1] # cls
 
 
 

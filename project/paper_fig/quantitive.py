@@ -51,7 +51,7 @@ if __name__=='__main__':
     gt_pickle_list = glob.glob('normal_map/gt/*.pickle')
     gt_id_list = [gt_pickle_path.split('/')[-1].split('.')[0] for gt_pickle_path in gt_pickle_list]
     est_list = glob.glob('normal_map/src/autoreg/*.pickle')
-    for map_i, est_path in enumerate(tqdm(est_list)):
+    for map_i, est_path in enumerate(tqdm.tqdm(est_list)):
         est_dict = pickle_load(est_path)
         est_instance_id = est_path.split('/')[-1].split('.')[0]
         gt_dict = pickle_load(gt_pickle_list[gt_id_list.index(est_instance_id.split('_')[-1])])
@@ -133,5 +133,5 @@ if __name__=='__main__':
         # cv2.imwrite(os.path.join(result_dir, time_log, est_instance_id + '.png'), total_map)
         # cv2.imwrite(os.path.join(result_dir, time_log, est_instance_id + 'wmask.png'), total_map_wmask)
 
-        total_map[-87:, :87, :] = cv2.resize(total_map_wmask[:, -H:, :], (87, 87))
+        # total_map[-87:, :87, :] = cv2.resize(total_map_wmask[:, -H:, :], (87, 87))
         cv2.imwrite(os.path.join(result_dir, time_log, est_instance_id + '.png'), total_map)

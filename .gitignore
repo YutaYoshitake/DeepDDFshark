@@ -16,11 +16,12 @@ project/dataset
 project/DDF/__pycache__/
 project/DDF/lightning_logs/
 project/DDF/sample_images/
-fixup_model/__pycache__
-project/DDF/until_*
+project/DDF/until_0324
+project/DDF/until_0421
+project/fixup_model/__pycache__
 project/lightning_logs
 project/old_files/until_0703
-old_files/sync_batchnorm/__pycache__
+project/old_files/sync_batchnorm/__pycache__
 project/paper_fig/ddf
 project/paper_fig/depth_map
 project/paper_fig/normal_map

@@ -1,19 +1,19 @@
 import os
 import sys
-import numpy as np
+from contextlib import redirect_stdout
 import random
+import numpy as np
 import pylab
 import glob
 import math
-import re
 import pickle
 import sys
 import numpy as np
 import torch
 import torch.nn.functional as F
-from tqdm import tqdm, trange
 import torchvision
 from scipy.spatial import cKDTree as KDTree
+from scipy.linalg import logm
 torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEBUG = False
@@ -830,7 +830,6 @@ def render_normal_map_from_afar(
     est_distance_map[est_mask] = 1. / est_invdistance_map[est_mask]
     est_distance_r[est_mask] = 1 / est_invdistance_r[est_mask]
     est_distance_u[est_mask] = 1 / est_invdistance_u[est_mask]
-    
     # thr = 7e-4
     # dif_mask_cr = torch.abs(est_distance_map - est_distance_r)  < thr
     # dif_mask_cu = torch.abs(est_distance_map - est_distance_u)  < thr
@@ -846,8 +845,6 @@ def render_normal_map_from_afar(
     diff_from_right = est_point - est_point_r
     diff_from_under = est_point - est_point_u
     est_normal = F.normalize(torch.cross(diff_from_right, diff_from_under, dim=-1), dim=-1)
-    # est_normal = torch.sum(est_normal[:, :, :, None, :]*o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
-    # est_normal = F.normalize(est_normal, dim=-1)
     
     return est_normal, est_distance_map, est_mask
 
@@ -880,3 +877,11 @@ def get_pe_target(cam_pos_wrd, w2c, rays_d_cam, obj_pos_wrd, o2w, obj_scale_wrd,
     pe_target_bbox = bbox_diagonal
     pe_target_obj = torch.cat([pe_target_cam_pos_obj, pe_target_center_d_obj, pe_target_bbox], dim=-1)
     return pe_target_obj
+
+
+
+def get_riemannian_distance(A, B):
+    ATB = torch.bmm(A.permute(0, 2, 1), B).to('cpu').detach().numpy().copy()
+    with redirect_stdout(open(os.devnull, 'w')):
+        log_ATB = np.stack([logm(R_i) for R_i in ATB], axis=0)
+    return torch.from_numpy((np.sqrt((log_ATB**2).sum(axis=(-1, -2))) / math.sqrt(2)).astype(np.float32)).clone()

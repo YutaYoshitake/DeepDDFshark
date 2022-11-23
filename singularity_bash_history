@@ -1,500 +1,500 @@
-sh sh/train.sh 
+nvidia-smi
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/train/cls.sh 
+sh sh/train/cls.sh 
+nvidia-smi
+nvidia-smi
+sh sh/train/cls.sh 
+nvidia-smi
+nvidia-smi
+sh sh/train/cls.sh 
+sh sh/train/cls.sh 
+nvidia-smi
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+python
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh works/DeepSDF/project/sh/train/11.sh 
+sh works/DeepSDF/project/sh/train/11.sh 
 cd works/DeepSDF/project/
-sh sh/train.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/train/27.sh
+sh sh/tes/seq.sh 
+sh sh/train/15.sh 
+nvidia-smi
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/train/04.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=randn_sequential_onlymlp_enc1dec0_woFix            --N_batch=8 --val_model_epoch=368
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=randn_sequential_onlymlp_enc1dec0_woFix            --N_batch=8 --val_model_epoch=368
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+fg
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh works/DeepSDF/project/sh/train/01.sh 
+sh works/DeepSDF/project/sh/train/01.sh 
+sh works/DeepSDF/project/sh/train/01.sh 
+sh works/DeepSDF/project/sh/train/01.sh 
+sh works/DeepSDF/project/sh/train/01.sh 
+sh works/DeepSDF/project/sh/train/01.sh 
+sh works/DeepSDF/project/sh/train/01.sh 
+sh works/DeepSDF/project/sh/train/21.sh 
+sh works/DeepSDF/project/sh/train/21.sh 
+sh works/DeepSDF/project/sh/train/21.sh 
+sh works/DeepSDF/project/sh/train/16.sh 
+sh works/DeepSDF/project/sh/train/21.sh 
+sh works/DeepSDF/project/sh/train/16.sh 
+sh works/DeepSDF/project/sh/train/16.sh 
+sh works/DeepSDF/project/sh/train/16.sh 
+sh works/DeepSDF/project/sh/train/16.sh 
+sh works/DeepSDF/project/sh/train/16.sh 
+sh works/DeepSDF/project/sh/train/14.sh 
 cd works/DeepSDF/project/
-sh sh/train.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/train/15.sh 
+sh sh/train/15.sh 
+sh sh/train/15.sh 
+nvidia-smi
+sh sh/train/15.sh 
+sh sh/train/15.sh 
+sh sh/train/15.sh 
+sh sh/train/15.sh 
+sh sh/train/15.sh 
+nvidia-smi
+nvidia-smi
+sh sh/tes/tes.sh 
+total_rays_cam_z1
+sh sh/tes/tes.sh 
+sh sh/train/22.sh 
+python
+nvidia-smi
+tmux a
+sh sh/train/01.sh 
+sh sh/train/01.sh 
+nvidia-smi
+sh sh/train/con_sim.sh 
+sh sh/train/con_sim.sh 
+sh sh/train/con_sim.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+python dataset.py 
+sh sh/tes/total.sh 
+sh works/DeepSDF/project/sh/train/03.sh
+sh works/DeepSDF/project/sh/train/03.sh
+sh works/DeepSDF/project/sh/train/03.sh
+sh works/DeepSDF/project/sh/train/03.sh
+sh works/DeepSDF/project/sh/train/03.sh
+sh works/DeepSDF/project/sh/train/03.sh
+sh works/DeepSDF/project/sh/train/03.sh
+sh works/DeepSDF/project/sh/train/03.sh
+sh works/DeepSDF/project/sh/train/03.sh
+sh works/DeepSDF/project/sh/train/03.sh
+sh works/DeepSDF/project/sh/train/03.sh
+python dataset.py
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.s
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/23.sh
+sh works/DeepSDF/project/sh/train/23.sh
+sh 
+sh works/DeepSDF/project/sh/tes/seq.sh 
+sh works/DeepSDF/project/sh/tes/seq.sh 
+sh works/DeepSDF/project/sh/tes/seq.sh 
 cd works/DeepSDF/project/
-sh sh/train.sh 
+sh sh/tes/seq.sh 
+sh sh/tes/seq.sh 
+sh sh/tes/seq.sh 
+sh sh/tes/seq.sh 
+sh sh/tes/seq.sh 
+sh sh/tes/seq.sh 
+sh sh/tes/seq.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/train/26.sh 
+nvidia-smi
+sh sh/tes/seq.sh 
+sh sh/train/15.sh 
+
+sh sh/train/03.sh 
+sh sh/train/con_sim.sh 
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh works/DeepSDF/project/sh/train/02.sh
+sh works/DeepSDF/project/sh/train/02.sh
+sh works/DeepSDF/project/sh/train/02.sh
+sh works/DeepSDF/project/sh/train/02.sh
+sh works/DeepSDF/project/sh/train/02.sh
+sh works/DeepSDF/project/sh/train/02.sh
+sh works/DeepSDF/project/sh/train/02.sh
+sh works/DeepSDF/project/sh/train/02.sh
+nvidia-smi
+sh works/DeepSDF/project/sh/train/02.sh
+sh works/DeepSDF/project/sh/train/02.sh
+sh works/DeepSDF/project/sh/train/02.sh
+        import pdb; pdb.set_trace()
+fg
+sh works/DeepSDF/project/sh/train/02.sh
+sh works/DeepSDF/project/sh/train/22.sh
+sh works/DeepSDF/project/sh/train/22.sh
+sh works/DeepSDF/project/sh/train/22.sh
+sh works/DeepSDF/project/sh/train/17.sh
+sh works/DeepSDF/project/sh/train/15.sh
 cd works/DeepSDF/project/
-sh sh/train.sh 
+sh sh/tes/tes.sh
+sh sh/tes/tes.sh
+sh sh/train/15.sh 
+sh sh/tes/tes.sh
+sh sh/train/01.sh 
+sh sh/train/02.sh 
+sh sh/train/con_sim.sh
+sh sh/tes/total.sh
+sh sh/tes/total.sh
+sh sh/tes/total.sh
+sh sh/tes/total.sh
+sh sh/tes/total.sh
+sh works/DeepSDF/project/sh/train/13.sh 
+sh works/DeepSDF/project/sh/train/13.sh 
+sh works/DeepSDF/project/sh/train/24.sh
+sh works/DeepSDF/project/sh/train/24.sh
+sh works/DeepSDF/project/sh/train/01.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
+sh works/DeepSDF/project/sh/train/21.sh
 cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
+ls
+sh sh/train/21.sh 
+sh sh/train/21.sh 
+sh sh/train/06.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+nvidia-smi
+tmux a
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+pip install torchsummary
+sh sh/tes/tes.sh 
+sh sh/check/debug.sh 
+cd DDF
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_sdg
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/multi35/cat_0407.txt --exp_version=depth_mae_normal_mae_sdg
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/multi35/instance_list.txt --exp_version=depth_mae_normal_mae_sdg
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg --instance_list_txt=/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/instance_list.txt
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg --instance_list_txt=/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/instance_list.txt
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg --instance_list_txt=/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/instance_list.txt
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg --instance_list_txt=/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/instance_list.txt
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg --instance_list_txt=/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/instance_list.txt
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg --instance_list_txt=/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/instance_list.txt
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg --instance_list_txt=/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/instance_list.txt
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg --instance_list_txt=/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/instance_list.txt
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg --instance_list_txt=/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/instance_list.txt
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg --instance_list_txt=/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/instance_list.txt
+CUDA_VISIBLE_DEVICES=0 python train_pl.py --config=configs/chair/cat.txt --exp_version=depth_mae_normal_mae_sdg --instance_list_txt=/home/yyoshitake/works/DeepSDF/project/DDF/instance_list/instance_list.txt
+python
+cd ../
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+nvidia-smi
+nvidia-smi
+nvidia-smi
+nvidia-smi
+tmux a
+tmux a
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+[A
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+nvidia-smi
+sh sh/tes/total.sh 
+nvidia-smi
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh works/DeepSDF/project/sh/train/12.sh 
+sh works/DeepSDF/project/sh/train/12.sh 
 cd works/DeepSDF/project/
-sh sh/train.sh 
+ls
+sh sh/tes/seq.sh 
+sh sh/tes/seq.sh 
+ls
+nvidia-smi
+sh sh/tes/tes.sh 
+sh sh/train/28.sh
+sh sh/train/28.sh
+sh sh/tes/seq.sh 
+sh sh/train/15.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/train/15.sh 
+sh sh/train/05.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+nvidia-smi
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/total.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
+sh sh/tes/tes.sh 
 cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh sh/train.sh 
-cd /d
-cd /d/workspace
+ls
+cd /d/workspace/yyoshitake/moving_camera/volumetric/tmp_2/
+ls
+cd ../
+ls
+cd tmp_1/
+ls
+mount -t squashfs results.sfs /results_sfs
 cd
-cd /d/workspace/yyoshitake
 cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-cd works/DeepSDF/project/
-sh sh/train.sh 
-sh works/DeepSDF/project/sh/train/01.sh 
- sh works/DeepSDF/project/sh/train/04.sh
- sh works/DeepSDF/project/sh/train/04.sh
-sh works/DeepSDF/project/sh/train/03.sh
-sh works/DeepSDF/project/sh/train/03.sh
-sh works/DeepSDF/project/sh/train/06.sh
-sh works/DeepSDF/project/sh/train/06.sh
-sh works/DeepSDF/project/sh/train/05.sh
-sh works/DeepSDF/project/sh/train/05.sh
-sh works/DeepSDF/project/sh/train/07.sh
-sh works/DeepSDF/project/sh/train/02.sh
-sh sh/train.sh 
-sh works/DeepSDF/project/sh/train/02.sh
-sh works/DeepSDF/project/sh/train/07.sh
-sh works/DeepSDF/project/sh/train/07.sh
-sh works/DeepSDF/project/sh/train/07.sh
-sh works/DeepSDF/project/sh/train/01.sh
-sh works/DeepSDF/project/sh/train/03.sh
-sh works/DeepSDF/project/sh/train/01.sh 
-sh works/DeepSDF/project/sh/train/01.sh 
-sh works/DeepSDF/project/sh/train/02.sh
-sh works/DeepSDF/project/sh/train/03.sh
-sh works/DeepSDF/project/sh/train/04.sh
-sh works/DeepSDF/project/sh/train/08.sh
-sh works/DeepSDF/project/sh/train/05.sh
-sh works/DeepSDF/project/sh/train/05.sh
-sh works/DeepSDF/project/sh/train/01.sh
-sh works/DeepSDF/project/sh/train/01.sh
-nvidia-smi
-sh works/DeepSDF/project/sh/train/01.sh
-sh works/DeepSDF/project/sh/train/01.sh
-sh works/DeepSDF/project/sh/train/04.sh
-sh works/DeepSDF/project/sh/train/04.sh
-sh works/DeepSDF/project/sh/train/05.sh
-sh works/DeepSDF/project/sh/train/06.sh
-sh works/DeepSDF/project/sh/train/06.sh
-sh works/DeepSDF/project/sh/train/06.sh
-sh works/DeepSDF/project/sh/train/06.sh
-sh works/DeepSDF/project/sh/train/07.sh
-sh works/DeepSDF/project/sh/train/07.sh
-sh works/DeepSDF/project/sh/train/08.sh
-sh works/DeepSDF/project/sh/train/08.sh
-sh works/DeepSDF/project/sh/train/08.sh
-cd works/DeepSDF/project/
-ls
-python sh/check/debug.sh 
-python sh/check/debug.sh 
-python sh/check/debug.sh 
-python sh/check/debug.sh 
-python sh/check/debug.sh 
-python sh/check/debug.sh 
-python sh/check/debug.sh 
-python sh/check/debug.sh 
-sh sh/check/debug.sh 
-nvidia-smi
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-c
-c
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/train/
-sh sh/train/13.sh 
-python dataset.py
-python dataset.py
-python dataset.py
-python dataset.py
-python dataset.py
-python dataset.py
-python dataset.py
-python dataset.py
-python dataset.py
-python dataset.py
-python dataset.py
-python 
-cd works/DeepSDF/project/
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-cd works/DeepSDF/project/
-ls
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
 python
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-python dataset.py 
-sh sh/check/debug.sh 
-python dataset.py 
-python dataset.py 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-sh tes.sh
+python
+cd works/DeepSDF/project/
 sh sh/tes/tes.sh
+cd works/DeepSDF/project/
+ls
 sh sh/tes/tes.sh
+cd works/DeepSDF/project/
 sh sh/tes/tes.sh
+cd works/DeepSDF/project/
 sh sh/tes/tes.sh
+cd works/DeepSDF/project/
 sh sh/tes/tes.sh
+cd works/DeepSDF/project/
 sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/tes/tes.sh
-sh sh/train/27.sh 
-sh sh/train/27.sh 
-sh sh/tes/tes.sh
+cd works/DeepSDF/project/
+sh sh/tes/tes.sh 
+cd /d/workspace/yyoshitake/moving_camera/volumetric/tmp_1/
 ls
-cd odam/
+cd results_sfs 
+df results_sfs
+cd 
+cd works/DeepSDF/project/
+python
+cd /d/workspace/yyoshitake/moving_camera/volumetric/tmp_1/
+df results_sfs
+cd /d/workspace/yyoshitake/moving_camera/volumetric/tmp_1
 ls
-cd ODAM/
+cd results_sfs 
+cd /d/workspace/yyoshitake/moving_camera/volumetric/tmp_1/results_sfs
+df /d/workspace/yyoshitake/moving_camera/volumetric/tmp_1/results_sfs
+cd works/DeepSDF/project/
+python
+df /d/workspace/yyoshitake/moving_camera/volumetric/tmp_1/results_sfs
+cd /d/workspace/yyoshitake/moving_camera/volumetric/tmp_1/results_sfs
+cd /d/workspace/yyoshitake/moving_camera/volumetric/tmp_1
+df results_sfs
+cd results_sfs
+ls results_sfs
+ls results_sfs/*
+cd /tes_sfs/
 ls
+cd f14a2e78a93c559b253b862f13dd465
 ls
-cd data2/
-ls
-python reader.py --filename scans/scene0000_00/scene0000_00.sens SensReader/tes
-ls
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens SensReader/tes
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens SensReader/tes
-pip install pypng
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens SensReader/tes
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
-ls
-vim \lib\site-packages\pydot__init__.py
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
-ls
-python SensReader/dataset.py 
-~cd SensReader/
-ls
-cd SensReader/
-ls
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2/scans --save_name all_tsdf_9 --window_size 9
 cd ../../
-python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2/scans --save_name all_tsdf_9 --window_size 9
-pip install numba
-python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2/scans --save_name all_tsdf_9 --window_size 9
-pip install ray
-python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2/scans --save_name all_tsdf_9 --window_size 9
-python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2/scans --save_name all_tsdf_9 --window_size 9
-python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2 --save_name all_tsdf_9 --window_size 9
-python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2 --save_name all_tsdf_9 --window_size 9
-python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2 --save_name all_tsdf_9 --window_size 9
-python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2 --save_name all_tsdf_9 --window_size 9
-python tools/tsdf_fusion/generate_gt.py --data_path /home/yyoshitake/works/DeepSDF/project/odam/ODAM/data2 --save_name all_tsdf_9 --window_size 9
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
-cd data2/
-ls
-python SensReader/reader.py --filename scans/scene0000_00/scene0000_00.sens --output_path SensReader/tes
-ls
-cd SensReader/
-ls
+cd
 python
+cd /tes_sfs/
+mv ue639c33f-d415-458c-8ff8-2ef68135af15 ../
+mv ue639c33f-d415-458c-8ff8-2ef68135af15 /d/workspace/yyoshitake/
+cd /d/workspace/yyoshitake/
+ls
+cd ue639c33f-d415-458c-8ff8-2ef68135af15
+ls
+cd /tes_sfs/
+cd 
+cd /tes_sfs/
+cd ue639c33f-d415-458c-8ff8-2ef68135af15
 ls
 ls
+cd /d/workspace/yyoshitake/moving_camera/volumetric/tmp_1/results/
 ls
+cd ../../
+../
 cd ../
-ls
-cd SensReader/tes/* scans/scene0000_00/
-mv SensReader/tes/* scans/scene0000_00/
-python 
-ls
-cd ../../
 ;s
-ls
-cd ODAM/
-ls
-python download-scannet.py -o ./data2 -scene_id = 
-python download-scannet.py -o ./data2 -scene_id scene0000_01
-python download-scannet.py -o ./data2 -id scene0000_01
-python download-scannet.py -o ./data2 --id scene0000_01
-cd data2/
-ls
-cd c
-cd SensReader/
-ls
-python reader.py --filename ../scans/scene0000_01 --output_path tes01
-python reader.py --filename ../scans/scene0000_01/scene0000_01.sens --output_path tes01
-ls
-cd ../
 ls
 cd ../
 ;s
 ls
-rm -r tools/
-python src/scripts/run_processor.py --config_path ./configs/detr_scan_net.yaml --no_code --use_prior --out_dir ./result/e2e --representation super_quadric
-export PYTHONPATH=$PYTHONPATH:$PWD
-python src/scripts/run_processor.py --config_path ./configs/detr_scan_net.yaml --no_code --use_prior --out_dir ./result/e2e --representation super_quadric
-python src/scripts/run_processor.py --config_path ./configs/detr_scan_net.yaml --no_code --use_prior --out_dir ./result/e2e --representation super_quadric
-python src/scripts/run_processor.py --config_path ./configs/detr_scan_net.yaml --no_code --use_prior --out_dir ./result/e2e --representation super_quadric
+mv ue639c33f-d415-458c-8ff8-2ef68135af15/* /tes_sfs/ue639c33f-d415-458c-8ff8-2ef68135af15/
+ls
+cd ue639c33f-d415-458c-8ff8-2ef68135af15/
+ls
 cd ../
+mv ue639c33f-d415-458c-8ff8-2ef68135af15/ moving_camera/
 ls
-cd ODAM/
+cd /tes_sfs/ue639c33f-d415-458c-8ff8-2ef68135af15/
 ls
-python 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-pip install quaternion
-pip install quaternion
-python check_rendering.py 
-python check_rendering.py 
-pip install plyfile
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-python check_rendering.py 
-point.shape
-cd works/DeepSDF/project/odam/ODAM
-python check_rendering.py
-cd works/DeepSDF/project/odam/ODAM
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-pip install PyWavefront
-pip install PyWavefront
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-~
-python check_rendering.py
-python check_rendering.py\
-python check_rendering.py\
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python
-python
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-rm -rf data2/SensReader
-mkdir data2/meta_data
-cd ../
-git clone https://github.com/facebookresearch/votenet.git
-cd ODAM/
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python check_rendering.py
-python reader.py --filename data2/scans/scene0000_00/scene0000_00.sens --out_path tes
-python reader.py --filename data2/scans/scene0000_00/scene0000_00.sens --output_path tes
-python reader.py --filename data2/scans/scene0000_00/scene0000_00.sens --output_path tes
-cd works/DeepSDF/project/
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-nvidia-smi
-nvidia-smi
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-ls
-cd project/
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-python
-python
-python
-sh sh/tes/tes.sh
-sh sh/tes/tes.sh
-sh sh/train/15.sh
-sh sh/train/15.sh
-sh sh/train/15.sh
-sh sh/train/15.sh
-sh sh/train/15.sh
-sh sh/train/15.sh
-sh sh/train/15.sh
-python
-sh sh/train/15.sh
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-nvidia-smi
-nvidia-smi

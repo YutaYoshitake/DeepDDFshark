@@ -316,64 +316,61 @@ class original_optimizer(pl.LightningModule):
                     inp_pre_obj_scale_wrd, inp_pre_shape_code, pre_obj_pos_wrd, pre_obj_axis_green_wrd, pre_obj_axis_red_wrd, pre_o2w, pre_obj_scale_wrd, pre_shape_code, pe_target, print_debug) #, self.backbone_decoder)
 
         ##################################################
-        # if optim_idx > 1:
-        #     for sample_id in range(batch_size):
-        #         # raw_1 = obs_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
-        #         # raw_2 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
-        #         raw_1 = obs_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -sum(past_itr_log['itr_length'][-2:]):-current_frame_num]
-        #         raw_2 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
-        #         raw_3 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -sum(past_itr_log['itr_length'][-2:]):-current_frame_num]
-        #         map_1 = raw_1[..., :-1]
-        #         mask_1 = raw_1[..., -1]
-        #         map_2 = raw_2[..., :-1]
-        #         mask_2 = raw_2[..., -1]
-        #         map_3 = raw_3[..., :-1]
-        #         mask_3 = raw_3[..., -1]
-        #         fig = plt.figure()
-        #         ax = Axes3D(fig)
-        #         c_list_1 = ['b', 'g', 'r', 'm', 'y']
-        #         c_list_2 = ['b', 'g', 'r', 'm', 'y']
-        #         for ind_1 in range(current_frame_num):
-        #             c_1 = c_list_1[ind_1]
-        #             c_2 = c_list_2[ind_1]
-        #             if past_itr_log['itr_length'][-2] > ind_1:
-        #                 point_1 = map_1[sample_id, ind_1][mask_1[sample_id, ind_1] > 0]
-        #                 point_1 = point_1.to('cpu').detach().numpy().copy()
-        #                 ax.scatter(point_1[:, 0], point_1[:, 1], point_1[:, 2], marker="o", linestyle='None', c='c', s=0.05)
-        #             point_2 = map_2[sample_id, ind_1][mask_2[sample_id, ind_1] > 0]
-        #             point_2 = point_2.to('cpu').detach().numpy().copy()
-        #             ax.scatter(point_2[::2, 0], point_2[::2, 1], point_2[::2, 2], marker="o", linestyle='None', c='m', s=0.05)
-        #             if past_itr_log['itr_length'][-2] > ind_1:
-        #                 point_3 = map_3[sample_id, ind_1][mask_3[sample_id, ind_1] > 0]
-        #                 point_3 = point_3.to('cpu').detach().numpy().copy()
-        #                 ax.scatter(point_3[::2, 0], point_3[::2, 1], point_3[::2, 2], marker="o", linestyle='None', c='g', s=0.05)
-        #         ax.view_init(elev=0, azim=90)
-        #         fig.savefig(f"{sample_id}_00_90.png")
-        #         ax.view_init(elev=0, azim=0)
-        #         fig.savefig(f"{sample_id}_00_00.png")
-        #         ax.view_init(elev=45, azim=45)
-        #         fig.savefig(f"{sample_id}_45_45.png")
-        #         plt.close()
-        #         import pdb; pdb.set_trace()
-        # ##################################################
-        # # if model_mode=='train' and optim_idx==0:
-        # gt = clopped_distance_map
-        # est = est_clopped_distance_map
-        # str_batch_idx = str(batch_idx).zfill(5)
-        # str_optim_idx = str(optim_idx).zfill(2)
-        # check_map = torch.cat([gt, est, torch.abs(gt-est)], dim=-1)
-        # check_map = torch.cat([map_i for map_i in check_map], dim=0)
+        # # if optim_idx > 1:
+        # for sample_id in range(batch_size):
+        #     raw_1 = obs_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
+        #     # raw_2 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
+        #     # raw_1 = obs_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -sum(past_itr_log['itr_length'][-2:]):-current_frame_num]
+        #     # raw_2 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
+        #     # raw_3 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -sum(past_itr_log['itr_length'][-2:]):-current_frame_num]
+        #     map_1, mask_1 = raw_1[..., :-1], raw_1[..., -1]
+        #     # map_2, mask_2 = raw_2[..., :-1], raw_2[..., -1]
+        #     # map_3, mask_3 = raw_3[..., :-1], raw_3[..., -1]
+        #     fig = plt.figure()
+        #     ax = Axes3D(fig)
+        #     c_list_1 = c_list_2 = ['b', 'g', 'r', 'm', 'y']
+        #     for ind_1 in range(current_frame_num):
+        #         c_1, c_2 = c_list_1[ind_1], c_list_2[ind_1]
+        #         # if past_itr_log['itr_length'][-2] > ind_1:
+        #         point_1 = map_1[sample_id, ind_1][mask_1[sample_id, ind_1] > 0]
+        #         point_1 = point_1.to('cpu').detach().numpy().copy()
+        #         ax.scatter(point_1[:, 0], point_1[:, 1], point_1[:, 2], marker="o", linestyle='None', c=c_1, s=0.1)
+        #         # point_2 = map_2[sample_id, ind_1][mask_2[sample_id, ind_1] > 0]
+        #         # point_2 = point_2.to('cpu').detach().numpy().copy()
+        #         # ax.scatter(point_2[::2, 0], point_2[::2, 1], point_2[::2, 2], marker="o", linestyle='None', c='m', s=0.05)
+        #         # if past_itr_log['itr_length'][-2] > ind_1:
+        #         #     point_3 = map_3[sample_id, ind_1][mask_3[sample_id, ind_1] > 0]
+        #         #     point_3 = point_3.to('cpu').detach().numpy().copy()
+        #         #     ax.scatter(point_3[::2, 0], point_3[::2, 1], point_3[::2, 2], marker="o", linestyle='None', c='g', s=0.05)
+        #     ax.view_init(elev=0, azim=90)
+        #     fig.savefig(f"{sample_id}_00_90.png")
+        #     ax.view_init(elev=0, azim=0)
+        #     fig.savefig(f"{sample_id}_00_00.png")
+        #     ax.view_init(elev=45, azim=45)
+        #     fig.savefig(f"{sample_id}_45_45.png")
+        #     plt.close()
+        #     # import pdb; pdb.set_trace()
+        # # ##################################################
+        # if optim_idx in {5, 10, 15}:
+        #     gt = clopped_distance_map
+        #     est = est_clopped_distance_map
+        #     str_batch_idx = str(batch_idx).zfill(5)
+        #     str_optim_idx = str(optim_idx).zfill(2)
+        #     check_map = torch.cat([gt, est, torch.abs(gt-est)], dim=-1)
+        #     check_map = torch.cat([map_i for map_i in check_map], dim=0)
+        #     check_map_torch(check_map, f'tes_{str_batch_idx}_{str_optim_idx}.png')
+        #     import pdb; pdb.set_trace()
+        # # ##################################################
+        # # batch_i = 0
+        # # gt = gt.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H)[batch_i]
+        # # est = est.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H)[batch_i]
+        # # for F_i in range(current_frame_num):
+        # #     pickle_dump(torch.stack([gt[F_i], est[F_i]], dim=0).to('cpu').detach().numpy().copy(), 
+        # #                 f'paper_fig/depth_map/raw_gt_est/{str(batch_idx).zfill(5)}_{F_i}_{str(optim_idx).zfill(2)}.pickle')
+        # print(sum([layer_i.attn_output_weights.mean(1) for layer_i in self.df_net.main_layers.encoder.layers])/3)
+        # print(sum([layer_i.self_attn_weights.mean(1) for layer_i in self.df_net.main_layers.decoder.layers])/3)
+        # print(sum([layer_i.cross_attn_weights.mean(1) for layer_i in self.df_net.main_layers.decoder.layers])/3)
         # import pdb; pdb.set_trace()
-        # check_map_torch(check_map, f'tes_{str_batch_idx}_{str_optim_idx}.png')
-        # ##################################################
-        # batch_i = 0
-        # gt = gt.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H)[batch_i]
-        # est = est.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H)[batch_i]
-        # for F_i in range(current_frame_num):
-        #     pickle_dump(torch.stack([gt[F_i], est[F_i]], dim=0).to('cpu').detach().numpy().copy(), 
-        #                 f'paper_fig/depth_map/raw_gt_est/{str(batch_idx).zfill(5)}_{F_i}_{str(optim_idx).zfill(2)}.pickle')
-        # import pdb; pdb.set_trace()
-        # self.df_net.main_layers.encoder.layers[0].attn_output_weights
         # ##################################################
         return est_obj_pos_wrd, est_obj_axis_green_wrd, est_obj_axis_red_wrd, est_obj_scale, est_shape_code
 
@@ -385,6 +382,9 @@ class original_optimizer(pl.LightningModule):
         np.random.seed(0 + self.current_epoch)
         # self.backbone_encoder.eval()
         # self.backbone_decoder.eval()
+        # if self.view_selection == 'sequential': # if self.view_selection == 'simultaneous':
+        #     if self.current_epoch < 200: self.total_itr, self.itr_per_frame = 5, 1 #     self.total_itr = int(min(max(3, 3+(10-3)/300*self.current_epoch), 10))
+        #     else: self.total_itr, self.itr_per_frame = 25, 5 #     self.itr_per_frame = self.total_itr
 
 
 
@@ -431,7 +431,7 @@ class original_optimizer(pl.LightningModule):
             cam_pos_wrd = frame_camera_pos_wrd[:, frame_idx_list].reshape(-1, 3).detach()
             rays_d_cam = frame_clopped_rays_d_cam[:, frame_idx_list].reshape(-1, self.ddf_H, self.ddf_H, 3).detach()
             bbox_diagonal = frame_bbox_diagonal[:, frame_idx_list].reshape(-1, 1)
-            print_debug = self.current_epoch == 0 and batch_idx == 0 and optim_idx in {0, 2}
+            print_debug = self.current_epoch == 0 and batch_idx == 0 and optim_idx in {0, 2, 23}
             if print_debug:
                 if optim_idx == 0:
                     print('########## TRAIN ##########')
@@ -531,7 +531,6 @@ class original_optimizer(pl.LightningModule):
         canonical_camera_rot, instance_id, path, ini_obj_pos, ini_obj_scale, ini_obj_axis_red_wrd, \
         ini_obj_axis_green_wrd,ini_shape_code, rand_seed, frame_gt_o2w, instance_id, scene_id, gt_pc_obj = self.preprocess(batch, step_mode)
 
-
         ###################################
         #####     Start inference.    #####
         ###################################
@@ -542,7 +541,7 @@ class original_optimizer(pl.LightningModule):
             current_frame_num = 1 # 2
         
         past_itr_log = {'itr_length': [], 'obs_d': [], 'est_d': [], 'obs_mask': [], 'est_mask': [], 'w2c': [], 'cam_pos_wrd': [], 'rays_d_cam': [], 'bbox_diagonal': []}
-        itr_err_list = {'pos':[], 'scale':[], 'red':[], 'green':[], 'shape':[], 'chm_obj':[], 'chm_wrd':[], 'chm_wrd_s':[], 'sec':[], 'cnv':[]}
+        itr_err_list = {'pos':[], 'rot':[], 'scale':[], 'red':[], 'green':[], 'chm_obj':[], 'chm_s_obj':[], 'chm_ss_obj':[], 'chm_wrd':[], 'chm_wrd_s':[], 'shape':[], 'sec':[], 'cnv':[], 'est_p':[], 'est_g':[], 'est_r':[], 'est_s':[], 'est_z':[]}
         loss_list = {'total':[], 'pos':[], 'scale':[], 'red':[], 'green':[], 'shape':[]}
 
         for optim_idx in range(-1, self.total_itr):
@@ -576,9 +575,7 @@ class original_optimizer(pl.LightningModule):
             end = torch.cuda.Event(enable_timing=True)
             start.record()
 
-            ###################################
-            ###   Perform initialization.   ###
-            ###################################
+            # Perform initialization.
             if optim_idx < 0:
                 est_obj_pos_wrd = ini_obj_pos.detach()
                 est_obj_scale = ini_obj_scale.detach()
@@ -586,9 +583,7 @@ class original_optimizer(pl.LightningModule):
                 est_obj_axis_red_wrd = ini_obj_axis_red_wrd.detach()
                 est_shape_code = ini_shape_code.detach()
 
-            ###################################
-            #####      Perform dfnet.     #####
-            ###################################
+            # Perform dfnet.
             else:
                 est_obj_pos_wrd, est_obj_axis_green_wrd, est_obj_axis_red_wrd, est_obj_scale, est_shape_code = \
                     self.forward(batch_size, current_frame_num, clopped_mask, clopped_distance_map, past_itr_log, pre_obj_pos_wrd, pre_obj_axis_green_wrd, 
@@ -599,6 +594,13 @@ class original_optimizer(pl.LightningModule):
             torch.cuda.synchronize()
             itr_err_list['sec'].append(start.elapsed_time(end) / 1000)
 
+            # Log est.
+            itr_err_list['est_p'].append(est_obj_pos_wrd.detach().clone())
+            itr_err_list['est_g'].append(est_obj_axis_green_wrd.detach().clone())
+            itr_err_list['est_r'].append(est_obj_axis_red_wrd.detach().clone())
+            itr_err_list['est_s'].append(est_obj_scale.detach().clone())
+            itr_err_list['est_z'].append(est_shape_code.detach().clone())
+            
             # Convergence. 
             update_mask = None
             # print(clopped_mask.shape)
@@ -668,13 +670,16 @@ class original_optimizer(pl.LightningModule):
             # pre_shape_code = gt_shape_code.clone().detach()
 
             # Cal err at each iteration.
-            if optim_idx==(self.total_itr-1): # step_mode=='tes' or optim_idx==(self.total_itr-1):
+            if step_mode=='tes' or optim_idx==(self.total_itr-1): # optim_idx==(self.total_itr-1): 
                 itr_err_list['pos'].append(torch.abs(pre_obj_pos_wrd - frame_gt_obj_pos_wrd[:, 0]).mean(dim=-1))
                 err_axis_green_cos_sim_i = self.cossim(pre_obj_axis_green_wrd, frame_gt_obj_green_wrd[:, 0]).clamp(min=self.cosssim_min, max=self.cosssim_max)
                 itr_err_list['green'].append(torch.acos(err_axis_green_cos_sim_i) * 180 / torch.pi)
                 err_axis_red_cos_sim_i = self.cossim(pre_obj_axis_red_wrd, frame_gt_obj_red_wrd[:, 0]).clamp(min=self.cosssim_min, max=self.cosssim_max)
                 itr_err_list['red'].append(torch.acos(err_axis_red_cos_sim_i) * 180 / torch.pi)
                 itr_err_list['scale'].append(100 * torch.abs(pre_obj_scale_wrd[:, 0] - frame_gt_obj_scale_wrd[:, 0, 0]) / frame_gt_obj_scale_wrd[:, 0, 0])
+                pre_o2w = axis2rotation(pre_obj_axis_green_wrd, pre_obj_axis_red_wrd)
+                if step_mode=='tes':
+                    itr_err_list['rot'].append(get_riemannian_distance(pre_o2w, frame_gt_o2w[:, 0]).to(pre_obj_pos_wrd))
                 depth_error = []
                 if step_mode=='tes':
                     est_pc_wrd_list = []
@@ -694,8 +699,7 @@ class original_optimizer(pl.LightningModule):
                                                 w2c = w2c, 
                                                 input_lat_vec = pre_shape_code, 
                                                 ddf = self.ddf, )
-                    depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1))
-                    # check_map_torch(torch.abs(gt_distance_map-est_distance_map).reshape(-1, 128), 'tes.png')
+                    depth_error.append(torch.abs(gt_distance_map-est_distance_map).mean(dim=-1).mean(dim=-1)) # check_map_torch(torch.abs(gt_distance_map-est_distance_map).reshape(-1, 128), 'tes.png')
                     # Get est pt
                     if step_mode=='tes':
                         est_mask = torch.logical_and(est_mask, est_distance_map < 1.25) # ?
@@ -707,31 +711,35 @@ class original_optimizer(pl.LightningModule):
                         b_est_mask[:, :, :-b_mask_thr] = torch.logical_and(b_est_mask[:, :, :-b_mask_thr], est_mask[:, :, b_mask_thr:])
                         est_pc_cam = rays_d_cam * est_distance_map[..., None]
                         est_pc_obj_cnc_i = torch.sum(est_pc_cam[..., None, :]*w2c.permute(0, 2, 1)[:, None, None, :, :], dim=-1) + cam_pos_wrd[:, None, None, :]
-                        pre_o2w = axis2rotation(pre_obj_axis_green_wrd, pre_obj_axis_red_wrd)
                         est_pc_wrd_cnc_i = torch.sum(est_pc_obj_cnc_i.clone()[..., None, :]*pre_o2w[..., None, None, :, :], dim=-1) * pre_obj_scale_wrd[..., None, None, :] + pre_obj_pos_wrd[..., None, None, :]
                         for c_btc_idx, (pt_obj_i, pt_wrd_i, mask_i) in enumerate(zip(est_pc_obj_cnc_i, est_pc_wrd_cnc_i, b_est_mask)):
                             est_pc_obj_list[c_btc_idx].append(pt_obj_i[mask_i].to('cpu').detach().numpy().copy())
                             est_pc_wrd_list[c_btc_idx].append(pt_wrd_i[mask_i].to('cpu').detach().numpy().copy())
                 itr_err_list['shape'].append(torch.stack(depth_error, dim=-1).mean(dim=-1))
-
-                if step_mode=='tes' and optim_idx==(self.total_itr-1):
-                    # Get est pt.
+                if step_mode=='tes': #  and optim_idx==(self.total_itr-1):
+                    # Get np pt.
                     est_pc_obj = [np.concatenate(pt_list) for pt_list in est_pc_obj_list]
                     est_pc_wrd = [np.concatenate(pt_list) for pt_list in est_pc_wrd_list]
-                    # Get gt pt.
                     gt_pc_wrd = torch.sum(gt_pc_obj[..., None, :]*frame_gt_o2w[:, 0][:, None, :, :], dim=-1) * frame_gt_obj_scale_wrd[:, 0][:, None, :] + frame_gt_obj_pos_wrd[:, 0][:, None, :]
                     gt_pc_obj_np = gt_pc_obj.to('cpu').detach().numpy().copy()
                     gt_pc_wrd_np = gt_pc_wrd.to('cpu').detach().numpy().copy()
                     # Cal Chamfer.
                     chm_dist_obj = []
+                    chm_sdist_obj = []
                     for btc_id, (est_pc_i, gt_pc_i) in enumerate(zip(est_pc_obj, gt_pc_obj_np)):
                         chm_dist_obj.append(compute_trimesh_chamfer(est_pc_i, gt_pc_i))
+                        est_pc_i = pre_obj_scale_wrd[btc_id, 0].to('cpu').detach().numpy().copy() * est_pc_i
+                        gt_pc_i = frame_gt_obj_scale_wrd[btc_id, 0, 0].to('cpu').detach().numpy().copy() * gt_pc_i
+                        chm_sdist_obj.append(compute_trimesh_chamfer(est_pc_i, gt_pc_i))
                     itr_err_list['chm_obj'].append(torch.tensor(chm_dist_obj).to(pre_obj_pos_wrd))
+                    itr_err_list['chm_s_obj'].append(torch.tensor(chm_sdist_obj).to(pre_obj_pos_wrd))
+                    itr_err_list['chm_ss_obj'].append(torch.tensor(chm_sdist_obj).to(pre_obj_pos_wrd) / frame_gt_obj_scale_wrd[:, 0, 0])
                     chm_dist_wrd = []
                     for btc_id, (est_pc_i, gt_pc_i) in enumerate(zip(est_pc_wrd, gt_pc_wrd_np)):
                         chm_dist_wrd.append(compute_trimesh_chamfer(est_pc_i, gt_pc_i))
                     itr_err_list['chm_wrd'].append(torch.tensor(chm_dist_wrd).to(pre_obj_pos_wrd))
                     itr_err_list['chm_wrd_s'].append(torch.tensor(chm_dist_wrd).to(pre_obj_pos_wrd) / frame_gt_obj_scale_wrd[:, 0, 0])
+            # else: itr_err_list['shape'].append(torch.zeros_like(itr_err_list['scale'][-1]))
 
             # Save steps.
             if update_mask is not None:
@@ -785,34 +793,38 @@ class original_optimizer(pl.LightningModule):
 
     def test_epoch_end(self, outputs):
         log_dict = {}
-        sec_start, avg_start, med_start = -1, 1, 11
-        log_txt = ['???_avg_log = {', 
-                   '    \'pos\'   : np.array([', # ]), 
-                   '    \'green\' : np.array([', # ]), 
-                   '    \'red\'   : np.array([', # ]), 
-                   '    \'scale\' : np.array([', # ]), 
-                   '    \'shape\' : np.array([', # ]), 
-                   '    \'chm_obj\' : np.array([', # ]), 
-                   '    \'chm_wrd\' : np.array([', # ]), 
+        sec_start, avg_start, med_start = 0, 2, 15
+        log_txt = ['???_sec_log = np.array([', # ])
+                   '???_avg_log = {', 
+                   '    \'pos\'       : np.array([', # ]), 
+                   '    \'rot\'       : np.array([', # ]), 
+                   '    \'chm_ss_obj\': np.array([', # ]), 
+                   '    \'chm_s_obj\' : np.array([', # ]), 
+                   '    \'green\'     : np.array([', # ]), 
+                   '    \'red\'       : np.array([', # ]), 
+                   '    \'scale\'     : np.array([', # ]), 
+                   '    \'shape\'     : np.array([', # ]), 
+                   '    \'chm_obj\'   : np.array([', # ]), 
+                   '    \'chm_wrd\'   : np.array([', # ]), 
                    '    \'chm_wrd_s\' : np.array([', # ]), 
                    '    }', 
                    '???_med_log = {', 
-                   '    \'pos\'   : np.array([', # ]), 
-                   '    \'green\' : np.array([', # ]), 
-                   '    \'red\'   : np.array([', # ]), 
-                   '    \'scale\' : np.array([', # ]), 
-                   '    \'shape\' : np.array([', # ]), 
-                   '    \'chm_obj\' : np.array([', # ]), 
-                   '    \'chm_wrd\' : np.array([', # ]), 
+                   '    \'pos\'       : np.array([', # ]), 
+                   '    \'rot\'       : np.array([', # ]), 
+                   '    \'chm_ss_obj\': np.array([', # ]), 
+                   '    \'chm_s_obj\' : np.array([', # ]), 
+                   '    \'green\'     : np.array([', # ]), 
+                   '    \'red\'       : np.array([', # ]), 
+                   '    \'scale\'     : np.array([', # ]), 
+                   '    \'shape\'     : np.array([', # ]), 
+                   '    \'chm_obj\'   : np.array([', # ]), 
+                   '    \'chm_wrd\'   : np.array([', # ]), 
                    '    \'chm_wrd_s\' : np.array([', # ]), 
                    '    }', 
-                   '???_sec_log = np.array([', # ])
                    ]
 
-        # itr_sec = np.stack([x['itr_err_list']['sec'] for x in outputs], axis=0)
-        # itr_sec_txt = (', ').join([str(n) for n in itr_sec[:-1].mean(0).tolist()])
-        # log_txt[sec_start] += itr_sec_txt + '])'
-        for idx, key_i in enumerate(['pos', 'green', 'red', 'scale', 'shape', 'chm_obj', 'chm_wrd', 'chm_wrd_s']):
+        # log err
+        for idx, key_i in enumerate(['pos', 'rot', 'chm_ss_obj', 'chm_s_obj', 'green', 'red', 'scale', 'shape', 'chm_obj', 'chm_wrd', 'chm_wrd_s']):
             itr_err = torch.cat([torch.stack(x['itr_err_list'][key_i], dim=-1) for x in outputs], dim=0)
             itr_err = itr_err.to('cpu').detach().numpy().copy()
             itr_err_med = np.median(itr_err, axis=0).tolist()
@@ -822,6 +834,11 @@ class original_optimizer(pl.LightningModule):
             log_txt[med_start+idx] += (', ').join([str(n) for n in itr_err_med]) + ']), '
             with open(self.test_log_path, 'a') as file:
                 file.write(f'{key_i}, {str(itr_err_avg[-1])}, {str(itr_err_med[-1])}\n')
+        # log sec
+        itr_sec = np.stack([x['itr_err_list']['sec'] for x in outputs], axis=0)
+        itr_sec_txt = (', ').join([str(n) for n in itr_sec[:-1].mean(0).tolist()])
+        log_txt[sec_start] += itr_sec_txt + '])'
+        # log cnv
         itr_cnv = torch.cat([x['itr_err_list']['cnv'] for x in outputs], dim=0)
         itr_cnv = itr_cnv.to('cpu').detach().numpy().copy()
         itr_cnv_med = np.median(itr_cnv)
@@ -830,25 +847,25 @@ class original_optimizer(pl.LightningModule):
         with open(self.test_log_path, 'a') as file:
             file.write(f'cnv, {str(itr_cnv_avg)}, {str(itr_cnv_med)}\n')
 
-        # Check logs.
+        for idx, key_i in enumerate(['path', 'gt_S_seed', 'rand_P_seed', 'rand_S_seed', 'randn_theta_seed', 'randn_axis_idx']):
+            log_dict[key_i] = np.concatenate([x[key_i] for x in outputs])
+        for idx, key_i in enumerate(['est_p', 'est_g', 'est_r', 'est_s', 'est_z']):
+            est_key_i = torch.cat([torch.stack(x['itr_err_list'][key_i]) for x in outputs], dim=1)
+            log_dict[key_i] = est_key_i.to('cpu').detach().numpy().copy()
+        pickle_dump(log_dict, self.test_log_path.split('.txt')[0] + '_error.pickle')
         with open(self.test_log_path, 'a') as file:
             for txt in log_txt:
                 file.write(txt + '\n')
-        log_dict['path'] = np.concatenate([x['path'] for x in outputs])
-        log_dict['gt_S_seed'] = np.concatenate([x['gt_S_seed'] for x in outputs])
-        log_dict['rand_P_seed'] = np.concatenate([x['rand_P_seed'] for x in outputs])
-        log_dict['rand_S_seed'] = np.concatenate([x['rand_S_seed'] for x in outputs])
-        log_dict['randn_theta_seed'] = np.concatenate([x['randn_theta_seed'] for x in outputs])
-        log_dict['randn_axis_idx'] = np.concatenate([x['randn_axis_idx'] for x in outputs])
-        pickle_dump(log_dict, self.test_log_path.split('.txt')[0] + '_error.pickle')
 
 
 
     def on_validation_epoch_start(self):
         self.rs['val'] = np.random.RandomState(72)
-        # torch.backends.cudnn.deterministic = True
         self.rays_d_cam = self.rays_d_cam.to(self.df_net.device)
         self.canonical_rays_d_cam = self.canonical_rays_d_cam.to(self.df_net.device)
+        # if self.view_selection == 'sequential': # if self.view_selection == 'simultaneous':
+        #     if self.current_epoch < 200: self.total_itr, self.itr_per_frame = 5, 1 #     self.total_itr = int(min(max(3, 3+(10-3)/300*self.current_epoch), 10))
+        #     else: self.total_itr, self.itr_per_frame = 25, 5 #     self.itr_per_frame = self.total_itr
 
 
 
@@ -884,17 +901,16 @@ class original_optimizer(pl.LightningModule):
 if __name__=='__main__':
     # Get args
     args = get_args()
-    args.gpu_num = torch.cuda.device_count() # log used gpu num.
-    args.check_val_every_n_epoch = args.save_interval
     ckpt_base_dir = 'lightning_logs/DeepTaR/chair/'
     val_model_name = args.expname.split('/')[-1] + args.exp_version
     if args.fine_tune=='yes' and 'FINETUNE' in set(args.exp_version.split('_')):
-        val_model_name = args.expname.split('/')[-1] + args.exp_version.split('FINETUNE_')[-1]
+        val_model_name = args.expname.split('/')[-1] + args.exp_version.split('_FINETUNE_')[0]
+    args.check_val_every_n_epoch = args.save_interval
+    args.gpu_num = torch.cuda.device_count() # log used gpu num.
     if args.initnet_ckpt_path=='non':
         args.initnet_ckpt_path = f'{ckpt_base_dir}/{args.init_net_name}/checkpoints/{str(args.init_net_epoch).zfill(10)}.ckpt'
     if args.model_ckpt_path=='non':
         args.model_ckpt_path = f'{ckpt_base_dir}/{val_model_name}/checkpoints/{str(args.val_model_epoch).zfill(10)}.ckpt'
-
 
     if args.code_mode == 'TRAIN':
         # Set trainer.
@@ -954,9 +970,7 @@ if __name__=='__main__':
         ##############################
 
         # Start training.
-        if args.fine_tune == 'no':
-            trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, datamodule=None, ckpt_path=ckpt_path)
-        elif args.fine_tune == 'yes':
+        if args.fine_tune == 'yes':
             src_model = original_optimizer(args, {'ddf':ddf, 'backbone_encoder':backbone.encoder_2dcnn})
             src_model = src_model.load_from_checkpoint(checkpoint_path=args.model_ckpt_path, args=args, pretrain_models={'ddf':ddf, 'backbone_encoder':backbone.encoder_2dcnn})
             model.df_net = src_model.df_net
@@ -964,7 +978,8 @@ if __name__=='__main__':
             model.backbone_encoder = src_model.backbone_encoder
             ckpt_path = None
             trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, datamodule=None, ckpt_path=ckpt_path)
-
+        elif args.fine_tune == 'no':
+            trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, datamodule=None, ckpt_path=ckpt_path)
 
     elif args.code_mode == 'TES':
         # Reload args.
