@@ -1,22 +1,22 @@
-import os
-import pdb
-import sys
-from turtle import pd
-import numpy as np
-import random
-import glob
-from tqdm import tqdm, trange
-from typing import Optional, Any, Union, Callable
+# import os
+# import pdb
+# import sys
+# from turtle import pd
+# import numpy as np
+# import random
+# import glob
+# from tqdm import tqdm, trange
+# from typing import Optional, Any, Union, Callable
 import torch
 import pytorch_lightning as pl
-from pytorch_lightning.plugins import DDPPlugin
+# from pytorch_lightning.plugins import DDPPlugin
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.utils.data as data_utils
-from torch.utils.data import DataLoader
-from torch.autograd import grad
-import torch.utils.data as data
-from torch import Tensor
+# import torch.utils.data as data_utils
+# from torch.utils.data import DataLoader
+# from torch.autograd import grad
+# import torch.utils.data as data
+# from torch import Tensor
 from often_use import *
 from resnet import *
 from fixup_model.transformer_fixup import TransformerEncoder_FixUp, TransformerDecoder_FixUp
@@ -55,9 +55,36 @@ class optimize_former(pl.LightningModule):
         # Main layers.
         self.add_conf = add_conf
         self.main_layers_name = main_layers_name
-        self.use_past_map = (main_layers_name == 'autoreg') or (add_conf in {'onlydec', 'onlydecv2', 'onlydecv3', 'exp22v2'})
-        self.padding_embeddings = add_conf in {'exp22v2', 'onlydecv3'}
-        if main_layers_name=='autoreg':
+        self.use_past_map = (add_conf in {'momenenc', 'onlydec2', 'onlydec3', 'onlydec'}) or (main_layers_name == 'autoreg')
+        self.padding_embeddings = add_conf in {'momenenc', 'onlydec3'}
+        if main_layers_name=='onlymlp':
+            self.main_layers = nn.Sequential()
+            for mlp_layer_idx in range(num_encoder_layers):
+                inp_dim = mlp_hidden_dim
+                out_dim = mlp_hidden_dim
+                if mlp_layer_idx == 0:
+                    inp_dim = enc_in_dim
+                if mlp_layer_idx == num_encoder_layers-1:
+                    out_dim = hidden_dim
+                self.main_layers.add_module(f'fc_{str(mlp_layer_idx).zfill(3)}', nn.Linear(inp_dim, out_dim))
+                self.main_layers.add_module(f'act_{str(mlp_layer_idx).zfill(3)}', nn.ReLU())
+                if mlp_layer_idx != num_encoder_layers-1:
+                    self.main_layers.add_module(f'drp_{str(mlp_layer_idx).zfill(3)}', nn.Dropout(dropout))
+        elif main_layers_name=='encoder':
+            self.main_layers = encoder_model(inp_embed_dim=enc_in_dim, # 512, # 
+                                             num_encoder_layers=num_encoder_layers, 
+                                             num_decoder_layers=num_decoder_layers, 
+                                             num_head=num_head, 
+                                             hidden_dim=hidden_dim, 
+                                             dim_feedforward=dim_feedforward, 
+                                             add_conf=add_conf, 
+                                             dropout=dropout, 
+                                             view_selection=view_selection, 
+                                             total_itr=total_itr, 
+                                             max_frame_num=total_obs_num, 
+                                             inp_itr_num=inp_itr_num, 
+                                             itr_per_frame=itr_per_frame, )
+        elif main_layers_name=='autoreg':
             self.inp_itr_num = inp_itr_num
             self.dec_inp_type = dec_inp_type
             enc_in_dim = 3*512
@@ -79,32 +106,6 @@ class optimize_former(pl.LightningModule):
                                                      hidden_dim=hidden_dim, 
                                                      dim_feedforward=dim_feedforward, 
                                                      dropout=dropout, )
-        elif main_layers_name=='encoder':
-            self.main_layers = encoder_model(inp_embed_dim=enc_in_dim, # 512, # 
-                                             num_encoder_layers=num_encoder_layers, 
-                                             num_head=num_head, 
-                                             hidden_dim=hidden_dim, 
-                                             dim_feedforward=dim_feedforward, 
-                                             add_conf=add_conf, 
-                                             dropout=dropout, 
-                                             view_selection=view_selection, 
-                                             total_itr=total_itr, 
-                                             max_frame_num=total_obs_num, 
-                                             inp_itr_num=inp_itr_num, 
-                                             itr_per_frame=itr_per_frame, )
-        elif main_layers_name=='onlymlp':
-            self.main_layers = nn.Sequential()
-            for mlp_layer_idx in range(num_encoder_layers):
-                inp_dim = mlp_hidden_dim
-                out_dim = mlp_hidden_dim
-                if mlp_layer_idx == 0:
-                    inp_dim = enc_in_dim
-                if mlp_layer_idx == num_encoder_layers-1:
-                    out_dim = hidden_dim
-                self.main_layers.add_module(f'fc_{str(mlp_layer_idx).zfill(3)}', nn.Linear(inp_dim, out_dim))
-                self.main_layers.add_module(f'act_{str(mlp_layer_idx).zfill(3)}', nn.ReLU())
-                if mlp_layer_idx != num_encoder_layers-1:
-                    self.main_layers.add_module(f'drp_{str(mlp_layer_idx).zfill(3)}', nn.Dropout(dropout))
         self.positional_encoding_mode = positional_encoding_mode
         if positional_encoding_mode == 'yes':
             self.learnable_pe = nn.Linear(7, hidden_dim)
@@ -334,7 +335,7 @@ class auto_regressive_model(pl.LightningModule):
             if add_conf=='T_Fixup':
                 init_inp *= (9 * num_decoder_layers) ** (- 1. / 4.)
             self.cls_token = nn.Parameter(cls_token)
-        self.pad_mlp = nn.Linear(dec_in_dim, hidden_dim)
+        # self.pad_mlp = nn.Linear(dec_in_dim, hidden_dim)
 
 
     def forward(self, _src_, tgt, past_itr_length, pe_target, print_debug=False, image_decoder=None):
@@ -351,41 +352,41 @@ class auto_regressive_model(pl.LightningModule):
         if pe_target is not None:
             src = src + pe_target[:, -past_itr_length[-1]:, :].permute(1, 0, 2)
         memory = self.encoder(src)
-        if print_debug:
-            print(f'---   ec_src    --- : {src.shape}')
-            print(f'---   ec_mem    --- : {memory.shape}')
+        if print_debug: print(f'---   ec_src    --- : {src.shape}'); print(f'---   ec_mem    --- : {memory.shape}')
 
         # decorder part.
-        if tgt is not None:
+        # if tgt is None: return memory.mean(0)
+        # elif tgt.shape[0] != src.shape[0]: return memory.mean(0)
+        out_size = past_itr_length[-min(len(past_itr_length), 2)] # past_itr_length[-min(len(past_itr_length), 2)]
+        if tgt is None:
+            atten_mask = None
+            # tgt = self.init_inp.expand(-1, src.shape[1], -1)
+            tgt = src
+            if self.use_cls == 'yes':
+                tgt = torch.cat([tgt, self.cls_token.expand(-1, src.shape[1], -1)], dim=0)
+        else:
             tgt = self.align_mlp(tgt) # [seq_d, batch, inp_embed_dim] -> [seq_d, batch, hidden_dim]
-            if self.inp_itr_num > 1:
-                tgt = self.ie(tgt, past_itr_length[-max(0, (self.inp_itr_num+1)):-1]) # [seq_d, batch, hidden_dim]
             atten_mask = None
             if self.atten_mask is not None:
                 atten_mask = self.atten_mask[len(past_itr_length)-2].to(tgt.device)
+            if self.use_cls == 'yes':
+                tgt = torch.cat([tgt, self.cls_token.expand(-1, src.shape[1], -1)], dim=0)
+            # if tgt.shape[0] != src.shape[0]:
+            #     # tgt = torch.cat([tgt, src[-1:]], dim=0) # srcで単純に埋める
+            #     tgt = torch.cat([tgt, self.pad_mlp(_src_[-1:])], dim=0) # 別のmlpを通したsrcで埋める
+            #     out_size = out_size + 1
+            if self.inp_itr_num > 1:
+                tgt = self.ie(tgt, past_itr_length[-max(0, (self.inp_itr_num+1)):-1]) # [seq_d, batch, hidden_dim]
             if pe_target is not None:
                 pe_start = - sum(past_itr_length[-max(0, (self.inp_itr_num+1)):])
                 pe_end = - past_itr_length[-1]
                 tgt = tgt + pe_target[:, pe_start:pe_end, :].permute(1, 0, 2)
-            if self.use_cls == 'yes':
-                tgt = torch.cat([tgt, self.cls_token.expand(-1, src.shape[1], -1)], dim=0)
-            if tgt.shape[0] != src.shape[0]:
-                tgt = torch.cat([tgt, self.pad_mlp(_src_[-1:])], dim=0) # 別のmlpを通したsrcで単純に埋める
-            #     tgt = torch.cat([tgt, src[-1:]], dim=0) # srcで単純に埋める
-        else:
-            atten_mask = None
-            tgt = self.init_inp.expand(-1, src.shape[1], -1) # src
-            if self.use_cls == 'yes':
-                tgt = torch.cat([tgt, self.cls_token.expand(-1, src.shape[1], -1)], dim=0)
         out = self.decoder(tgt=tgt, memory=memory, atten_mask=atten_mask)
         if self.use_cls != 'yes':
-            out_size = past_itr_length[-min(len(past_itr_length), 2)]
-            if print_debug:
-                print(f'---   dc_tgt    --- : {tgt.shape}')
-                print(f'---   dc_out    --- : {out.shape}')
-                print(f'--- dc_bf_mean  --- : {out[-out_size:, :, :].shape}')
+            if print_debug: print(f'---   dc_tgt    --- : {tgt.shape}'); print(f'---   dc_out    --- : {out.shape}'); print(f'--- dc_bf_mean  --- : {out[-out_size:, :, :].shape}')
             return out[-out_size:, :, :].mean(0)
-        else: return out[-1] # cls
+        else:
+            return out[-1] # cls
 
 
 
@@ -395,6 +396,7 @@ class encoder_model(pl.LightningModule):
         self, 
         inp_embed_dim=3*512, 
         num_encoder_layers=3, 
+        num_decoder_layers=2, 
         num_head=8, 
         hidden_dim=256, 
         dim_feedforward=1024, 
@@ -413,31 +415,44 @@ class encoder_model(pl.LightningModule):
         self.hidden_dim = hidden_dim
         self.align_mlp = nn.Linear(inp_embed_dim, hidden_dim)
         self.add_conf = add_conf
+        self.inp_itr_num = inp_itr_num
         self.forward_mode = 'encoder'
-        T_Fixup = add_conf in {'T_Fixup', 'exp22', 'exp22v2', 'onlydec', 'onlydecv2', 'onlydecv3'}
+        T_Fixup = True # add_conf in {'T_Fixup', 'momenenc', 'onlydec2', 'onlydec', 'onlydec3'}
+        T_Fixup_N = num_encoder_layers
+        if add_conf == 'momenenc':
+            T_Fixup_N = num_encoder_layers + num_decoder_layers
         self.encoder = TransformerEncoder_FixUp(
                             encoder_layers=num_encoder_layers, 
                             d_model=hidden_dim, 
                             nhead=num_head, 
                             dim_feedforward=dim_feedforward, 
                             dropout=dropout, 
-                            activation='relu', 
-                            two_mha=add_conf=='onlydecv3', 
-                            T_Fixup =T_Fixup, )
-        if add_conf in {'exp22', 'exp22v2'}:
-            self.forward_mode = 'temporal'
-            self.pos_encoder = PositionalEncoding(d_model=hidden_dim, dropout=0.0, max_len=16)
-            self.temporal_encoder = TransformerEncoder_FixUp(
-                                        encoder_layers=num_encoder_layers, 
+                            two_mha=add_conf=='onlydec3', 
+                            T_Fixup = T_Fixup, 
+                            T_Fixup_N=T_Fixup_N, 
+                            )
+        print(self.encoder.layers[0].fc1.weight[0, :5])
+        print('##########   INMODEL   ##########')
+
+        if add_conf == 'momenenc':
+            self.forward_mode = add_conf
+            self.itr_encoder = PositionalEncoding(d_model=hidden_dim, dropout=0.0, max_len=16)
+            self.momentum_encoder = TransformerEncoder_FixUp(
+                                        encoder_layers=num_decoder_layers, 
                                         d_model=hidden_dim, 
                                         nhead=num_head, 
                                         dim_feedforward=dim_feedforward, 
                                         dropout=dropout, 
-                                        activation='relu', )
-        elif add_conf in {'onlydec', 'onlydecv2', 'onlydecv3'}:
-            self.inp_itr_num = 3 # inp_itr_num
+                                        T_Fixup=T_Fixup, 
+                                        T_Fixup_N=T_Fixup_N, 
+                                        )
+            print(self.encoder.layers[0].fc1.weight[0, :5])
+            print('##########   INMODEL   ##########')
+        
+        elif add_conf in {'onlydec', 'onlydec2', 'onlydec3'}:
+            self.itr_encoder = IterationEncoding(hidden_dim)
             self.forward_mode = add_conf
-            if add_conf == 'onlydecv2':
+            if add_conf in {'onlydec2', 'onlydec3'}: # マスクを作成
                 if view_selection=='simultaneous':
                     seq_len = max_frame_num * total_itr
                     frame_idx = torch.cat([torch.arange(max_frame_num)]*total_itr, dim=0)[..., None].expand(-1, seq_len)
@@ -446,10 +461,14 @@ class encoder_model(pl.LightningModule):
                     itr_mask = itr_idx != itr_idx.transpose(-2, -1)
                     total_atten_mask = torch.logical_and(itr_mask, frame_mask)
                     self.atten_mask = []
+                    self.frame_atten_mask = []
+                    self.itr_atten_mask = []
                     for itr_idx in range(0, total_itr):
                         start = max(itr_idx + 1 - self.inp_itr_num, 0) * max_frame_num
                         end = (itr_idx + 1) * max_frame_num
                         self.atten_mask.append(total_atten_mask[start:end, start:end])
+                        self.frame_atten_mask.append(frame_mask[start:end, start:end])
+                        self.itr_atten_mask.append(itr_mask[start:end, start:end])
                 if view_selection=='sequential':
                     seq_len = sum(range(1, max_frame_num + 1)) * itr_per_frame
                     frame_idx = torch.cat(
@@ -466,54 +485,13 @@ class encoder_model(pl.LightningModule):
                         self.atten_mask.append(total_atten_mask[start:end, start:end])
                 print('### w_atten_mask ###')
                 print(self.atten_mask[-1].to(torch.uint8))
-            self.itr_encoder = IterationEncoding(hidden_dim)
-        print('##########   ENCODER   ##########')
-        print(self.encoder.layers[0].fc1.weight[0, :5])
-        print('##########     END     ##########')
 
     def forward(self, inp, past_itr_length, pe_target, print_debug=False, image_decoder=None):
-        # check_map_torch(image_decoder(inp[-past_itr_length[-1]:][:, 0,    0: 512][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'src_obs.png')
-        # check_map_torch(image_decoder(inp[-past_itr_length[-1]:][:, 0,  512:1024][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'src_est.png')
-        # check_map_torch(image_decoder(inp[-past_itr_length[-1]:][:, 0, 1024:1536][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'src_dif.png')
-        if self.forward_mode in {'onlydec', 'onlydecv2'}:
-            inp_start = sum(past_itr_length[-self.inp_itr_num:])
-            x = self.align_mlp(inp[-inp_start:])
-            if pe_target is not None:
-                x = x + pe_target[:, -inp_start:, :].permute(1, 0, 2)
-            if self.forward_mode == 'onlydecv2':
-                atten_mask = self.atten_mask[len(past_itr_length)-1].to(inp.device)
-            else:
-                atten_mask = None
-            x = self.itr_encoder(x, past_itr_length[-self.inp_itr_num:])
-            if print_debug:
-                print(f'---   ec_inp   --- : {x.shape}')
-            x = self.encoder(x, atten_mask)
-            if print_debug:
-                print(f'---   ec_out    --- : {x.shape}')
-                print(f'--- out_bf_mean --- : {x[-past_itr_length[-1]:].shape}')
-            x = x[-past_itr_length[-1]:].mean(0)
-            return x
-        
-        elif self.forward_mode in {'onlydecv3'}:
-            inp_start = sum(past_itr_length[-self.inp_itr_num:])
-            x = self.align_mlp(inp[-inp_start:])
-            if pe_target is not None:
-                x = x + pe_target[:, -inp_start:, :].permute(1, 0, 2)
-            x = self.itr_encoder(x, past_itr_length[-self.inp_itr_num:])
-            start_itr = max(0, len(past_itr_length) - self.inp_itr_num)
-            end_frame = len(past_itr_length)
-            tmp_list = [x[sum(past_itr_length[start_itr:itr_idx]):sum(past_itr_length[start_itr:itr_idx+1])] for itr_idx in range(start_itr, end_frame)]
-            x = nn.utils.rnn.pad_sequence(tmp_list, batch_first=True, padding_value=0.0) # [itr, seq, batch, dim] 
-            if print_debug:
-                print(f'---   ec_inp   --- : {x.shape}')
-            x = self.encoder(x, seq_padding_mask=None, itr_padding_mask=None)
-            if print_debug:
-                print(f'---   ec_out    --- : {x.shape}')
-                print(f'--- out_af_mean --- : {x.mean(1).shape}')
-            x = x.mean(1)
-            return x[-1]
-        
-        else:
+        # check_map_torch(image_decoder(inp[-past_itr_length[-1]:][:, 0,    0: 512][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'src_obs_crr.png')
+        # check_map_torch(image_decoder(inp[-past_itr_length[-1]:][:, 0,  512:1024][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'src_est_crr.png')
+        # check_map_torch(image_decoder(inp[-past_itr_length[-1]:][:, 0, 1024:1536][:, :, None, None])[:, -1].reshape(-1, 128)>0, 'src_dif_crr.png')
+
+        if self.forward_mode == 'encoder':
             x = self.align_mlp(inp[-past_itr_length[-1]:])
             if print_debug:
                 print(f'---   ec_inp   --- : {x.shape}')
@@ -524,3 +502,79 @@ class encoder_model(pl.LightningModule):
                 print(f'---   ec_out    --- : {x.shape}')
                 print(f'--- out_bf_mean --- : {x.shape}')
             return x.mean(0)
+
+        elif self.forward_mode in {'onlydec', 'onlydec2', 'onlydec3'}:
+            inp_start = sum(past_itr_length[-self.inp_itr_num:])
+            x = self.align_mlp(inp[-inp_start:])
+            # embedding.
+            if pe_target is not None:
+                x = x + pe_target.permute(1, 0, 2)[-inp_start:] # 逐次いける？
+            x = self.itr_encoder(x, past_itr_length[-self.inp_itr_num:])
+            # check_map_torch(self.itr_encoder(torch.zeros_like(x), past_itr_length[-self.inp_itr_num:])[:, 0, :], 'pe.png')
+            
+            if self.forward_mode in {'onlydec', 'onlydec2'}:
+                # マスクを作成
+                if self.forward_mode == 'onlydec':
+                    atten_mask = None
+                elif self.forward_mode == 'onlydec2':
+                    atten_mask = self.atten_mask[len(past_itr_length)-1].to(inp.device)
+                if print_debug:
+                    print(f'---   ecn_inp   --- : {x.shape}')
+                x = self.encoder(x, atten_mask)
+
+            if self.forward_mode in {'onlydec3'}:
+                frame_atten_mask = self.frame_atten_mask[len(past_itr_length)-1].to(inp.device)
+                itr_atten_mask = self.itr_atten_mask[len(past_itr_length)-1].to(inp.device)
+                if print_debug:
+                    print(f'---   ecn_inp   --- : {x.shape}')
+                x = self.encoder(x, seq_padding_mask=frame_atten_mask, itr_padding_mask=itr_atten_mask)
+
+                # start_itr = max(0, len(past_itr_length) - self.inp_itr_num)
+                # end_itr = len(past_itr_length)
+                # tmp_list = [x[sum(past_itr_length[start_itr:itr_idx]):sum(past_itr_length[start_itr:itr_idx+1])] for itr_idx in range(start_itr, end_itr)]
+                # x = nn.utils.rnn.pad_sequence(tmp_list, batch_first=True, padding_value=float('nan')) # [itr, seq, batch, dim] 
+                # pad_mask = torch.isnan(x).any(dim=-1) # nanのマスク検出 -> Padマスク作る
+                # x[pad_mask] = 0.0 # nanの部分を0で埋め直す
+                # if print_debug:
+                #     print(f'---   pad_inp  --- : {x.shape}')
+                # seq_padding_mask = None
+                # itr_padding_mask = None
+                # x = self.encoder(x, seq_padding_mask=seq_padding_mask, itr_padding_mask=itr_padding_mask)
+                # x = x[-1] # [itr, seq, batch, dim]
+
+            if print_debug:
+                print(f'--- out_bf_mean --- : {x[-past_itr_length[-1]:].shape}')
+            return x[-past_itr_length[-1]:].mean(0)
+
+        elif self.forward_mode == 'momenenc':
+            inp_start = sum(past_itr_length[-self.inp_itr_num:])
+            x = self.align_mlp(inp[-inp_start:])
+            # cam pos embedding.
+            if pe_target is not None:
+                x = x + pe_target.permute(1, 0, 2)[-inp_start:] # 逐次いける？
+
+            start_itr = max(0, len(past_itr_length) - self.inp_itr_num)
+            end_frame = len(past_itr_length)
+            tmp_list = [x[sum(past_itr_length[start_itr:itr_idx]):sum(past_itr_length[start_itr:itr_idx+1])] for itr_idx in range(start_itr, end_frame)]
+            x = nn.utils.rnn.pad_sequence(tmp_list, batch_first=True, padding_value=float('nan')).permute(1, 0, 2, 3) # [seq, itr, batch, dim] 
+            pad_mask = torch.isnan(x).any(dim=-1) # nanのマスク検出 -> Padマスク作る
+            x[pad_mask] = 0.0 # nanの部分を0で埋め直す
+            if print_debug:
+                print(f'---   pad_inp  --- : {x.shape}')
+            padding_mask = None
+
+            seq, itr, batch, dim = x.shape
+            x = x.reshape(seq, itr*batch, dim) # [seq, itr*batch, dim]
+            if print_debug:
+                print(f'---   vec_inp  --- : {x.shape}')
+            x = self.encoder(x, padding_mask)
+
+            x = x.reshape(seq, itr, batch, dim)
+            pad_mask = torch.logical_not(pad_mask).to(x).unsqueeze(-1)
+            x = (pad_mask * x).sum(0) / pad_mask.sum(0) # mask Trueで平均を取る
+
+            x = self.itr_encoder(x) # [itr, batch, dim]
+            x = self.momentum_encoder(x) # [itr, batch, dim]
+            if print_debug:
+                print(f'---   mec_out  --- : {x.shape}')
+            return x[-1]

@@ -21,13 +21,12 @@ import torch.utils.data as data
 import torchvision
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from chamferdist import ChamferDistance
-from scipy.spatial.transform import Rotation as R
+# from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+# from chamferdist import ChamferDistance
+# from scipy.spatial.transform import Rotation as R
 
 from parser import *
 from often_use import *
-# from dataset import *
 
 torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 
@@ -324,6 +323,19 @@ class DDF(pl.LightningModule):
 
 
 
+    # def forward(self, inp):
+    #     rays_o = inp[:, -3:][:, None, None, :]
+    #     rays_d = inp[:, -6:-3][:, None, None, :]
+    #     input_lat_vec = inp[:, :-6]
+
+    #     lat_voxel = self.decoder(input_lat_vec)
+    #     sampled_lat_vec = self.latent_sampler(lat_voxel, rays_d, rays_o, 'without_mask')
+    #     inp = torch.cat([sampled_lat_vec], dim=-1)
+    #     est_inverced_depth = self.mlp(inp).squeeze(-1)
+    #     return est_inverced_depth
+
+
+
     def forward(self, rays_o, rays_d, input_lat_vec, blur_mask='without_mask'):
 
         # get latent vec
@@ -606,6 +618,7 @@ if __name__=='__main__':
     # Get args
     args = get_args()
     args.gpu_num = torch.cuda.device_count() # log used gpu num.
+    args.ddf_H = args.H
 
 
     # Set trainer.
@@ -638,6 +651,7 @@ if __name__=='__main__':
 
 
     # Create dataloader
+    from dataset import *
     train_dataset = DDF_dataset(args, args.train_data_dir, args.N_views)
     train_dataloader = data_utils.DataLoader(train_dataset, batch_size=args.N_batch, num_workers=args.num_workers, drop_last=False, shuffle=True)
     val_dataset = DDF_dataset(args, args.val_data_dir, args.N_val_views)

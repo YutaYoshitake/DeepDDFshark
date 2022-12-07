@@ -199,6 +199,10 @@ def config_parser():
                         help='')
     parser.add_argument("--reset_transformer_params", action='store_true', # 不要
                         help='')
+    parser.add_argument("--use_sampled_txtfile", type=str, default='no', # 不要
+                        help='')
+    parser.add_argument("--train_txtfile", type=str, default='no', # 不要
+                        help='')
 
     # training options
     parser.add_argument("--input_H", type=int, default=256, 

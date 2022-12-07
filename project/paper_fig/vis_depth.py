@@ -17,12 +17,12 @@ from often_use import *
 
 
 H = 128
-target_dir = '/home/yyoshitake/works/DeepSDF/project/paper_fig/depth_map/raw_gt_est'
+target_dir = f'/home/yyoshitake/works/DeepSDF/project/paper_fig/depth_map/raw_gt_est/{sys.argv[-1]}'
 result_dir = '/home/yyoshitake/works/DeepSDF/project/paper_fig/depth_map/result'
 pickle_list = glob.glob(target_dir + '/*')
 dt_now = datetime.datetime.now()
-time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
-os.mkdir(os.path.join(result_dir, time_log))
+time_log = sys.argv[-1] # dt_now.strftime('%Y_%m_%d_%H_%M_%S')
+os.makedirs(os.path.join(result_dir, time_log), exist_ok=True)
 
 for list_i in tqdm.tqdm(pickle_list):
     str_id = list_i.split('/')[-1].split('.')[0]
@@ -84,6 +84,7 @@ for list_i in tqdm.tqdm(pickle_list):
     path_dif = os.path.join(result_dir, time_log, 'dif_' + str_id + '.png')
     cv2.imwrite(path_dif,  png)
 
+    os.remove('tmp.png')
     # import pdb; pdb.set_trace()
 
     # #############################################

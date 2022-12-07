@@ -175,14 +175,14 @@ class ResNet(nn.Module):
 
 
 
-def ResNet50(args, in_channel=3):
-    args.output_stride = 8
-    if args.gpu_num > 1:
-        BatchNorm = SynchronizedBatchNorm2d
-    else:
-        BatchNorm = nn.BatchNorm2d
-    model = ResNet(Bottleneck, [3, 4, 6, 3], args.output_stride, BatchNorm, in_channel=in_channel)
-    return model
+# def ResNet50(args, in_channel=3):
+#     args.output_stride = 8
+#     if args.gpu_num > 1:
+#         BatchNorm = SynchronizedBatchNorm2d
+#     else:
+#         BatchNorm = nn.BatchNorm2d
+#     model = ResNet(Bottleneck, [3, 4, 6, 3], args.output_stride, BatchNorm, in_channel=in_channel)
+#     return model
 
 
 
@@ -295,16 +295,16 @@ def ResNet50_wo_dilation(in_channel=3, gpu_num=1):
 
 
 
-def _get_clones(module, N):
-    return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
+# def _get_clones(module, N):
+#     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
 
 
 
-def _get_activation_fn(activation):
-    if activation == "relu":
-        return F.relu
-    elif activation == "gelu":
-        return F.gelu
+# def _get_activation_fn(activation):
+#     if activation == "relu":
+#         return F.relu
+#     elif activation == "gelu":
+#         return F.gelu
 
 
 
@@ -354,227 +354,227 @@ class IterationEncoding(nn.Module):
 
 
 
-class TransformerEncoderLayer_woNorm(nn.Module):
+# class TransformerEncoderLayer_woNorm(nn.Module):
 
-    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu"):
-        super(TransformerEncoderLayer_woNorm, self).__init__()
-        ##################################################
-        # self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=0.0)
-        # self.linear1 = nn.Linear(d_model, dim_feedforward)
-        # self.linear2 = nn.Linear(dim_feedforward, d_model)
-        ##################################################
-        dropout = 0.1
-        self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
-        self.linear1 = nn.Linear(d_model, dim_feedforward)
-        self.dropout = nn.Dropout(dropout)
-        self.linear2 = nn.Linear(dim_feedforward, d_model)
-        self.dropout1 = nn.Dropout(dropout)
-        self.dropout2 = nn.Dropout(dropout)
-        ##################################################
-        self.activation = _get_activation_fn(activation)
+#     def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu"):
+#         super(TransformerEncoderLayer_woNorm, self).__init__()
+#         ##################################################
+#         # self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=0.0)
+#         # self.linear1 = nn.Linear(d_model, dim_feedforward)
+#         # self.linear2 = nn.Linear(dim_feedforward, d_model)
+#         ##################################################
+#         dropout = 0.1
+#         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+#         self.linear1 = nn.Linear(d_model, dim_feedforward)
+#         self.dropout = nn.Dropout(dropout)
+#         self.linear2 = nn.Linear(dim_feedforward, d_model)
+#         self.dropout1 = nn.Dropout(dropout)
+#         self.dropout2 = nn.Dropout(dropout)
+#         ##################################################
+#         self.activation = _get_activation_fn(activation)
 
-    def forward(self, src: Tensor, src_mask: Optional[Tensor] = None, src_key_padding_mask: Optional[Tensor] = None) -> Tensor:
-        src2, self.attn_output_weights = self.self_attn(src, src, src, key_padding_mask=src_key_padding_mask, attn_mask=src_mask)
-        ##################################################
-        # src = src + src2
-        # src2 = self.linear2(self.activation(self.linear1(src)))
-        # return src + src2
-        ##################################################
-        src = src + self.dropout1(src2)
-        src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
-        return src + self.dropout2(src2)
+#     def forward(self, src: Tensor, src_mask: Optional[Tensor] = None, src_key_padding_mask: Optional[Tensor] = None) -> Tensor:
+#         src2, self.attn_output_weights = self.self_attn(src, src, src, key_padding_mask=src_key_padding_mask, attn_mask=src_mask)
+#         ##################################################
+#         # src = src + src2
+#         # src2 = self.linear2(self.activation(self.linear1(src)))
+#         # return src + src2
+#         ##################################################
+#         src = src + self.dropout1(src2)
+#         src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
+#         return src + self.dropout2(src2)
 
 
 
-class TransformerDecoderLayer_woNorm(nn.Module):
+# class TransformerDecoderLayer_woNorm(nn.Module):
 
-    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu"):
-        super(TransformerDecoderLayer_woNorm, self).__init__()
+#     def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu"):
+#         super(TransformerDecoderLayer_woNorm, self).__init__()
         
-        dropout = 0.1
-        self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
-        self.multihead_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
-        self.linear1 = nn.Linear(d_model, dim_feedforward)
-        self.dropout = nn.Dropout(dropout)
-        self.linear2 = nn.Linear(dim_feedforward, d_model)
+#         dropout = 0.1
+#         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+#         self.multihead_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+#         self.linear1 = nn.Linear(d_model, dim_feedforward)
+#         self.dropout = nn.Dropout(dropout)
+#         self.linear2 = nn.Linear(dim_feedforward, d_model)
 
-        self.dropout1 = nn.Dropout(dropout)
-        self.dropout2 = nn.Dropout(dropout)
-        self.dropout3 = nn.Dropout(dropout)
-        self.activation = _get_activation_fn(activation)
+#         self.dropout1 = nn.Dropout(dropout)
+#         self.dropout2 = nn.Dropout(dropout)
+#         self.dropout3 = nn.Dropout(dropout)
+#         self.activation = _get_activation_fn(activation)
 
-    def forward(self, tgt: Tensor, memory: Tensor, tgt_mask: Optional[Tensor] = None, memory_mask: Optional[Tensor] = None,
-                tgt_key_padding_mask: Optional[Tensor] = None, memory_key_padding_mask: Optional[Tensor] = None) -> Tensor:
-        tgt2, self.self_attn_weights = self.self_attn(tgt, tgt, tgt)
-        tgt = tgt + self.dropout1(tgt2)
-        tgt2, self.mha_attn_weights = self.multihead_attn(tgt, memory, memory)
-        tgt = tgt + self.dropout2(tgt2)
-        tgt2 = self.linear2(self.dropout(self.activation(self.linear1(tgt))))
-        return tgt + self.dropout3(tgt2)
+#     def forward(self, tgt: Tensor, memory: Tensor, tgt_mask: Optional[Tensor] = None, memory_mask: Optional[Tensor] = None,
+#                 tgt_key_padding_mask: Optional[Tensor] = None, memory_key_padding_mask: Optional[Tensor] = None) -> Tensor:
+#         tgt2, self.self_attn_weights = self.self_attn(tgt, tgt, tgt)
+#         tgt = tgt + self.dropout1(tgt2)
+#         tgt2, self.mha_attn_weights = self.multihead_attn(tgt, memory, memory)
+#         tgt = tgt + self.dropout2(tgt2)
+#         tgt2 = self.linear2(self.dropout(self.activation(self.linear1(tgt))))
+#         return tgt + self.dropout3(tgt2)
 
 
 
-class CustomLayerNorm(nn.Module):
+# class CustomLayerNorm(nn.Module):
 
-    def __init__(self, normalized_shape, eps=1e-5, elementwise_affine=True, variable_length='false'):
-        super(CustomLayerNorm, self).__init__()
+#     def __init__(self, normalized_shape, eps=1e-5, elementwise_affine=True, variable_length='false'):
+#         super(CustomLayerNorm, self).__init__()
         
-        self.eps = eps
-        self.normalized_shape = normalized_shape
-        self.elementwise_affine = elementwise_affine
-        if self.elementwise_affine:
-            self.weight = nn.Parameter(torch.empty(self.normalized_shape))
-            self.bias = nn.Parameter(torch.empty(self.normalized_shape))
-        else:
-            self.register_parameter('weight', None)
-            self.register_parameter('bias', None)
+#         self.eps = eps
+#         self.normalized_shape = normalized_shape
+#         self.elementwise_affine = elementwise_affine
+#         if self.elementwise_affine:
+#             self.weight = nn.Parameter(torch.empty(self.normalized_shape))
+#             self.bias = nn.Parameter(torch.empty(self.normalized_shape))
+#         else:
+#             self.register_parameter('weight', None)
+#             self.register_parameter('bias', None)
         
-        self.variable_length = variable_length
+#         self.variable_length = variable_length
 
-        self.reset_parameters()
+#         self.reset_parameters()
 
-    def reset_parameters(self):
-        if self.elementwise_affine:
-            nn.init.ones_(self.weight)
-            nn.init.zeros_(self.bias)
+#     def reset_parameters(self):
+#         if self.elementwise_affine:
+#             nn.init.ones_(self.weight)
+#             nn.init.zeros_(self.bias)
 
-    def forward(self, inp, first_itr_or_optim_idx):
-        if self.variable_length=='false':
-            if first_itr_or_optim_idx:
-                E_inp = inp.mean(-1, keepdim=True)
-                Var_inp = (inp - E_inp).pow(2).mean(-1, keepdim=True)
-                self.E_inp = E_inp.clone().detach()
-                self.Var_inp = Var_inp.clone().detach()
-            else:
-                E_inp = self.E_inp.detach()
-                Var_inp = self.Var_inp.detach()
-            x = (inp - E_inp) / torch.sqrt(Var_inp + self.eps)
-            x = self.weight * x + self.bias
-            return x
+#     def forward(self, inp, first_itr_or_optim_idx):
+#         if self.variable_length=='false':
+#             if first_itr_or_optim_idx:
+#                 E_inp = inp.mean(-1, keepdim=True)
+#                 Var_inp = (inp - E_inp).pow(2).mean(-1, keepdim=True)
+#                 self.E_inp = E_inp.clone().detach()
+#                 self.Var_inp = Var_inp.clone().detach()
+#             else:
+#                 E_inp = self.E_inp.detach()
+#                 Var_inp = self.Var_inp.detach()
+#             x = (inp - E_inp) / torch.sqrt(Var_inp + self.eps)
+#             x = self.weight * x + self.bias
+#             return x
 
-        if self.variable_length=='false_dec':
-            seq_len, batch, dim = inp.shape
-            if first_itr_or_optim_idx == 0:
-                E_inp = inp.mean(-1, keepdim=True)
-                Var_inp = (inp - E_inp).pow(2).mean(-1, keepdim=True)
-                self.E_inp = E_inp.clone().detach()
-                self.Var_inp = Var_inp.clone().detach()
-            elif first_itr_or_optim_idx > 0:
-                E_inp = self.E_inp.tile(first_itr_or_optim_idx+1, 1, 1).detach()
-                Var_inp = self.Var_inp.tile(first_itr_or_optim_idx+1, 1, 1).detach()
-            x = (inp - E_inp) / torch.sqrt(Var_inp + self.eps)
-            x = self.weight * x + self.bias
-            return x
+#         if self.variable_length=='false_dec':
+#             seq_len, batch, dim = inp.shape
+#             if first_itr_or_optim_idx == 0:
+#                 E_inp = inp.mean(-1, keepdim=True)
+#                 Var_inp = (inp - E_inp).pow(2).mean(-1, keepdim=True)
+#                 self.E_inp = E_inp.clone().detach()
+#                 self.Var_inp = Var_inp.clone().detach()
+#             elif first_itr_or_optim_idx > 0:
+#                 E_inp = self.E_inp.tile(first_itr_or_optim_idx+1, 1, 1).detach()
+#                 Var_inp = self.Var_inp.tile(first_itr_or_optim_idx+1, 1, 1).detach()
+#             x = (inp - E_inp) / torch.sqrt(Var_inp + self.eps)
+#             x = self.weight * x + self.bias
+#             return x
 
 
 
-class TransformerEncoderLayer_CustomNorm(nn.Module):
+# class TransformerEncoderLayer_CustomNorm(nn.Module):
 
-    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu", use_norm=False):
-        super(TransformerEncoderLayer_CustomNorm, self).__init__()
+#     def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu", use_norm=False):
+#         super(TransformerEncoderLayer_CustomNorm, self).__init__()
 
-        dropout = 0.1
-        self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
-        self.d_model = d_model
+#         dropout = 0.1
+#         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+#         self.d_model = d_model
 
-        self.linear1 = nn.Linear(d_model, dim_feedforward)
-        self.dropout = nn.Dropout(dropout)
-        self.linear2 = nn.Linear(dim_feedforward, d_model)
+#         self.linear1 = nn.Linear(d_model, dim_feedforward)
+#         self.dropout = nn.Dropout(dropout)
+#         self.linear2 = nn.Linear(dim_feedforward, d_model)
 
-        self.use_norm = use_norm
-        if self.use_norm:
-            self.norm1 = CustomLayerNorm(d_model, variable_length='false')
-            self.norm2 = CustomLayerNorm(d_model, variable_length='false')
-        self.dropout1 = nn.Dropout(dropout)
-        self.dropout2 = nn.Dropout(dropout)
-        self.activation = _get_activation_fn(activation)
+#         self.use_norm = use_norm
+#         if self.use_norm:
+#             self.norm1 = CustomLayerNorm(d_model, variable_length='false')
+#             self.norm2 = CustomLayerNorm(d_model, variable_length='false')
+#         self.dropout1 = nn.Dropout(dropout)
+#         self.dropout2 = nn.Dropout(dropout)
+#         self.activation = _get_activation_fn(activation)
 
-    def forward(self, src: Tensor, first_itr) -> Tensor:
-        src2, self.attn_output_weights = self.self_attn(src, src, src)
-        src = src + self.dropout1(src2)
-        if self.use_norm:
-            src = self.norm1(src, first_itr)
+#     def forward(self, src: Tensor, first_itr) -> Tensor:
+#         src2, self.attn_output_weights = self.self_attn(src, src, src)
+#         src = src + self.dropout1(src2)
+#         if self.use_norm:
+#             src = self.norm1(src, first_itr)
         
-        src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
-        src = src + self.dropout2(src2)
-        if self.use_norm:
-            src = self.norm2(src, first_itr)
-        return src
+#         src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
+#         src = src + self.dropout2(src2)
+#         if self.use_norm:
+#             src = self.norm2(src, first_itr)
+#         return src
 
 
 
-class CustomTransformerEncoder(nn.Module):
-    __constants__ = ['norm']
+# class CustomTransformerEncoder(nn.Module):
+#     __constants__ = ['norm']
 
-    def __init__(self, encoder_layer, num_layers):
-        super(CustomTransformerEncoder, self).__init__()
+#     def __init__(self, encoder_layer, num_layers):
+#         super(CustomTransformerEncoder, self).__init__()
 
-        self.layers = _get_clones(encoder_layer, num_layers)
-        self.num_layers = num_layers
+#         self.layers = _get_clones(encoder_layer, num_layers)
+#         self.num_layers = num_layers
 
-    def forward(self, src: Tensor, first_itr, mask: Optional[Tensor] = None, src_key_padding_mask: Optional[Tensor] = None) -> Tensor:
-        output = src
-        for mod in self.layers:
-            output = mod(output, first_itr)
-        return output
+#     def forward(self, src: Tensor, first_itr, mask: Optional[Tensor] = None, src_key_padding_mask: Optional[Tensor] = None) -> Tensor:
+#         output = src
+#         for mod in self.layers:
+#             output = mod(output, first_itr)
+#         return output
 
 
 
-class TransformerDecoderLayer_CustomNorm(nn.Module):
+# class TransformerDecoderLayer_CustomNorm(nn.Module):
 
-    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu", use_norm=False):
-        super(TransformerDecoderLayer_CustomNorm, self).__init__()
-        dropout = 0.1
+#     def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu", use_norm=False):
+#         super(TransformerDecoderLayer_CustomNorm, self).__init__()
+#         dropout = 0.1
 
-        self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
-        self.multihead_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
-        self.d_model = d_model
-        # Implementation of Feedforward model
-        self.linear1 = nn.Linear(d_model, dim_feedforward)
-        self.dropout = nn.Dropout(dropout)
-        self.linear2 = nn.Linear(dim_feedforward, d_model)
+#         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+#         self.multihead_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+#         self.d_model = d_model
+#         # Implementation of Feedforward model
+#         self.linear1 = nn.Linear(d_model, dim_feedforward)
+#         self.dropout = nn.Dropout(dropout)
+#         self.linear2 = nn.Linear(dim_feedforward, d_model)
 
-        self.use_norm = use_norm
-        if self.use_norm:
-            self.norm1 = CustomLayerNorm(d_model, variable_length='false_dec')
-            self.norm2 = CustomLayerNorm(d_model, variable_length='false_dec')
-            self.norm3 = CustomLayerNorm(d_model, variable_length='false_dec')
-        self.dropout1 = nn.Dropout(dropout)
-        self.dropout2 = nn.Dropout(dropout)
-        self.dropout3 = nn.Dropout(dropout)
+#         self.use_norm = use_norm
+#         if self.use_norm:
+#             self.norm1 = CustomLayerNorm(d_model, variable_length='false_dec')
+#             self.norm2 = CustomLayerNorm(d_model, variable_length='false_dec')
+#             self.norm3 = CustomLayerNorm(d_model, variable_length='false_dec')
+#         self.dropout1 = nn.Dropout(dropout)
+#         self.dropout2 = nn.Dropout(dropout)
+#         self.dropout3 = nn.Dropout(dropout)
 
-        self.activation = _get_activation_fn(activation)
+#         self.activation = _get_activation_fn(activation)
 
-    def forward(self, tgt: Tensor, memory: Tensor, optim_idx) -> Tensor:
-        tgt2, self.self_attn_weights = self.self_attn(tgt, tgt, tgt)
-        tgt = tgt + self.dropout1(tgt2)
-        if self.use_norm:
-            tgt = self.norm1(tgt, optim_idx)
+#     def forward(self, tgt: Tensor, memory: Tensor, optim_idx) -> Tensor:
+#         tgt2, self.self_attn_weights = self.self_attn(tgt, tgt, tgt)
+#         tgt = tgt + self.dropout1(tgt2)
+#         if self.use_norm:
+#             tgt = self.norm1(tgt, optim_idx)
         
-        tgt2, self.mha_attn_weights = self.multihead_attn(tgt, memory, memory)
-        tgt = tgt + self.dropout2(tgt2)
-        if self.use_norm:
-            tgt = self.norm2(tgt, optim_idx)
+#         tgt2, self.mha_attn_weights = self.multihead_attn(tgt, memory, memory)
+#         tgt = tgt + self.dropout2(tgt2)
+#         if self.use_norm:
+#             tgt = self.norm2(tgt, optim_idx)
 
-        tgt2 = self.linear2(self.dropout(self.activation(self.linear1(tgt))))
-        tgt = tgt + self.dropout3(tgt2)
-        if self.use_norm:
-            tgt = self.norm3(tgt, optim_idx)
-        return tgt
+#         tgt2 = self.linear2(self.dropout(self.activation(self.linear1(tgt))))
+#         tgt = tgt + self.dropout3(tgt2)
+#         if self.use_norm:
+#             tgt = self.norm3(tgt, optim_idx)
+#         return tgt
 
 
 
-class CustomTransformerDecoder(nn.Module):
+# class CustomTransformerDecoder(nn.Module):
 
-    def __init__(self, decoder_layer, num_layers):
-        super(CustomTransformerDecoder, self).__init__()
-        self.layers = _get_clones(decoder_layer, num_layers)
-        self.num_layers = num_layers
+#     def __init__(self, decoder_layer, num_layers):
+#         super(CustomTransformerDecoder, self).__init__()
+#         self.layers = _get_clones(decoder_layer, num_layers)
+#         self.num_layers = num_layers
 
-    def forward(self, tgt: Tensor, memory: Tensor, optim_idx) -> Tensor:
-        output = tgt
-        for mod in self.layers:
-            output = mod(output, memory, optim_idx)
-        return output
+#     def forward(self, tgt: Tensor, memory: Tensor, optim_idx) -> Tensor:
+#         output = tgt
+#         for mod in self.layers:
+#             output = mod(output, memory, optim_idx)
+#         return output
 
 

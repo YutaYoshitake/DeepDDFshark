@@ -11,9 +11,10 @@
 *.sif
 *.ckpt
 project/__pycache__/
-project/BackBone/
+project/BackBone
 project/dataset
 project/DDF/__pycache__/
+project/DDF/dataset
 project/DDF/lightning_logs/
 project/DDF/sample_images/
 project/DDF/until_0324
@@ -27,5 +28,9 @@ project/paper_fig/depth_map
 project/paper_fig/normal_map
 project/randn
 project/sample_images
-project/scannet
+project/scannet/ODAM/__pycache__
+project/scannet/ODAM/data2
+project/scannet/ODAM/experiments
+project/scannet/ODAM/result
+project/scannet/ODAM/src
 project/txt/experiments

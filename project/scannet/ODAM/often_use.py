@@ -1,22 +1,74 @@
 import os
 import sys
-from contextlib import redirect_stdout
-import random
 import numpy as np
+import random
 import pylab
 import glob
 import math
+import re
 import pickle
 import sys
 import numpy as np
 import torch
 import torch.nn.functional as F
+from tqdm import tqdm, trange
 import torchvision
-from scipy.spatial import cKDTree as KDTree
-from scipy.linalg import logm
+
 torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEBUG = False
+
+
+
+
+
+##################################################
+##################################################
+##################################################
+def quaternion2rotation(q):
+    qw, qx, qy, qz = q
+    R = np.array([[1 - 2*qy**2 - 2*qz**2, 2*qx*qy - 2*qz*qw, 2*qx*qz + 2*qy*qw], 
+                  [2*qx*qy + 2*qz*qw, 1 - 2*qx**2 - 2*qz**2, 2*qy*qz - 2*qx*qw], 
+                  [2*qx*qz - 2*qy*qw, 2*qy*qz + 2*qx*qw, 1 - 2*qx**2 - 2*qy**2]])
+    return R
+
+
+
+def make_M_from_tqs(t, q, s):
+    # q = np.quaternion(q[0], q[1], q[2], q[3])
+    T = np.eye(4)
+    T[0:3, 3] = t
+    R = np.eye(4)
+    R[0:3, 0:3] = quaternion2rotation(q) # quaternion.as_rotation_matrix(q)
+    S = np.eye(4)
+    S[0:3, 0:3] = np.diag(s)
+    M = T.dot(R).dot(S)
+    return M
+
+
+
+def load_matrix_from_txt(path, shape=(4, 4)):
+    with open(path) as f:
+        txt = f.readlines()
+    txt = ''.join(txt).replace('\n', ' ')
+    matrix = [float(v) for v in txt.split()]
+    return np.array(matrix).reshape(shape)
+
+
+
+def loadOBJ(fliePath):
+    vertices = []
+    for line in open(fliePath, "r"):
+        vals = line.split()
+        if len(vals) == 0:
+            continue
+        if vals[0] == "v":
+            v = np.array([float(v_i) for v_i in vals[1:4]])
+            vertices.append(v)
+    return np.array(vertices)
+##################################################
+##################################################
+##################################################
 
 
 
@@ -610,8 +662,6 @@ def get_OSMap_obj(distance_map, mask, rays_d_cam, w2c, cam_pos_wrd, o2w, obj_pos
     OSMap_obj[torch.logical_not(mask)] = 0.
     OSMap_obj_wMask = torch.cat([OSMap_obj, mask.to(OSMap_obj.dtype).unsqueeze(-1)], dim=-1)
     return OSMap_obj_wMask
-    # OSMap_cam_wMask = torch.cat([OSMap_cam, mask.to(OSMap_obj.dtype).unsqueeze(-1)], dim=-1)
-    # return OSMap_cam_wMask
 
 
 
@@ -628,38 +678,34 @@ def get_diffOSMap_obj(obs_distance_map, est_distance_map, obs_mask, est_mask, ra
     diffOSMap_obj[torch.logical_not(diff_or_mask)] = 0.
     diffOSMap_obj_wMask = torch.cat([diffOSMap_obj, diff_xor_mask.to(diffOSMap_obj).unsqueeze(-1)], dim=-1)
     return diffOSMap_obj_wMask
-    # diffOSMap_cam_wMask = torch.cat([diffOSMap_cam, diff_xor_mask.to(diffOSMap_obj).unsqueeze(-1)], dim=-1)
-    # return diffOSMap_cam_wMask
 
 
 
-# def compute_trimesh_chamfer(gt_points, gen_mesh, offset, scale, num_mesh_samples=30000):
-def compute_trimesh_chamfer(gt_points_np, gen_points_sampled):
-    """
-    This function computes a symmetric chamfer distance, i.e. the sum of both chamfers.
-    gt_points: trimesh.points.PointCloud of just poins, sampled from the surface (see
-               compute_metrics.ply for more documentation)
-    gen_mesh: trimesh.base.Trimesh of output mesh from whichever autoencoding reconstruction
-              method (see compute_metrics.py for more)
-    """
+# def get_OSMap(distance_map, rays_d_cam, w2c, cam_pos_wrd, o2w, obj_pos_wrd, obj_scale, mask='non'):
+#     OSMap_cam = distance_map[..., None] * rays_d_cam
+#     OSMap_wrd = torch.sum(OSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+#     OSMap_wrd = OSMap_wrd + cam_pos_wrd[..., None, None, :]
+#     OSMap_obj = OSMap_wrd - obj_pos_wrd[..., None, None, :]
+#     OSMap_obj = torch.sum(OSMap_obj[..., None, :]*o2w.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+#     OSMap_obj = OSMap_obj / obj_scale[..., None, None, :]
+#     if mask == 'non':
+#         return OSMap_obj
+#     else:
+#         OSMap_obj[torch.logical_not(mask)] = 0.
+#         return OSMap_obj
 
-    # gen_points_sampled = trimesh.sample.sample_surface(gen_mesh, num_mesh_samples)[0]
-    # gen_points_sampled = gen_points_sampled / scale - offset
-    # only need numpy array of points
-    # gt_points_np = gt_points.vertices
-    # gt_points_np = gt_points.vertices
 
-    # one direction
-    gen_points_kd_tree = KDTree(gen_points_sampled)
-    one_distances, one_vertex_ids = gen_points_kd_tree.query(gt_points_np)
-    gt_to_gen_chamfer = np.mean(np.square(one_distances))
 
-    # other direction
-    gt_points_kd_tree = KDTree(gt_points_np)
-    two_distances, two_vertex_ids = gt_points_kd_tree.query(gen_points_sampled)
-    gen_to_gt_chamfer = np.mean(np.square(two_distances))
-
-    return gt_to_gen_chamfer + gen_to_gt_chamfer
+# def get_diff_OSMap(diff_distance_map, rays_d_cam, w2c, o2w, obj_scale, mask='non'):
+#     diff_OSMap_cam = diff_distance_map[..., None] * rays_d_cam
+#     diff_OSMap_wrd = torch.sum(diff_OSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+#     diff_OSMap_obj = torch.sum(diff_OSMap_wrd[..., None, :]*o2w.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+#     diff_OSMap_obj = diff_OSMap_obj / obj_scale[..., None, None, :]
+#     if mask == 'non':
+#         return diff_OSMap_obj
+#     else:
+#         diff_OSMap_obj[torch.logical_not(mask)] = 0.
+#         return diff_OSMap_obj
 
 
 
@@ -780,7 +826,7 @@ def render_normal_map_from_afar(
 
     # Get rays inputs.
     rays_d = F.normalize(rays_d_obj, dim=-1)
-    rays_o = rays_o_obj
+    rays_o = F.normalize(rays_o_obj, dim=-1)
 
     # Estimating.
     est_invdistance_map_obj_scale, negative_D_mask = ddf.forward_from_far(rays_o, rays_d, input_lat_vec)
@@ -830,6 +876,7 @@ def render_normal_map_from_afar(
     est_distance_map[est_mask] = 1. / est_invdistance_map[est_mask]
     est_distance_r[est_mask] = 1 / est_invdistance_r[est_mask]
     est_distance_u[est_mask] = 1 / est_invdistance_u[est_mask]
+    
     # thr = 7e-4
     # dif_mask_cr = torch.abs(est_distance_map - est_distance_r)  < thr
     # dif_mask_cu = torch.abs(est_distance_map - est_distance_u)  < thr
@@ -845,6 +892,8 @@ def render_normal_map_from_afar(
     diff_from_right = est_point - est_point_r
     diff_from_under = est_point - est_point_u
     est_normal = F.normalize(torch.cross(diff_from_right, diff_from_under, dim=-1), dim=-1)
+    # est_normal = torch.sum(est_normal[:, :, :, None, :]*o2c[..., None, None, :, :].permute(0, 1, 2, 4, 3), -1)
+    # est_normal = F.normalize(est_normal, dim=-1)
     
     return est_normal, est_distance_map, est_mask
 
@@ -877,11 +926,3 @@ def get_pe_target(cam_pos_wrd, w2c, rays_d_cam, obj_pos_wrd, o2w, obj_scale_wrd,
     pe_target_bbox = bbox_diagonal
     pe_target_obj = torch.cat([pe_target_cam_pos_obj, pe_target_center_d_obj, pe_target_bbox], dim=-1)
     return pe_target_obj
-
-
-
-def get_riemannian_distance(A, B):
-    ATB = torch.bmm(A.permute(0, 2, 1), B).to('cpu').detach().numpy().copy()
-    with redirect_stdout(open(os.devnull, 'w')):
-        log_ATB = np.stack([logm(R_i) for R_i in ATB], axis=0)
-        return torch.from_numpy((np.sqrt((log_ATB**2).sum(axis=(-1, -2))) / math.sqrt(2)).astype(np.float32)).clone()

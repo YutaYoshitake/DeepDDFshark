@@ -1,11 +1,11 @@
 expname = chair/cat
-train_data_dir = /disks/local/yyoshitake/DeepSDF/train_data/
+train_data_dir = /d/workspace/yyoshitake/ShapeNet/ddf/chair/train_data/
 N_views = 200
 val_data_dir = ./dataset/dugon/validation_set_multi35/
 N_val_views = 100
 
 N_instances = 3196
-instance_list_txt = ./instance_list.txt
+instance_list_txt = ./instance_list/instance_list.txt
 
 save_interval = 100
 N_epoch = 20000

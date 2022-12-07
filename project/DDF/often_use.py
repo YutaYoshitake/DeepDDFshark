@@ -226,3 +226,23 @@ def get_rot_views(lat_deg, freq, model):
 
     return pos_list, w2c_list
             
+
+
+
+
+def txt2list(txt_file):
+    result_list = []
+    with open(txt_file, 'r') as f:
+        lines = f.read().splitlines()
+        for line in lines:
+            result_list.append(line.rstrip('\n'))
+    return result_list
+
+
+
+
+
+def list2txt(result_list, txt_file):
+    with open(txt_file, 'a') as f:
+        for result in result_list:
+            f.write(result + '\n')
