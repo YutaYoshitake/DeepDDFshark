@@ -1,0 +1,28 @@
+expname = table/cat
+exp_version = depth_mae_normal_mae_seed0_normal001_lr00001
+train_data_dir = /disks/local/yyoshitake/ddf/table/train_data_cmp
+N_views = 200
+val_data_dir = Nothing
+N_val_views = 0
+N_instances = 4817
+instance_list_txt = ./instance_list/table/total_havibg_ddf_data.txt
+
+save_interval = 100
+N_epoch = 20000
+N_batch = 30
+
+sample_ratio = .2
+model_lrate = 0.0001
+vec_lrate = 0.0005
+
+latent_size = 256
+use_world_dir = True
+
+use_3d_code = True
+voxel_ch_num = 32
+voxel_sample_num = 32
+only_latent = False
+integrate_sampling_mode = 'CAT'
+
+use_normal_data = True
+use_normal_loss = True

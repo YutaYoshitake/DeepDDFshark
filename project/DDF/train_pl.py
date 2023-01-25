@@ -1,29 +1,30 @@
 import os
 import pdb
 import sys
-from turtle import pd
-import numpy as np
-import random
-import pylab
+# from turtle import pd
+# import numpy as np
+# import random
+# import pylab
 import glob
 import math
 import re
-from tqdm import tqdm, trange
+# from tqdm import tqdm, trange
 import torch
 import pytorch_lightning as pl
 from pytorch_lightning.plugins import DDPPlugin
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as data_utils
-from torch.utils.data import DataLoader
-from torch.autograd import grad
-import torch.utils.data as data
-import torchvision
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+# from torch.utils.data import DataLoader
+# from torch.autograd import grad
+# import torch.utils.data as data
+# import torchvision
+# import matplotlib.pyplot as plt
+# from mpl_toolkits.mplot3d import Axes3D
 # from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 # from chamferdist import ChamferDistance
 # from scipy.spatial.transform import Rotation as R
+
 
 from parser import *
 from often_use import *
@@ -32,6 +33,8 @@ torch.pi = torch.acos(torch.zeros(1)).item() * 2 # which is 3.1415927410125732
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEBUG = False
+
+
 
 # seed = 0
 # random.seed(seed)
@@ -110,7 +113,7 @@ class DDF_latent_sampler(pl.LightningModule):
         else:
             print('unknown integrate mode')
             sys.exit()
-            
+    
     
     def forward(self, lat_voxel, rays_d_wrd, rays_o, blur_mask=False, normal_mask=False, train=False):
         ####################################################################################################
@@ -159,7 +162,7 @@ class DDF_latent_sampler(pl.LightningModule):
                     sampled_lat_vec.append(sampled_lat_vec_i[0, 0, :num_blur_mask])
                     sampled_lat_vec_r.append(sampled_lat_vec_i[0, 0, num_blur_mask:num_blur_mask + num_normal_mask])
                     sampled_lat_vec_u.append(sampled_lat_vec_i[0, 0, num_blur_mask + num_normal_mask:])
-                
+
                 sampled_lat_vec = torch.cat(sampled_lat_vec)
                 sampled_lat_vec_r = torch.cat(sampled_lat_vec_r)
                 sampled_lat_vec_u = torch.cat(sampled_lat_vec_u)
@@ -450,6 +453,37 @@ class DDF(pl.LightningModule):
             # Calculate normal loss.
             normal_loss = self.mae(est_normal, gt_normal_map[hit_obj_mask])
             # normal_loss = F.mse_loss(est_normal, gt_normal_map[hit_obj_mask])
+        
+        # # 法線画像のデバック：バッチサイズ１でsample_ratio=1.0の時
+        # # GTと推定値
+        # gt_normal_map_for_check = torch.zeros_like(gt_normal_map)
+        # gt_normal_map_for_check[hit_obj_mask] = gt_normal_map[hit_obj_mask]
+        # check_map_torch((gt_normal_map_for_check[0]+1)/2, 'tes_n_gt.png')
+        # est_normal_map_for_check = torch.zeros_like(gt_normal_map)
+        # est_normal_map_for_check[hit_obj_mask] = est_normal
+        # check_map_torch((est_normal_map_for_check[0]+1)/2, 'tes_n_est.png')
+        # # ピクセルから算出
+        # def get_pixel_normal(position, mask):
+        #     length = position.shape[0]
+        #     diff_from_right = (position[1:length] - position[0:length-1])[:, 0:length-1]
+        #     diff_from_under = (position[:, 1:length] - position[:, 0:length-1])[0:length-1]
+        #     normal = F.normalize(torch.cross(diff_from_right, diff_from_under, dim=-1), dim=-1)
+        #     color = (normal + 1) / 2
+        #     normal_image = torch.zeros_like(color)
+        #     normal_image[mask[0:length-1, 0:length-1]] = color[mask[0:length-1, 0:length-1]]
+        #     return normal_image
+        # est_point = est_depth[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask]
+        # est_point_image = torch.zeros_like(gt_normal_map)
+        # est_point_image[hit_obj_mask] = est_point
+        # est_normal_image = get_pixel_normal(est_point_image[0], hit_obj_mask[0])
+        # check_map(est_normal_image, 'tes_pixn_est.png')
+        # gt_depth = 1 / inverced_depth_map[hit_obj_mask]
+        # gt_point = gt_depth[..., None] * rays_d_wrd[hit_obj_mask].reshape(-1, 3) + rays_o[hit_obj_mask]
+        # gt_point_image = torch.zeros_like(gt_normal_map)
+        # gt_point_image[hit_obj_mask] = gt_point
+        # gt_normal_image = get_pixel_normal(gt_point_image[0], hit_obj_mask[0])
+        # check_map(gt_normal_image, 'tes_pixn_gt.png')
+        # import pdb; pdb.set_trace()
 
         # Cal latent reg.
         latent_vec_reg = torch.sum(torch.norm(input_lat_vec, dim=-1)) / input_lat_vec.shape[0]
@@ -471,7 +505,7 @@ class DDF(pl.LightningModule):
 
         else:
             loss = depth_loss + self.code_reg_lambda * min(1, self.current_epoch / 1000) * latent_vec_reg
-        
+        # torch.cuda.empty_cache()
         # # log image
         # if batch_idx == 0:
         #     sample_img = torch.zeros_like(inverced_depth_map[0])
@@ -627,13 +661,14 @@ if __name__=='__main__':
             version=f'{args.expname}_{args.exp_version}',
             name='lightning_logs'
         )
+    # from pytorch_lightning.strategies import DDPStrategy
     trainer = pl.Trainer(
         gpus=args.gpu_num, 
-        strategy=DDPPlugin(find_unused_parameters=False), 
+        strategy=DDPPlugin(find_unused_parameters=False), # DDPStrategy(process_group_backend="gloo"), # 
         logger=logger,
         max_epochs=args.N_epoch, 
         enable_checkpointing = False,
-        check_val_every_n_epoch=args.check_val_every_n_epoch,
+        check_val_every_n_epoch=args.check_val_every_n_epoch, 
         )
     
 
@@ -653,9 +688,9 @@ if __name__=='__main__':
     # Create dataloader
     from dataset import *
     train_dataset = DDF_dataset(args, args.train_data_dir, args.N_views)
-    train_dataloader = data_utils.DataLoader(train_dataset, batch_size=args.N_batch, num_workers=args.num_workers, drop_last=False, shuffle=True)
-    val_dataset = DDF_dataset(args, args.val_data_dir, args.N_val_views)
-    val_dataloader = data_utils.DataLoader(train_dataset, batch_size=args.N_batch, num_workers=args.num_workers, drop_last=False, shuffle=True)
+    train_dataloader = data_utils.DataLoader(train_dataset, batch_size=args.N_batch, num_workers=args.N_batch, drop_last=False, shuffle=True) # , num_workers=args.N_batch, drop_last=False, shuffle=True) # args.num_workers
+    # val_dataset = DDF_dataset(args, args.val_data_dir, args.N_val_views)
+    # val_dataloader = data_utils.DataLoader(train_dataset, batch_size=args.N_batch, num_workers=args.num_workers, drop_last=False, shuffle=True)
 
     # For single instance.
     args.same_instances = False
@@ -672,7 +707,7 @@ if __name__=='__main__':
         trainer.fit(
             model=model, 
             train_dataloaders=train_dataloader, 
-            val_dataloaders=val_dataloader, 
+            val_dataloaders=None, 
             datamodule=None, 
             ckpt_path=None
             )
@@ -684,7 +719,7 @@ if __name__=='__main__':
         trainer.fit(
             model=model, 
             train_dataloaders=train_dataloader, 
-            val_dataloaders=val_dataloader, 
+            val_dataloaders=None, 
             datamodule=None, 
             ckpt_path=latest_ckpt_path
             )

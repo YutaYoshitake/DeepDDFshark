@@ -1,0 +1,47 @@
+
+\begin{table}[t]
+    \centering
+    \caption{その他の比較結果}
+    \begin{tabular}{c|cc|cc}
+        % \toprule
+        \hline
+        \multirow{3}{*}{\rotatebox{90}{モデル}}
+        & & & Decoderモデル
+        & \begin{tabular}{c}Encoder\\Decoderモデル\end{tabular}\\
+        % \midrule
+        \hline
+        \multirow{6}{*}{\rotatebox{90}{Chair}}
+        & \multirow{3}{*}{\rotatebox{90}{無作為}}
+        &   \footnotesize{並進} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{回転} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{形状} & 0.00/0.00 & 0.00/0.00 \\
+        \cline{2-6}
+        & \multirow{3}{*}{\rotatebox{90}{連続}}
+        &   \footnotesize{並進} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{回転} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{形状} & 0.00/0.00 & 0.00/0.00 \\
+        \hline
+        \multirow{6}{*}{\rotatebox{90}{Display}}
+        & \multirow{3}{*}{\rotatebox{90}{無作為}}
+        &   \footnotesize{並進} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{回転} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{形状} & 0.00/0.00 & 0.00/0.00 \\
+        \cline{2-6}
+        & \multirow{3}{*}{\rotatebox{90}{連続}}
+        &   \footnotesize{並進} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{回転} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{形状} & 0.00/0.00 & 0.00/0.00 \\
+        \hline
+        \multirow{6}{*}{\rotatebox{90}{Cabinet}}
+        & \multirow{3}{*}{\rotatebox{90}{無作為}}
+        &   \footnotesize{並進} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{回転} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{形状} & 0.00/0.00 & 0.00/0.00 \\
+        \cline{2-6}
+        & \multirow{3}{*}{\rotatebox{90}{連続}}
+        &   \footnotesize{並進} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{回転} & 0.00/0.00 & 0.00/0.00 \\
+        & & \footnotesize{形状} & 0.00/0.00 & 0.00/0.00 \\
+        \hline
+    \end{tabular}
+\end{table}

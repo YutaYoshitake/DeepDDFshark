@@ -32,7 +32,7 @@ def reload_args(args, sys_argv):
 
     # それ以外のArgsをリロード
     print('##### RELOAD ARGS LOG #####')
-    args_log_list = txt2list(os.path.join('lightning_logs', f'{args.expname}{args.exp_version}', 'args.txt'))
+    args_log_list = txt2list(os.path.join('lightning_logs', args.expname, args.exp_version, 'args.txt'))
     args_log_key_list = []
 
     for args_log in args_log_list:
@@ -117,11 +117,11 @@ def config_parser():
                         help='')
     parser.add_argument("--encoder_norm_type", type=str, default='LayerNorm', 
                         help='')
-    parser.add_argument("--train_data_dir", type=str, default='non', 
+    parser.add_argument("--train_data_dir", type=str, default='/d/workspace/yyoshitake/moving_camera/volumetric/tmp_2/results', 
                         help='')
     parser.add_argument("--train_instance_list_txt", type=str, 
                         help='')
-    parser.add_argument("--val_data_dir", type=str, default='non', 
+    parser.add_argument("--val_data_dir", type=str, default='/d/workspace/yyoshitake/moving_camera/volumetric/tmp_2/results', 
                         help='')
     parser.add_argument("--layer_wise_attention", type=str, default='no', 
                         help='')
@@ -136,12 +136,6 @@ def config_parser():
     parser.add_argument("--automatic_optimization", type=str, default='manual', 
                         help='')
     parser.add_argument("--model_ckpt_path", type=str, default='non', 
-                        help='')
-    parser.add_argument("--initnet_ckpt_path", type=str, default='non', 
-                        help='')
-    parser.add_argument("--init_mode", type=str, default='all',
-                        help='')
-    parser.add_argument("--init_net_name", type=str, default='non', 
                         help='')
     parser.add_argument("--val_model_epoch", type=int, default=0, 
                         help='')
@@ -159,7 +153,7 @@ def config_parser():
                         help='')
     parser.add_argument("--add_conf", type=str, default='Nothing', 
                         help='')
-    parser.add_argument("--canonical_data_path", type=str, default='Nothing', 
+    parser.add_argument("--canonical_data_path", type=str, default='dataset/dugon/moving_camera/paper_exp/chair/canonical/', 
                         help='')
     parser.add_argument("--canonical_fov", type=float, default=60, 
                         help='')
@@ -189,6 +183,18 @@ def config_parser():
                         help='')
     parser.add_argument("--fine_tune", type=str, default='no', 
                         help='')
+    parser.add_argument("--prg", type=str, default='no', 
+                        help='')
+    parser.add_argument("--scale_dim", type=int, default=1, 
+                        help='')
+    parser.add_argument("--pt_path", type=str, default='/home/yyoshitake/works/make_depth_image/project/point_clouds/03001627', 
+                        help='')
+    parser.add_argument("--initnet_ckpt_path", type=str, default='non', 
+                        help='')
+    parser.add_argument("--init_mode", type=str, default='all',
+                        help='')
+    parser.add_argument("--init_net_name", type=str, default='non', 
+                        help='')
     parser.add_argument("--train_N_views", type=int, # 不要
                         help='')
     parser.add_argument("--val_N_views", type=int, # 不要
@@ -202,6 +208,12 @@ def config_parser():
     parser.add_argument("--use_sampled_txtfile", type=str, default='no', # 不要
                         help='')
     parser.add_argument("--train_txtfile", type=str, default='no', # 不要
+                        help='')
+    parser.add_argument("--shape_code_dir", type=str, default='no', # 不要
+                        help='')
+    parser.add_argument("--pre_train_epoch", type=int, default=0, # 不要
+                        help='')
+    parser.add_argument("--scannet_view_selection", type=str, default='use_top_mask', 
                         help='')
 
     # training options
@@ -217,7 +229,7 @@ def config_parser():
                         help='')
     parser.add_argument("--N_batch", type=int, default=1, 
                         help='batch size')
-    parser.add_argument("--N_epoch", type=int, default=1, 
+    parser.add_argument("--N_epoch", type=int, default=100000, 
                         help='epoch size')
     parser.add_argument("--num_workers", type=int, default=32,
                         help='')
@@ -245,15 +257,17 @@ def config_parser():
                         help='')
     parser.add_argument("--rand_Z_sigma", type=float, default=0.05, 
                         help='')
-    parser.add_argument("--L_p", type=float, default=1e1, 
+    parser.add_argument("--L_p", type=float, default=10, 
                         help='')
-    parser.add_argument("--L_s", type=float, default=1e1, 
+    parser.add_argument("--L_s", type=float, default=1, 
                         help='')
-    parser.add_argument("--L_a", type=float, default=1e0, 
+    parser.add_argument("--L_a", type=float, default=1, 
                         help='')
-    parser.add_argument("--L_c", type=float, default=1e1, 
+    parser.add_argument("--L_c", type=float, default=0.1, 
                         help='')
-    parser.add_argument("--L_d", type=float, default=1e0, 
+    parser.add_argument("--L_d", type=float, default=0, 
+                        help='')
+    parser.add_argument("--L_r", type=float, default=1.0, 
                         help='')
     parser.add_argument("--main_layers_name", type=str, default='non', 
                         help='')
@@ -266,6 +280,12 @@ def config_parser():
     parser.add_argument("--integrate_mode", type=str, default='average', 
                         help='')
     parser.add_argument("--trans_integrate_mode", type=str, default='average', 
+                        help='')
+    parser.add_argument("--cnt_prg_step", type=int, default=80, 
+                        help='')
+    parser.add_argument("--data_type", type=str, default='shapenet', # 'scan2cad'
+                        help='')
+    parser.add_argument("--sym_label_path", type=str, default='no', # 'scan2cad'
                         help='')
     
 

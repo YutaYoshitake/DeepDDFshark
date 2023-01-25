@@ -1,0 +1,2 @@
+CUDA_VISIBLE_DEVICES=2 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=rndsim_autoreg_tau01img --N_batch=1 --val_epoch=400 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/paper_exp/cabinet/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --num_encoder_layers=3 --num_decoder_layers=3 --main_layers_name=autoreg --add_conf=T_Fixup_Pad --inp_itr_num=1 --positional_encoding_mode=yes --total_itr=7 --val_model_epoch=320

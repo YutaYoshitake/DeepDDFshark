@@ -1,0 +1,7 @@
+python renderer.py --config=../configs/paper_exp/table/view5/rdn.txt --ddf_model_path=/home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/table/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000005000.ckpt
+python renderer.py --config=../configs/paper_exp/table/view5/rdn.txt --ddf_model_path=/home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/table/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000003000.ckpt
+
+# python renderer.py --config=../configs/paper_exp/table/view5/rdn.txt --ddf_model_path=/home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/table/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000003000.ckpt
+# python renderer.py --config=../configs/paper_exp/table/view5/rdn.txt --ddf_model_path=/home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/table/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000002500.ckpt
+# python renderer.py --config=../configs/paper_exp/table/view5/rdn.txt --ddf_model_path=/home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/table/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000002000.ckpt
+# python renderer.py --config=../configs/paper_exp/table/view5/rdn.txt --ddf_model_path=/home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/table/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000001500.ckpt

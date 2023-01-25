@@ -1,500 +1,500 @@
+python ddf_inter_shape.py --config=../configs/paper_exp/cabinet/view5/rdn.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/cabinet/view5/rdn.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/cabinet/view5/rdn.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/cabinet/view5/rdn.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/cabinet/view5/rdn.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/cabinet/view5/rdn.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/cabinet/view5/rdn.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair/view5/tes.txt
 ls
-cd /tes_sfs/ue639c33f-d415-458c-8ff8-2ef68135af15/
+python ddf_inter_shape.py --config=../configs/paper_exp/chair/view5/tes.txt
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=onlymlp_enc1dec0_woFix_wpe --N_batch=7 --val_model_epoch=368  --tes_data_list=dataset/sampled_path/chair/tes/20221210084125_tes_unknown_randn_5_10_1_all.pickle
+nvidia-smi
+CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=onlymlp_enc1dec0_woFix_wpe --N_batch=7 --val_model_epoch=368  --tes_data_list=dataset/sampled_path/chair/tes/20221210084125_tes_unknown_randn_5_10_1_all.pickle
+cd ../
+CUDA_VISIBLE_DEVICES=7 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=onlymlp_enc1dec0_woFix_wpe --N_batch=7 --val_model_epoch=368  --tes_data_list=dataset/sampled_path/chair/tes/20221210084125_tes_unknown_randn_5_10_1_all.pickle
+CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TES --config=configs/paper_exp/chair/view5/tes.txt --exp_version=onlymlp_enc1dec0_woFix_wpe --N_batch=7 --val_model_epoch=368  --tes_data_list=dataset/sampled_path/chair/tes/20221210084125_tes_unknown_randn_5_10_1_all.pickle --test_data_dir=/home/yyoshitake/works/DeepSDF/disks/old/chair/tmp_1/squashfs-root
+CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TES --config=configs/paper_exp/chair_a/view5/tes.txt --exp_version=onlymlp_enc1dec0_woFix_wpe --N_batch=7 --val_model_epoch=368  --tes_data_list=dataset/sampled_path/chair/tes/20221210084125_tes_unknown_randn_5_10_1_all.pickle --test_data_dir=/home/yyoshitake/works/DeepSDF/disks/old/chair/tmp_1/squashfs-root
+CUDA_VISIBLE_DEVICES=1 python train.py --code_mode=TES --config=configs/paper_exp/chair_a/view5/tes.txt --exp_version=onlymlp_enc1dec0_woFix_wpe --N_batch=7 --val_model_epoch=368  --tes_data_list=dataset/sampled_path/chair/tes/20221210084125_tes_unknown_randn_5_10_1_all.pickle --test_data_dir=/home/yyoshitake/works/DeepSDF/disks/old/chair/tmp_1/squashfs-root --pt_path=/home/yyoshitake/works/make_depth_image/project/point_clouds/03001627
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/seq.txt --exp_version=seq_encoder_FINETUNE_ --N_batch=7 --val_model_epoch=120 --tes_data_list=dataset/sampled_path/table/tes/20230111155715_tes_continuous_16_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/seq.txt --exp_version=seq_autoreg_FINETUNE_ --N_batch=7 --val_model_epoch=120 --tes_data_list=dataset/sampled_path/table/tes/20230111155715_tes_continuous_16_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/seq.txt --exp_version=seq_autoreg_FINETUNE_ --N_batch=7 --val_model_epoch=48 --tes_data_list=dataset/sampled_path/table/tes/20230111155715_tes_continuous_16_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/rdn.txt --exp_version=rdn_encoder           --N_batch=7 --val_model_epoch=168 --tes_data_list=dataset/sampled_path/table/tes/20230111155153_tes_randn_16_10_2_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+rm *.png
+s
 ls
-cd works/DeepSDF/project/
-sh sh/exp/train.sh 
-cd works/DeepSDF/project/
-sh sh/exp/train.sh 
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/ --port 7878
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair --port 7788
-tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair --port 7788
+CUDA_VISIBLE_DEVICES=0 python train_for_shapenet.py --code_mode=TES --config=configs/paper_exp/chair_a/view5/tes.txt --exp_version=rndsim_encoder_tau01 --N_batch=1 --val_model_epoch=400 --data_type=scan2cad
+nvidia-smi
+nvidia-smi
+CUDA_VISIBLE_DEVICES=0 python train_for_shapenet.py --code_mode=TES --config=configs/paper_exp/chair_a/view5/tes.txt --exp_version=rndsim_encoder_tau01 --N_batch=1 --val_model_epoch=400 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=0 python train_check_shapenet.py --code_mode=TES --config=configs/paper_exp/chair_a/view5/tes.txt --exp_version=rndsim_encoder_tau01 --N_batch=1 --val_model_epoch=400 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=0 python train_check_shapenet.py --code_mode=TES --config=configs/paper_exp/chair_a/view5/tes.txt --exp_version=rndsim_encoder_tau01 --N_batch=1 --val_model_epoch=400 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=0 python train_check_shapenet.py --code_mode=TES --config=configs/paper_exp/chair_a/view5/tes.txt --exp_version=rndsim_encoder_tau01 --N_batch=1 --val_model_epoch=400 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=0 python train_check_shapenet.py --code_mode=TES --config=configs/paper_exp/chair_a/view5/tes.txt --exp_version=rndsim_encoder_tau01 --N_batch=1 --val_model_epoch=400 --data_type=scan2cad
+cd ../../
 ls
-cd project/
+cd make_depth_image/project/
 ls
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
+python paper_fig.py 
 nvidia-smi
-sh sh/check/debug.sh 
-sh sh/exp/train.sh 
-cd DDF/
-ls
-python check_
-python check_memory.py 
-torchsummary
-pip install torchinfo
-torchsummary
-python check_memory.py 
-python check_memory.py 
-python check_memory.py 
-python check_memory.py 
-python check_memory.py 
-python check_memory.py 
-python check_memory.py 
-python check_memory.py 
-python check_memory.py --config=configs/chair/check.txt
-python check_memory.py --config=configs/chair/check.txt
-python check_memory.py --config=configs/chair/check.txt
-python check_memory.py --config=configs/chair/check.txt
-python check_memory.py --config=configs/chair/check.txt
-python check_memory.py --config=configs/chair/check.txt
-python check_memory.py --config=configs/chair/check.txt
-python check_memory.py --config=configs/chair/check.txt
-python check_memory.py --config=configs/chair/check.txt
-python check_memory.py --config=configs/chair/check.txt
-python check_memory.py --config=configs/chair/check.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-python check_memory.py --config=configs/chair/cat.txt
-cd works/DeepSDF/project/
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/exp/train.sh
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/tes/total.sh 
-nvidia-smi
-nvidia-smi
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-nvidia-smi
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-nvidia-smi
-nvidia-smi
-sh sh/exp/train.sh 
-sh sh/exp/train.sh 
-cd works/DeepSDF/project/
-sh sh/tes/total.sh 
-nvidia-smi
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-nvidia-smi
-nvidia-smi
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-nvidia-smi
-nvidia-smi
-tmux a
-sh sh/tes/total.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/tes.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/tes/total.sh 
-sh sh/exp/train.sh
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/tes/total.sh 
-sh sh/exp/train.sh
-cd project/
-sh sh/check/debug.sh 
-ls
-cd works/
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_onlyonce --inp_itr_num=3 --N_batch=7 --val_model_epoch=464 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+cd ../../
 cd DeepSDF/project/
-sh sh/check/debug.sh 
-pip install cv2
-pip install --user cv2
-pip install --user opencv-python
-pip install --user opencv-python
-sh sh/check/debug.sh 
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_onlyonce --inp_itr_num=3 --N_batch=7 --val_model_epoch=464 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_onlyonce --inp_itr_num=3 --N_batch=7 --val_model_epoch=464 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=rdn_autoreg --inp_itr_num=3 --N_batch=7 --val_model_epoch=136 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=rdn_autoreg --inp_itr_num=3 --N_batch=7 --val_model_epoch=136 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=rdn_autoreg --inp_itr_num=3 --N_batch=7 --val_model_epoch=136 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=rdn_autoreg --inp_itr_num=3 --N_batch=7 --val_model_epoch=136 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_onlyonce --N_batch=7 --val_model_epoch=1920 --tes_data_list=dataset/sampled_path/chair/tes/20221214021558_tes_unknown_continuous_8_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+cd works/DeepSDF/project/
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=tes --N_batch=3 --num_encoder_layers=8 --num_decoder_layers=3 --main_layers_name=autoreg --add_conf=T_Fixup_Pad --inp_itr_num=1 --positional_encoding_mode=yes --total_itr=7
+rm *.png
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=tes --N_batch=3 --num_encoder_layers=8 --num_decoder_layers=3 --main_layers_name=autoreg --add_conf=T_Fixup_Pad --inp_itr_num=1 --positional_encoding_mode=yes --total_itr=7
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=tes --N_batch=3 --num_encoder_layers=8 --num_decoder_layers=3 --main_layers_name=autoreg --add_conf=T_Fixup_Pad --inp_itr_num=1 --positional_encoding_mode=yes --total_itr=7
+cd works/DeepSDF/project/
 nvidia-smi
-pip list
+sh sh/exp/tes.sh 
+sh sh/exp/tes.sh 
+sh sh/exp/tes.sh 
+sh sh/exp/tes.sh 
+cd works/DeepSDF/project/
+ls
+sh sh/exp/train.sh 
+sh sh/exp/train.sh 
+sh sh/exp/train.sh 
+sh sh/exp/train.sh 
+nvidia-smi
+cd works/DeepSDF/project/
+sh sh/exp/tes.sh 
+nvidia-smi
+sh sh/exp/tes.sh 
+nvidia-smi
+sh sh/exp/tes.sh 
+sh sh/exp/tes.sh 
+nvidia-smi
+sh sh/exp/tes.sh 
+cd works/DeepSDF/project/
+cd works/DeepSDF/project/
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+sh /home/yyoshitake/works/DeepSDF/project/sh/exp/tes.sh
+ls
+rm *.png
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_onlymlp --N_batch=7 --val_model_epoch=112 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_onlymlp --N_batch=7 --val_model_epoch=112 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_onlymlp --N_batch=7 --val_model_epoch=112 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+rm *.png
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_onlyonce --N_batch=7 --val_model_epoch=2320 --total_itr=3 --tes_data_list=dataset/sampled_path/chair/tes/20221214021558_tes_unknown_continuous_8_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=7 --val_model_epoch=112 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=7 --val_model_epoch=112 --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+rm *.png
+ls
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_autoreg_FINETUNE_ --N_batch=7 --val_model_epoch=120 --tes_data_list=dataset/sampled_path/chair/tes/20221214021558_tes_unknown_continuous_8_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+ls
+rm *.png
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=0 --val_model_epoch=128                --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=1 --val_model_epoch=128                --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=1 --val_model_epoch=128                --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=1 --val_model_epoch=128                --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=1 --val_model_epoch=128                --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+cd paper_fig/
+ls
+cd ../
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=1 --val_model_epoch=128                --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=1 --val_model_epoch=128                --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+python quantitive.py --config=../configs/paper_exp/chair/view5/tes.txt
+cd paper_fig/
+python quantitive.py --config=../configs/paper_exp/chair/view5/tes.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/tes.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+ls
+ls
+ls /home/yyoshitake/works/DeepSDF/project/paper_fig/normal_map/
+cd ../
+ls
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=1 --val_model_epoch=128                --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=1 --val_model_epoch=128                --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=1 --val_model_epoch=128                --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=1 --val_model_epoch=128                --tes_data_list=dataset/sampled_path/chair/tes/20221210160130_tes_unknown_randn_8_10_1_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+cd paper_fig/
+ls
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+cd ../
+l;s
+ls
+nvidia-smi
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=tes --N_batch=3 --num_encoder_layers=3 --num_decoder_layers=3 --main_layers_name=autoreg --add_conf=T_Fixup_Pad --inp_itr_num=1 --positional_encoding_mode=yes --total_itr=7
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TRAIN --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=tes --N_batch=3 --num_encoder_layers=3 --num_decoder_layers=3 --main_layers_name=autoreg --add_conf=T_Fixup_Pad --inp_itr_num=1 --positional_encoding_mode=yes --total_itr=7
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+cd paper_fig/
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python quantitive.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+c
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+python ddf_inter_shape.py --config=../configs/paper_exp/chair_a/view5/tes.txt
+tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/DeepTaR/chair --port 7777
+tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/ --port 7777
+tensorboard --logdir /home/yyoshitake/works/DeepSDF/project/lightning_logs/ScanNet/ --port 7777
+cd works/DeepSDF/project/
+sh /home/yyoshitake/works/DeepSDF/project/configs/paper_exp/table/view5/check.sh
+ls
+cd works/DeepSDF/project/
+ls
+cd scannet
+ls
+python make_dataset.py 
+python make_dataset.py 
+python make_dataset.py 
+python get_data.py scene0568_00
+python get_data.py scene0568_00
+cd /home/yyoshitake/works/DeepSDF/project/scannet/data2/scans/raw/scene0568_00/
+cd /home/yyoshitake/works/DeepSDF/project/scannet/data2/scans/raw/
+ld
+ls
+cd ../
+cd scene0568_00/
+lscd ../../../
+cd ../../
+python get_data.py scene0261_02
+python make_dataset.py 
+python make_dataset.py 
+python make_dataset.py 
+python get_data.py scene0304_00
+python make_dataset.py 
+python make_dataset.py 
+python make_dataset.py 
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/cabinet/view5/rdn.txt --exp_version=rdn_encoder --N_batch=7 --val_model_epoch=8 --tes_data_list=dataset/sampled_path/table/tes/20230111155153_tes_randn_16_10_2_all.pickle --test_data_dir=/home/yyoshitake/works/DeepSDF/disks/dfnet/volumetric/table/squashfs-root --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+cd ../
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/cabinet/view5/rdn.txt --exp_version=rdn_encoder --N_batch=7 --val_model_epoch=8 --tes_data_list=dataset/sampled_path/table/tes/20230111155153_tes_randn_16_10_2_all.pickle --test_data_dir=/home/yyoshitake/works/DeepSDF/disks/dfnet/volumetric/table/squashfs-root --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/cabinet/view5/rdn.txt --exp_version=rdn_encoder --N_batch=7 --val_model_epoch=8 --tes_data_list=dataset/sampled_path/table/tes/20230111155153_tes_randn_16_10_2_all.pickle --test_data_dir=/home/yyoshitake/works/DeepSDF/disks/dfnet/volumetric/table/squashfs-root --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/rdn.txt --exp_version=rdn_encoder --N_batch=7 --val_model_epoch=8 --tes_data_list=dataset/sampled_path/table/tes/20230111155153_tes_randn_16_10_2_all.pickle --test_data_dir=/home/yyoshitake/works/DeepSDF/disks/dfnet/volumetric/table/squashfs-root --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/rdn.txt --exp_version=rdn_encoder --N_batch=7 --val_model_epoch=8 --tes_data_list=dataset/sampled_path/table/tes/20230111155153_tes_randn_16_10_2_all.pickle --test_data_dir=/home/yyoshitake/works/DeepSDF/disks/dfnet/volumetric/table/squashfs-root --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/rdn.txt --exp_version=rdn_encoder --N_batch=7 --val_model_epoch=8 --tes_data_list=dataset/sampled_path/table/tes/20230111155153_tes_randn_16_10_2_all.pickle --test_data_dir=/home/yyoshitake/works/DeepSDF/disks/dfnet/volumetric/table/squashfs-root --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/rdn.txt --exp_version=rdn_encoder --N_batch=7 --val_model_epoch=8 --tes_data_list=dataset/sampled_path/table/tes/20230111155153_tes_randn_16_10_2_all.pickle --test_data_dir=/home/yyoshitake/works/DeepSDF/disks/dfnet/volumetric/table/squashfs-root --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/rdn.txt --exp_version=rdn_encoder --N_batch=7 --val_model_epoch=8 --tes_data_list=dataset/sampled_path/table/tes/20230111155153_tes_randn_16_10_2_all.pickle --test_data_dir=/home/yyoshitake/works/DeepSDF/disks/dfnet/volumetric/table/squashfs-root --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+cd scannet
+python scannet_utils.py 
+ls
+cd ../
+python scannet_dataset.py 
+python scannet_dataset.py --config=./configs/paper_exp/chair/view5/txt.txt
+python scannet_dataset.py --config=./configs/paper_exp/chair/view5/txt.txt
+python scannet_dataset.py --config=./configs/paper_exp/chair/view5/txt.txt
+python scannet_dataset.py --config=./configs/paper_exp/chair/view5/txt.txt
+python scannet_dataset.py --config=./configs/paper_exp/chair/view5/txt.txt
+python scannet_dataset.py --config=./configs/paper_exp/chair/view5/txt.txt
+cd scannet
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python get_data.py 
+python make_dataset.py 
+cd ../../../
+cd make_depth_image/project/
+ls
+python make_ddf_dataset.py 
+python make_ddf_dataset.py 
+ls /home/yyoshitake/works/DeepSDF/project/DDF/dataset/table
+ls /home/yyoshitake/works/DeepSDF/project/DDF/dataset/table/results_cmp
+python make_ddf_dataset.py 
+python make_ddf_dataset.py 
+python make_ddf_dataset.py 
+python make_ddf_dataset.py 
+python make_ddf_dataset.py 
+ls
+cd ../../
+ls
+cd DeepSDF/
+ls
 cd project/
-sh sh/check/debug.sh 
+ls
+python make_dataset.py
+cd scannet
+python make_dataset.py
+python make_dataset.py
+python make_dataset.py
+python make_dataset.py
+python make_dataset.py
+python get_data.py 
+python get_data_debug.py 
+python get_data.py 
+python get_data_debug.py 
+python get_data_debug.py 
+python get_data.py scene0257_00
+python get_data.py scene0257_00
+python get_data.py scene0257_00
+python make_dataset.py
+python make_dataset.py
 python 
+python z_get_data.py scene0257_00
+python z_get_data.py scene0257_00
+python z_get_data.py scene0257_00
+python z_get_data.py scene0389_00
+python z_get_data.py scene0389_00
+python z_get_data.py scene0353_00
+python z_get_data.py scene0251_00
+python z_get_data.py scene0251_00
+python z_get_data.py scene0251_00
+python z_get_data.py scene0353_00
+python z_get_data.py scene0389_00
+python make_dataset.py
+ls
+python make_dataset.py
+cd ../../../make_depth_image/project/
+ls
+python paper_fig.py 
+python paper_fig.py 
+python paper_fig.py 
+python paper_fig.py 
+python paper_fig.py 
+python paper_fig.py 
+python paper_fig.py 
+python paper_fig.py 
+python paper_fig.py 
+python paper_fig.py 
+python paper_fig.py 
+python paper_fig.py 
+python paper_fig.py 
+cd works/DeepSDF/project/paper_fig/
+ls
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+python paper_dfnet_data.py 
+cd works/DeepSDF/project/
+CUDA_VISIBLE_DEVICES=0 python train_check_scannet.py --code_mode=TRAIN --config=configs/paper_exp/cir_re/view5/seq.txt --exp_version=seq_autoreg_FINETUNE_ --N_batch=8 --pre_train_epoch=360 --val_model_epoch=0 --data_type=scan2cad --save_interval=1
+CUDA_VISIBLE_DEVICES=0 python train_check_scannet.py --code_mode=TRAIN --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_autoreg_FINETUNE_ --N_batch=8 --pre_train_epoch=360 --val_model_epoch=0 --data_type=scan2cad --save_interval=1
+CUDA_VISIBLE_DEVICES=0 python train_check_scannet.py --code_mode=TRAIN --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_autoreg_FINETUNE_ --N_batch=8 --pre_train_epoch=360 --val_model_epoch=0 --data_type=scan2cad --save_interval=1
+cd works/DeepSDF/project/
+cd scannet
+ls
 python 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-python 
-cd works/DeepSDF/project/
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-cd works/DeepSDF/project/
-sh sh/exp/train.sh 
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
-python 
+python make_dataset.py 
+python check_failed_ins.py 
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0377_01
+python get_data.py chair results scene0695_02
 python
-vim
-ls
-vim run_sif.sh 
-sh run_sif.sh 
-python
-python
-python3
-env PYTHONNOUSERSITE=1 python3
-shell /home/nob/pytorch.sif
-singularity shell /home/nob/pytorch.sif
-python
-python
-singularity shell /home/nob/pytorch.sif
-import cv2
-python
-python
-python
-cd works/DeepSDF/project/
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-cd /d/workspace/yyoshitake/
-ls
-python
-apt install
-python
-python
-python
-python
-pip list
-cat /home/nob/ubuntu.def
-python
-python cv2
-python
-ls
-cd project/
-ls
-sh sh/check/debug.sh 
-python
-python3
-cd project/
-sh sh/check/debug.sh 
-cd works/DeepSDF/project/
-sh sh/exp/train.sh 
-cd works/DeepSDF/project/
-sh sh sh/exp/train.sh 
-sh sh sh/exp/train.sh 
-cd works/DeepSDF/project/
-python dataset.py 
-cd works/DeepSDF/project/
-ls
-python dataset.py 
-python dataset.py 
-python dataset.py 
-fg
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-rm -rf dataset/sampled_path/train/
-python dataset.py 
-rm -rf dataset/sampled_path/train/*
-python dataset.py 
-cd works/DeepSDF/project/
-ls
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-rm -rf dataset/sampled_path/train/*
+python get_data.py chair results scene0695_02
+python get_data.py chair results scene0695_02
+python get_data.py chair results scene0695_02
+python get_data.py chair results scene0695_02
+python get_data.py chair results scene0695_02
+rm -rf results_chair_tes/03001627/scene0377_01
+rm -rf results_chair_tes/03001627/scene0695_02
+mv results/03001627/scene0377_01 results_chair_tes/03001627/
+mv results/03001627/scene0695_02 results_chair_tes/03001627/
+python make_dataset.py 
+rm -rf data2/scans/raw/scene0591_00
+rm -rf data2/scans/raw/scene0050_00
+rm -rf data2/scans/raw/scene0406_00
+rm -rf data2/scans/raw/scene0406_01
+rm -rf data2/scans/raw/scene0406_02
+mv scan_tes/scans/* data2/scans/raw/
+python make_dataset.py 
+python make_dataset.py 
+python get_data.py chair results scene0591_00
+python get_data.py chair results scene0591_00
+python make_dataset.py 
+rm -rf data2/scans/raw/scene0591_00
+mv scan_tes/scans/* data2/scans/raw/
+python make_dataset.py 
+rm -rf /home/yyoshitake/works/DeepSDF/project/scannet/results_chair_tes/03001627/scene0050_00
+rm -rf results_chair_tes/03001627/scene0591_00
+rm -rf results_chair_tes/03001627/scene0406_00
+rm -rf results_chair_tes/03001627/scene0406_01
+rm -rf results_chair_tes/03001627/scene0406_02
+mv /home/yyoshitake/works/DeepSDF/project/scannet/results/03001627/* /home/yyoshitake/works/DeepSDF/project/scannet/results_chair_tes/03001627/
+python get_data.py chair results scene0695_02
+python get_data.py chair results scene0695_02
+CUDA_VISIBLE_DEVICES=0 python check_annotation.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+mv check_annotations/03001627/*.png check_annotations/03001627/train/
+CUDA_VISIBLE_DEVICES=0 python check_annotation.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+CUDA_VISIBLE_DEVICES=0 python check_annotation.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+CUDA_VISIBLE_DEVICES=0 python check_annotation.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+CUDA_VISIBLE_DEVICES=0 python check_annotation.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+CUDA_VISIBLE_DEVICES=0 python check_annotation.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
+CUDA_VISIBLE_DEVICES=0 python check_annotation.py --config=../configs/paper_exp/chair_re/view5/rdn.txt
 nvidia-smi
-htop
-fg
-nvidia-smi
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-cd works/DeepSDF/project/
-ls
-python dataset.py 
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
-nvidia-smi
-cd works/DeepSDF/project/
-python dataset.py 
-python dataset.py 
-sh sh/check/debug.sh 
-nvidia-smi
-nvidia-smi
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-nvidia-smi
-htop
-cd works/DeepSDF/project/
-ls
-sh sh/check/debug.sh 
-cd works/DeepSDF/project/
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-sh sh/exp/train.sh 
-sh sh/exp/train.sh 
-sh sh/exp/train.sh 
-sh sh/exp/train.sh 
-sh sh/exp/train.sh 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
-python dataset.py 
+cd ../
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/seq.txt --exp_version=seq_encoder_FINETUNE_copy --N_batch=7 --val_model_epoch=288 --tes_data_list=dataset/sampled_path/table/tes/20230111155715_tes_continuous_16_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/seq.txt --exp_version=seq_encoder_FINETUNE_copy --N_batch=7 --val_model_epoch=288 --tes_data_list=dataset/sampled_path/table/tes/20230111155715_tes_continuous_16_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/seq.txt --exp_version=seq_encoder_FINETUNE_copy --N_batch=7 --val_model_epoch=288 --tes_data_list=dataset/sampled_path/table/tes/20230111155715_tes_continuous_16_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_onlyonce          --N_batch=7 --val_model_epoch=4720 --total_itr=3 --tes_data_list=dataset/sampled_path/chair/tes/20221214021558_tes_unknown_continuous_8_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_onlyonce          --N_batch=7 --val_model_epoch=4720 --total_itr=3 --tes_data_list=dataset/sampled_path/chair/tes/20221214021558_tes_unknown_continuous_8_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_onlyonce          --N_batch=7 --val_model_epoch=4720 --total_itr=3 --tes_data_list=dataset/sampled_path/chair/tes/20221214021558_tes_unknown_continuous_8_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_onlyonce          --N_batch=7 --val_model_epoch=4720 --total_itr=3 --tes_data_list=dataset/sampled_path/chair/tes/20221214021558_tes_unknown_continuous_8_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_onlyonce          --N_batch=7 --val_model_epoch=4720 --total_itr=3 --tes_data_list=dataset/sampled_path/chair/tes/20221214021558_tes_unknown_continuous_8_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_onlyonce          --N_batch=7 --val_model_epoch=4720 --total_itr=3 --tes_data_list=dataset/sampled_path/chair/tes/20221214021558_tes_unknown_continuous_8_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/project/dataset/dugon/moving_camera/paper_exp/chair/canonical
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/seq.txt --exp_version=seq_encoder_FINETUNE_copy --N_batch=7 --val_model_epoch=288 --tes_data_list=dataset/sampled_path/table/tes/20230111155715_tes_continuous_16_10_2_all.pickle --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=7 --val_model_epoch=232 --tes_data_list=dataset/sampled_path/table/tes/20230111155153_tes_randn_16_10_2_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=0 python train.py --code_mode=TES --config=configs/paper_exp/table/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=7 --val_model_epoch=232 --tes_data_list=dataset/sampled_path/table/tes/20230111155153_tes_randn_16_10_2_all.pickle      --canonical_data_path=/home/yyoshitake/works/DeepSDF/disks/dfnet/canonical/tmp_map/04379243
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=360 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+rm *.png
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
 python
-python dataset.py 
-python dataset.py 
-sh sh/exp/train.sh 
-sh sh/exp/train.sh 
-sh sh/exp/train.sh 
-sh sh/exp/train.sh 
-sh sh/exp/train.sh 
-sh sh/exp/train.sh 
-sh sh/exp/train.sh 
+cd scannet
+python check_anno_debug.py 
+python check_anno_debug.py 
+python check_anno_debug.py 
+python check_anno_debug.py 
 cd works/DeepSDF/project/
-sh sh/exp/train.sh 
-cd works/DeepSDF/project/
-sh sh/check/debug.sh 
-sh sh/check/debug.sh 
-python 
-cd works/DeepSDF/project/
-sh sh/exp/train.sh 
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
-sh sh/exp/train.sh
-cd works/DeepSDF/project/
-sh sh/exp/train.sh 
-cd works/DeepSDF/project/
-sh sh/exp/train.sh 
-cd works/DeepSDF/project/
-sh sh/exp/train.sh
+python check_anno_debug.py 
+cd scannet
+python check_anno_debug.py 
+python check_anno_debug.py 
+python check_anno_debug.py 
+python check_anno_debug.py 
+python check_anno_debug.py 
+python check_anno_debug.py 
+python check_anno_debug.py 
+python check_anno_debug.py 
+python check_anno_debug.py 
+cd 
+cd works/DeepSDF/project/scannet/data2/scans/raw/scene0
+cd works/DeepSDF/project/scannet/data2/scans/raw/
+cd ../../../
+ls
+cd ../
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
+CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad

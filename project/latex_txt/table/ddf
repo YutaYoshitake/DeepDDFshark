@@ -1,0 +1,44 @@
+\begin{table}[t]
+    \centering
+    \begin{tabular}{lccccccccc}
+        \toprule
+        モデル
+        & 推論時間 & メモリ使用量 \\
+        \midrule
+        DIST-Renderer & ??? \\
+        DDF & ??? & ??? \\
+        \bottomrule
+    \end{tabular}
+    \caption{Main results}
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \begin{tabular}{lcccccc}
+        \toprule
+        \multirow{2}{*}{モデル} 
+        & \multicolumn{3}{c}{Chair}
+        & \multicolumn{3}{c}{Table} \\
+         & \footnotesize{深度} & \footnotesize{点群} & \footnotesize{失敗数} & \footnotesize{深度} & \footnotesize{点群} & \footnotesize{失敗数} \\
+        \midrule
+        DIST-Renderer & ???/??? & ???/??? & ??? & ???/??? & ???/??? & ??? \\
+        DeepDDF & ???/??? & ???/??? & ??? & ???/??? & ???/??? & ??? \\
+        \bottomrule
+    \end{tabular}
+    \caption{Main results}
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \begin{tabular}{lcccccc}
+        \toprule
+        エポック
+        & 訓練データの形状数
+        & \multicolumn{3}{c}{復元の精度} \\
+         & \footnotesize{深度} & \footnotesize{点群} & \footnotesize{失敗数}\\
+        \midrule
+        DIST-Renderer & ??? & ???/??? & ??? & ???/??? & ???/??? & ??? \\
+        \bottomrule
+    \end{tabular}
+    \caption{Main results}
+\end{table}

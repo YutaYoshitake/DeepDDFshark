@@ -1,0 +1,35 @@
+expname = DeepTaR/cabinet/
+fov = 50
+input_H = 128
+input_W = 128
+ddf_H_W_during_dfnet = 128
+train_instance_list_txt = /home/yyoshitake/works/make_depth_image/project/instance_list/paper/cabinet/train.txt
+val_instance_list_txt   = /home/yyoshitake/works/make_depth_image/project/instance_list/paper/cabinet/val.txt
+test_instance_list_txt  = /home/yyoshitake/works/make_depth_image/project/instance_list/paper/cabinet/tes.txt
+train_data_dir = /disks/local/yyoshitake/moving_camera/volumetric/cabinet/results
+val_data_dir   = /disks/local/yyoshitake/moving_camera/volumetric/cabinet/results
+test_data_dir  = /home/yyoshitake/works/DeepSDF/disks/dfnet/volumetric/cabinet/squashfs-root
+train_txtfile = /home/yyoshitake/works/DeepSDF/project/dataset/sampled_path/cabinet/train/20230106023536_train_continuous_1000_10_2_all
+val_data_list = /home/yyoshitake/works/DeepSDF/project/dataset/sampled_path/cabinet/val/20230106032303_val_continuous_8_10_2_all.pickle
+canonical_fov = 60
+canonical_data_path = /disks/local/yyoshitake/moving_camera/canonical/tmp_map/02933112
+pt_path = /home/yyoshitake/works/make_depth_image/project/point_clouds/02933112
+use_sampled_txtfile=yes
+
+save_interval = 8
+total_obs_num = 5 
+total_itr = 10
+itr_per_frame = 2
+view_position = continuous
+view_selection = sequential
+scale_dim = 3
+
+ddf_model_path = /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/cabinet/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000008000.ckpt
+ddf_instance_list_txt = /home/yyoshitake/works/make_depth_image/project/instance_list/paper/cabinet/ddf_train.txt
+latent_size = 256
+N_instances = 1465
+use_3d_code = True
+voxel_ch_num = 32
+voxel_sample_num = 32
+only_latent = False
+integrate_sampling_mode = 'CAT'

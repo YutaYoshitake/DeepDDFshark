@@ -1,17 +1,17 @@
 expname = chair/cat
-train_data_dir = /d/workspace/yyoshitake/ShapeNet/ddf/chair/train_data/
+exp_version = depth_mae_normal_mae_seed0_normal001_lr00001
+train_data_dir = /disks/local/yyoshitake/ddf/chair/train_data
 N_views = 200
 val_data_dir = ./dataset/dugon/validation_set_multi35/
 N_val_views = 100
-
 N_instances = 3196
-instance_list_txt = ./instance_list/instance_list.txt
+instance_list_txt = ./instance_list/chair/instance_list.txt
 
 save_interval = 100
 N_epoch = 20000
 N_batch = 1
 
-sample_ratio = .2
+sample_ratio = 1.0
 model_lrate = 0.0001
 vec_lrate = 0.0005
 

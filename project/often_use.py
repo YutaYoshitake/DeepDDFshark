@@ -210,63 +210,9 @@ def get_rot_views(lat_deg, freq, model):
 
 
 
-# def batch_vec2skew(v, batch_size):
-#     """
-#     :param v:  (3, ) torch tensor
-#     :return:   (3, 3)
-#     """
-#     zero = torch.zeros([batch_size, 1], dtype=torch.float32, device=v.device)
-#     skew_v0 = torch.cat([ zero,    -v[:, 2:3],   v[:, 1:2]], dim=1)  # (batch, 3, 1)
-#     skew_v1 = torch.cat([ v[:, 2:3],   zero,    -v[:, 0:1]], dim=1)
-#     skew_v2 = torch.cat([-v[:, 1:2],   v[:, 0:1],   zero], dim=1)
-#     skew_v = torch.stack([skew_v0, skew_v1, skew_v2], dim=1)  # (batch, 3, 3)
-#     return skew_v  # (batch, 3, 3)
-
-
-
-# def batch_Exp(r):
-#     """so(3) vector to SO(3) matrix
-#     :param r: (3, ) axis-angle, torch tensor
-#     :return:  (3, 3)
-#     """
-#     batch_size = r.shape[0]
-#     skew_r = batch_vec2skew(r, batch_size)  # (batch, 3, 3)
-#     norm_r = r.norm(dim=1)[:, None, None] + 1e-15
-#     eye = torch.eye(3, dtype=torch.float32, device=r.device).expand(batch_size, -1, -1)
-#     R = eye + (torch.sin(norm_r) / norm_r) * skew_r + ((1 - torch.cos(norm_r)) / norm_r**2) * torch.bmm(skew_r, skew_r)
-#     return R
-
-
-
-# def batch_pi2rot_y(pi):
-#     # Rotate randomly.
-#     if all(pi[:, 0] == 0) and all(pi[:, 2] == 0):
-#         zeros = torch.zeros_like(pi[:, 0])
-#         ones = torch.ones_like(pi[:, 0])
-#         R_0 = torch.stack([torch.cos(pi[:, 1]), zeros, -torch.sin(pi[:, 1])], dim=-1)
-#         R_1 = torch.stack([              zeros,  ones,                zeros], dim=-1)
-#         R_2 = torch.stack([torch.sin(pi[:, 1]), zeros,  torch.cos(pi[:, 1])], dim=-1)
-#         return torch.stack([R_0, R_1, R_2], dim=-1)
-#     else:
-#         print('only y-axis rotation.')
-#         sys.exit()
-
-            
-                                    
-# def get_weighted_average(target, ratio): # [Batch, Sample, Values]
-#     ratio = ratio / torch.sum(ratio, dim=1)[..., None] # [Batch, Sample]
-#     return torch.sum(ratio[..., None] * target, dim=1) # [Batch, Sample, Values]
-
-
-
 def batch_linspace(start, end, step):
     raw = torch.linspace(0, 1, step)[None, :].to(start)
     return (end.to(start) - start)[:, None] * raw + start[:, None]
-
-
-
-# def int_clamp(n, smallest, largest):
-#     return int(max(smallest, min(n, largest)))
 
 
 
@@ -329,78 +275,6 @@ def render_distance_map_from_axis(
 
 
 
-# def clopping_distance_map(mask, distance_map, image_coord, input_H, input_W, ddf_H, bbox_list='not_given'):
-#     # Get bbox.
-#     if bbox_list == 'not_given':
-#         raw_bbox_list = []
-#         for i, mask_i in enumerate(mask):
-#             masked_image_coord = image_coord[mask_i]
-#             if masked_image_coord.shape[0] != 0:
-#                 max_y, max_x = masked_image_coord.max(dim=0).values
-#                 min_y, min_x = masked_image_coord.min(dim=0).values
-#             elif masked_image_coord.shape[0] == 0:
-#                 mask[i] = torch.ones_like(mask_i)
-#                 max_y, max_x = image_coord.reshape(-1, 2).max(dim=0).values
-#                 min_y, min_x = image_coord.reshape(-1, 2).min(dim=0).values
-#             raw_bbox_list.append(torch.tensor([[max_x, max_y], [min_x, min_y]]))
-#         raw_bbox_list = torch.stack(raw_bbox_list, dim=0)
-        
-#         # 正方形でClop.
-#         bbox_H_xy = torch.stack([raw_bbox_list[:, 0, 0] - raw_bbox_list[:, 1, 0], # H_x
-#                                  raw_bbox_list[:, 0, 1] - raw_bbox_list[:, 1, 1]] # H_y
-#                                     , dim=-1)
-#         bbox_H = bbox_H_xy.max(dim=-1).values # BBoxのxy幅の内、大きい方で揃える
-#         diff_bbox_H = (bbox_H[:, None] - bbox_H_xy) / 2
-#         bbox_list = raw_bbox_list + torch.stack([diff_bbox_H, -diff_bbox_H], dim=-2) # maxには足りない分を足し、minからは引く
-
-#         # BBoxが画像からはみ出た場合、収まるように戻す
-#         border = torch.tensor([[input_W-1, input_H-1], [0, 0]])[None]
-#         outside = border - bbox_list
-#         outside[:, 0][outside[:, 0] > .0] = 0. # 値が負ならMaxがはみ出た -> ずれを引く
-#         outside[:, 1][outside[:, 1] < .0] = 0. # 値が正ならMinがはみ出た -> ずれを足す
-#         bbox_list = bbox_list + outside.sum(dim=-2)[:, None, :]
-        
-#         # 元画像より大きい時
-#         for i_, (diff_bbox_H_i, bbox_H_xy_i, bbox_H_i) in enumerate(zip(diff_bbox_H, bbox_H_xy, bbox_H)):
-#             if not (bbox_H_i < min(input_H, input_W)):
-#                 print('unballance bbox!')
-#                 max_y = raw_bbox_list[i_][0, 1]
-#                 min_y = raw_bbox_list[i_][1, 1]
-#                 upper_limitted = max_y <= input_H
-#                 lower_limitted = min_y >= 0
-#                 if upper_limitted==lower_limitted:
-#                     bbox_list[i_][:, 1] = raw_bbox_list[i_][:, 1] + torch.stack([diff_bbox_H, -diff_bbox_H], dim=-2)[:, 1]
-#                 elif upper_limitted: # 上が画像の淵からはみ出ている
-#                     bbox_list[i_][1, 1] = raw_bbox_list[i_][1, 1] - 2*diff_bbox_H[1]
-#                 elif lower_limitted: # 下が画像の淵からはみ出ている
-#                     bbox_list[i_][0, 1] = raw_bbox_list[i_][0, 1] + 2*diff_bbox_H[1]
-#                 import pdb; pdb.set_trace()
-        
-#         # 範囲をそろえる
-#         bbox_list[:, :, 0] = bbox_list[:, :, 0] / (0.5*input_W) - 1 # change range [-1, 1]
-#         bbox_list[:, :, 1] = bbox_list[:, :, 1] / (0.5*input_H) - 1 # change range [-1, 1]
-
-#     # Clop
-#     mask = mask[:, None] # (N, dummy_C, H, W)
-#     distance_map = distance_map[:, None] # (N, dummy_C, H, W)
-
-#     coord_x = batch_linspace(bbox_list[:, 1, 0], bbox_list[:, 0, 0], ddf_H)
-#     coord_x = coord_x[:, None, :].expand(-1, ddf_H, -1)
-#     coord_y = batch_linspace(bbox_list[:, 1, 1], bbox_list[:, 0, 1], ddf_H)
-#     coord_y = coord_y[:, :, None].expand(-1, -1, ddf_H)
-#     sampling_coord = torch.stack([coord_x, coord_y], dim=-1).to(distance_map.device)
-#     cloped_mask = F.grid_sample(
-#                         mask.to(sampling_coord.dtype), 
-#                         sampling_coord, 
-#                         align_corners=True)[:, 0] > 0.99 # (N, H, W)
-#     cloped_distance_map = F.grid_sample(
-#                         distance_map.to(sampling_coord.dtype), 
-#                         sampling_coord, 
-#                         align_corners=True)[:, 0] # (N, H, W)
-#     return cloped_mask, cloped_distance_map, bbox_list
-
-
-
 def clopping_distance_map_from_bbox(ddf_H, bbox_list, rays_d_cam, mask, distance_map):
     # Reshape.
     batch, seq, _, _ = bbox_list.shape
@@ -415,10 +289,7 @@ def clopping_distance_map_from_bbox(ddf_H, bbox_list, rays_d_cam, mask, distance
     coord_y = batch_linspace(bbox_list[:, 1, 1], bbox_list[:, 0, 1], ddf_H)
     coord_y = coord_y[:, :, None].expand(-1, -1, ddf_H)
     sampling_coord = torch.stack([coord_x, coord_y], dim=-1).to(distance_map.device)
-    cloped_mask = F.grid_sample(
-                        mask.to(sampling_coord.dtype), 
-                        sampling_coord, 
-                        align_corners=True)[:, 0] > 0.99 # (N, H, W)
+    cloped_mask = F.grid_sample(mask.to(sampling_coord.dtype), sampling_coord, align_corners=True)[:, 0] > 0.99 # (N, H, W)
     cloped_distance_map = F.grid_sample(
                         distance_map.to(sampling_coord.dtype), 
                         sampling_coord, 
@@ -435,96 +306,6 @@ def clopping_distance_map_from_bbox(ddf_H, bbox_list, rays_d_cam, mask, distance
     cloped_distance_map[torch.logical_not(cloped_mask)] = 0.
     rays_d_cam = rays_d_cam.reshape(batch, seq, ddf_H, ddf_H, 3)
     return cloped_mask, cloped_distance_map, rays_d_cam
-
-
-
-# def get_normalized_depth_map(mask, distance_map, rays_d_cam, avg_depth_map='not_given'):
-#     # Convert to depth map.
-#     depth_map = rays_d_cam[..., -1] * distance_map
-
-#     # Get average.
-#     if avg_depth_map=='not_given':
-#         avg_depth_map = torch.tensor(
-#             [depth_map_i[mask_i].mean() for mask_i, depth_map_i in zip(mask, depth_map)]
-#             , device=depth_map.device) # 物体の存在しているピクセルで平均を取る。
-#         # top_n = 10 # top_nからtop_n//2までの平均を取る
-#         # avg_depth_map = torch.stack([
-#         #                     torch.topk(depth_map_i[mask_i], top_n).values[top_n//2:].mean() - torch.topk(-depth_map_i[mask_i], top_n).values[top_n//2:].mean() 
-#         #                     for mask_i, depth_map_i in zip(mask, depth_map)], dim=0)
-#         # avg_depth_map = avg_depth_map / 2
-
-#     # Normalizing.
-#     normalized_depth_map = depth_map - avg_depth_map[:, None, None]
-#     normalized_depth_map[torch.logical_not(mask)] = 0. # 物体の存在しているピクセルを正規化
-#     return depth_map, normalized_depth_map, avg_depth_map
-
-
-
-# def get_clopped_rays_d_cam(size, bbox_list, rays_d_cam):
-#     coord_x = batch_linspace(bbox_list[:, 1, 0], bbox_list[:, 0, 0], size)
-#     coord_x = coord_x[:, None, :].expand(-1, size, -1)
-#     coord_y = batch_linspace(bbox_list[:, 1, 1], bbox_list[:, 0, 1], size)
-#     coord_y = coord_y[:, :, None].expand(-1, -1, size)
-#     sampling_coord = torch.stack([coord_x, coord_y], dim=-1)
-#     rays_d_cam = rays_d_cam.expand(bbox_list.shape[0], -1, -1, -1).permute(0, 3, 1, 2)
-#     rays_d_cam = F.grid_sample(rays_d_cam.to(sampling_coord.dtype), sampling_coord, align_corners=True).permute(0, 2, 3, 1)
-#     rays_d_cam = F.normalize(rays_d_cam, dim=-1)
-#     return rays_d_cam # H, W, 3:xyz
-
-
-
-# def diff2estimation(obj_pos_cim, scale_diff, bbox_list, avg_z_map, fov, canonical_bbox_diagonal=1.0, with_cim2cam_info=False):
-#     # Get Bbox info.
-#     bbox_list = bbox_list.to(obj_pos_cim)
-#     fov = torch.deg2rad(torch.tensor(fov, dtype=torch.float))
-#     xy_cim = obj_pos_cim[:, :2]
-#     bbox_hight = bbox_list[:, 0, 1] - bbox_list[:, 1, 1]
-#     bbox_center = bbox_list.mean(1)
-
-#     # clopした深度マップでの予測物体中心(x, y)をカメラ座標系における(x, y)に変換
-#     cim2im_scale = (bbox_hight) / 2 # clopしたBBoxの高さ÷画像の高さ２
-#     im2cam_scale = avg_z_map * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)
-#     xy_im = cim2im_scale[:, None] * xy_cim + bbox_center # 元画像における物体中心
-#     xy_cam = im2cam_scale[:, None] * xy_im
-
-#     # 正規化深度画像での物体中心zをカメラ座標系におけるzに変換
-#     z_diff = obj_pos_cim[:, 2]
-#     z_cam = z_diff + avg_z_map
-
-#     # clopしたBBoxの対角
-#     clopping_bbox_diagonal = 2 * math.sqrt(2)
-
-#     # clopしたBBoxの対角とカノニカルBBoxの対角の比を変換
-#     scale = scale_diff * im2cam_scale[:, None] * cim2im_scale[:, None] * clopping_bbox_diagonal / canonical_bbox_diagonal
-#     if with_cim2cam_info:
-#         return torch.cat([xy_cam, z_cam[..., None]], dim=-1), scale, cim2im_scale, im2cam_scale, bbox_center
-#     else:
-#         return torch.cat([xy_cam, z_cam[..., None]], dim=-1), scale
-
-
-
-# def get_clopping_infos(bbox_list, avg_z_map, fov):
-#     # Get Bbox info.
-#     fov = torch.deg2rad(torch.tensor(fov, dtype=torch.float))
-#     bbox_hight = bbox_list[:, 0, 1] - bbox_list[:, 1, 1]
-#     bbox_center = bbox_list.mean(1)
-
-#     # clopした深度マップでの予測物体中心(x, y)をカメラ座標系における(x, y)に変換
-#     cim2im_scale = (bbox_hight) / 2 # clopしたBBoxの高さ÷画像の高さ２
-#     im2cam_scale = avg_z_map * torch.tan(fov/2) # 中心のDepth（z軸の値）×torch.tan(fov/2)
-#     return cim2im_scale, im2cam_scale, bbox_center
-
-
-
-# def diffcim2diffcam(diff_pos_cim, cim2im_scale, im2cam_scale):
-#     # Get Bbox info.
-#     diff_xy_cim = diff_pos_cim[:, :-1]
-#     diff_z_diff = diff_pos_cim[:, -1]
-
-#     # clopした深度マップでの予測物体中心(x, y)をカメラ座標系における(x, y)に変換
-#     diff_xy_im = cim2im_scale[:, None] * diff_xy_cim # 元画像における物体中心
-#     diff_xy_cam = im2cam_scale[:, None] * diff_xy_im
-#     return torch.cat([diff_xy_cam, diff_z_diff[:, None]], dim=-1)
 
 
 
@@ -578,6 +359,46 @@ def sample_fibonacci_views(n):
 
 
 
+def get_OSMap_obj(distance_map, mask, rays_d_cam, w2c, cam_pos_wrd, o2w, obj_pos_wrd, obj_scale, data_type='shapenet', add_conf='nothing'):
+    OSMap_cam = distance_map[..., None] * rays_d_cam
+    OSMap_wrd = torch.sum(OSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1) + cam_pos_wrd[..., None, None, :]
+    OSMap_obj = torch.sum((OSMap_wrd - obj_pos_wrd[..., None, None, :])[..., None, :]*o2w.permute(0, 2, 1)[..., None, None, :, :], dim=-1) / obj_scale[..., None, None, :]
+    OSMap_obj[torch.logical_not(mask)] = 0.
+    if data_type == 'scan2cad':
+        dist_mask = distance_map < 0.1
+        OSMap_obj[dist_mask] = 0.
+    if add_conf == 'only_once':
+        OSMap_wrd_wMask = torch.cat([OSMap_wrd, mask.to(OSMap_obj.dtype).unsqueeze(-1)], dim=-1)
+        return OSMap_wrd_wMask
+    else:
+        OSMap_obj_wMask = torch.cat([OSMap_obj, mask.to(OSMap_obj.dtype).unsqueeze(-1)], dim=-1)
+        return OSMap_obj_wMask
+
+
+
+def get_diffOSMap_obj(obs_distance_map, est_distance_map, obs_mask, est_mask, rays_d_cam, w2c, o2w, obj_scale, data_type='shapenet', add_conf='nothing'):
+    diff_or_mask = torch.logical_or(obs_mask, est_mask)
+    diff_xor_mask = torch.logical_xor(obs_mask, est_mask)
+
+    diff_distance_map = obs_distance_map - est_distance_map
+    diffOSMap_cam = diff_distance_map[..., None] * rays_d_cam
+    diffOSMap_wrd = torch.sum(diffOSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+    diffOSMap_obj = torch.sum(diffOSMap_wrd[..., None, :]*o2w.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
+    diffOSMap_obj = diffOSMap_obj / obj_scale[..., None, None, :]
+
+    diffOSMap_obj[torch.logical_not(diff_or_mask)] = 0.
+    if data_type == 'scan2cad':
+        dist_mask = obs_distance_map <= 0
+        diffOSMap_obj[dist_mask] = 0.
+    if add_conf == 'only_once':
+        diffOSMap_wrd_wMask = torch.cat([diffOSMap_wrd, diff_xor_mask.to(diffOSMap_obj).unsqueeze(-1)], dim=-1)
+        return diffOSMap_wrd_wMask
+    else:
+        diffOSMap_obj_wMask = torch.cat([diffOSMap_obj, diff_xor_mask.to(diffOSMap_obj).unsqueeze(-1)], dim=-1)
+        return diffOSMap_obj_wMask
+
+
+
 # def get_OSMap_wrd(distance_map, mask, rays_d_cam, w2c, cam_pos_wrd):
 #     OSMap_cam = distance_map[..., None] * rays_d_cam
 #     OSMap_wrd = torch.sum(OSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
@@ -600,36 +421,6 @@ def sample_fibonacci_views(n):
 #     diffOSMap_wrd[torch.logical_not(diff_or_mask)] = 0.
 #     diffOSMap_wrd_wMask = torch.cat([diffOSMap_wrd, diff_xor_mask.to(diffOSMap_wrd).unsqueeze(-1)], dim=-1)
 #     return diffOSMap_wrd_wMask
-
-
-
-def get_OSMap_obj(distance_map, mask, rays_d_cam, w2c, cam_pos_wrd, o2w, obj_pos_wrd, obj_scale):
-    OSMap_cam = distance_map[..., None] * rays_d_cam
-    OSMap_wrd = torch.sum(OSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1) + cam_pos_wrd[..., None, None, :]
-    OSMap_obj = torch.sum((OSMap_wrd - obj_pos_wrd[..., None, None, :])[..., None, :]*o2w.permute(0, 2, 1)[..., None, None, :, :], dim=-1) / obj_scale[..., None, None, :]
-    OSMap_obj[torch.logical_not(mask)] = 0.
-    OSMap_obj_wMask = torch.cat([OSMap_obj, mask.to(OSMap_obj.dtype).unsqueeze(-1)], dim=-1)
-    return OSMap_obj_wMask
-    # OSMap_cam_wMask = torch.cat([OSMap_cam, mask.to(OSMap_obj.dtype).unsqueeze(-1)], dim=-1)
-    # return OSMap_cam_wMask
-
-
-
-def get_diffOSMap_obj(obs_distance_map, est_distance_map, obs_mask, est_mask, rays_d_cam, w2c, o2w, obj_scale):
-    diff_or_mask = torch.logical_or(obs_mask, est_mask)
-    diff_xor_mask = torch.logical_xor(obs_mask, est_mask)
-
-    diff_distance_map = obs_distance_map - est_distance_map
-    diffOSMap_cam = diff_distance_map[..., None] * rays_d_cam
-    diffOSMap_wrd = torch.sum(diffOSMap_cam[..., None, :]*w2c.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
-    diffOSMap_obj = torch.sum(diffOSMap_wrd[..., None, :]*o2w.permute(0, 2, 1)[..., None, None, :, :], dim=-1)
-    diffOSMap_obj = diffOSMap_obj / obj_scale[..., None, None, :]
-
-    diffOSMap_obj[torch.logical_not(diff_or_mask)] = 0.
-    diffOSMap_obj_wMask = torch.cat([diffOSMap_obj, diff_xor_mask.to(diffOSMap_obj).unsqueeze(-1)], dim=-1)
-    return diffOSMap_obj_wMask
-    # diffOSMap_cam_wMask = torch.cat([diffOSMap_cam, diff_xor_mask.to(diffOSMap_obj).unsqueeze(-1)], dim=-1)
-    # return diffOSMap_cam_wMask
 
 
 
@@ -660,107 +451,6 @@ def compute_trimesh_chamfer(gt_points_np, gen_points_sampled):
     gen_to_gt_chamfer = np.mean(np.square(two_distances))
 
     return gt_to_gen_chamfer + gen_to_gt_chamfer
-
-
-
-# class WarmupScheduler(torch.optim.lr_scheduler.LambdaLR):
-
-#     def __init__(self, optimizer, warmup_steps, last_epoch=-1, d_model=512):
-
-#         def lr_lambda(step_num):
-#             step_num = step_num + 1
-#             return d_model**(-0.5) * min(step_num**(-0.5), step_num*(warmup_steps**(-1.5)))
-
-#         super(WarmupScheduler, self).__init__(optimizer, lr_lambda, last_epoch=last_epoch)
-
-#     def get_lr(self):
-#         # if not self._get_lr_called_within_step:
-#         #     warnings.warn("To get the last learning rate computed by the scheduler, "
-#         #                   "please use `get_last_lr()`.")
-
-#         if self.last_epoch == 0: print('warm up !')
-#         return [lmbda(self.last_epoch) for lmbda in self.lr_lambdas]
-
-
-
-# def get_inits(batch_size, randn_from_pickle, rand_idx_int, rand_P_range, rand_S_range, rand_R_range, 
-#     random_axis_list, random_axis_num, rand_Z_center, frame_obj_pos, frame_obj_scale, 
-#     frame_gt_obj_axis_green_wrd, frame_gt_obj_axis_red_wrd, gt_shape_code, frame_gt_o2w, rand_idx_max, mode, 
-#     rand_P_seed, rand_S_seed, randn_theta_seed, randn_axis_idx):
-
-#     use_log = not(rand_P_seed[0]=='non' or rand_S_seed[0]=='non' or randn_theta_seed[0]=='non' or randn_axis_idx[0]=='non')
-#     use_log = use_log and mode!='train'
-    
-#     if use_log:
-#         rand_P_seed = rand_P_seed.to('cpu')
-#         rand_S_seed = rand_S_seed.to('cpu')
-#         randn_theta_seed = randn_theta_seed.to('cpu')
-#         randn_axis_idx = randn_axis_idx.to('cpu')
-
-#     elif randn_from_pickle and (mode!='train'):
-#         # Get randn path.
-#         rand_idx_str = str(int(rand_idx_int)).zfill(10)
-#         randn_path = f'randn/list0randn_batch128_{mode}/{rand_idx_str}.pickle'
-
-#         rand_idx_int = rand_idx_int + 1
-#         if rand_idx_int > rand_idx_max[mode]:
-#             rand_idx_int = 0
-
-#         # Get randn seeds.
-#         randn = pickle_load(randn_path)
-#         rand_P_seed = randn[0][:batch_size] # torch.rand(batch_size, 1)
-#         rand_S_seed = randn[1][:batch_size] # torch.rand(batch_size, 1)
-#         randn_theta_seed = randn[2][:batch_size] # torch.rand(batch_size)
-#         randn_axis_idx = randn[3][:batch_size] # np.random.choice(random_axis_num, batch_size)
-
-#     else:
-#         rand_P_seed = torch.rand(batch_size, 1)
-#         rand_S_seed = torch.rand(batch_size, 1)
-#         randn_theta_seed = torch.rand(batch_size)
-#         randn_axis_idx = np.random.choice(random_axis_num, batch_size)
-
-#     # Log seeds.
-#     if mode in {'val', 'tes'}:
-#         rand_seed = {}
-#         rand_seed['rand_P_seed'] = rand_P_seed
-#         rand_seed['rand_S_seed'] = rand_S_seed
-#         rand_seed['randn_theta_seed'] = randn_theta_seed
-#         rand_seed['randn_axis_idx'] = randn_axis_idx 
-#     else:
-#         rand_seed = None
-
-
-#     # Get initial position.
-#     rand_P = 2 * rand_P_range * (rand_P_seed - .5) #  * (torch.rand(batch_size, 1) - .5)
-#     ini_obj_pos = frame_obj_pos[:, 0, :] + rand_P.to(frame_obj_pos)
-
-#     # Get initial scale.
-#     rand_S = 2 * rand_S_range * (rand_S_seed - .5) + 1. #  * (torch.rand(batch_size, 1) - .5) + 1.
-#     ini_obj_scale = frame_obj_scale[:, 0].unsqueeze(-1) * rand_S.to(frame_obj_scale)
-
-#     # Get initial red.
-#     randn_theta = rand_R_range * 2 * (randn_theta_seed - .5)
-#     randn_axis = random_axis_list[randn_axis_idx]
-#     randn_axis = torch.sum(randn_axis[..., None, :]*frame_gt_o2w[:, 0].to(randn_axis), dim=-1)
-#     cos_t = torch.cos(randn_theta)
-#     sin_t = torch.sin(randn_theta)
-#     n_x = randn_axis[:, 0]
-#     n_y = randn_axis[:, 1]
-#     n_z = randn_axis[:, 2]
-#     rand_R = torch.stack([torch.stack([cos_t+n_x*n_x*(1-cos_t), n_x*n_y*(1-cos_t)-n_z*sin_t, n_z*n_x*(1-cos_t)+n_y*sin_t], dim=-1), 
-#                             torch.stack([n_x*n_y*(1-cos_t)+n_z*sin_t, cos_t+n_y*n_y*(1-cos_t), n_y*n_z*(1-cos_t)-n_x*sin_t], dim=-1), 
-#                             torch.stack([n_z*n_x*(1-cos_t)-n_y*sin_t, n_y*n_z*(1-cos_t)+n_x*sin_t, cos_t+n_z*n_z*(1-cos_t)], dim=-1)], dim=1)
-#     obj_red_wrd = frame_gt_obj_axis_red_wrd[:, 0]
-#     ini_obj_axis_red_wrd = torch.sum(obj_red_wrd[..., None, :]*rand_R.to(obj_red_wrd), dim=-1)
-
-#     # Get initial green.
-#     obj_green_wrd = frame_gt_obj_axis_green_wrd[:, 0]
-#     ini_obj_axis_green_wrd = torch.sum(obj_green_wrd[..., None, :]*rand_R.to(obj_green_wrd), dim=-1)
-
-#     # Get initial shape.
-#     ini_shape_code = rand_Z_center.unsqueeze(0).expand(batch_size, -1).to(gt_shape_code) # + randn_Z
-
-#     return ini_obj_pos, ini_obj_scale, ini_obj_axis_red_wrd, ini_obj_axis_green_wrd, ini_shape_code, rand_idx_int, rand_seed
 
 
 
@@ -867,7 +557,7 @@ def list2txt(result_list, txt_file):
 
 
 
-def get_pe_target(cam_pos_wrd, w2c, rays_d_cam, obj_pos_wrd, o2w, obj_scale_wrd, bbox_diagonal, H):
+def get_pe_target(cam_pos_wrd, w2c, rays_d_cam, obj_pos_wrd, o2w, obj_scale_wrd, bbox_diagonal, H, add_conf):
     pe_target_cam_pos_obj = torch.sum((cam_pos_wrd - obj_pos_wrd)[..., None, :]*o2w.permute(0, 1, 3, 2), dim=-1) / obj_scale_wrd
     center_start = int(-(-H//2)-1)
     center_end = int(H//2+1)
@@ -876,7 +566,14 @@ def get_pe_target(cam_pos_wrd, w2c, rays_d_cam, obj_pos_wrd, o2w, obj_scale_wrd,
     pe_target_center_d_obj = torch.sum(center_d_wrd[..., None, :]*o2w.permute(0, 1, 3, 2), dim=-1)
     pe_target_bbox = bbox_diagonal
     pe_target_obj = torch.cat([pe_target_cam_pos_obj, pe_target_center_d_obj, pe_target_bbox], dim=-1)
-    return pe_target_obj
+    # return pe_target_obj
+    pe_target_cam_pos_wrd = cam_pos_wrd
+    pe_target_center_d_wrd = center_d_wrd
+    pe_target_wrd = torch.cat([pe_target_cam_pos_wrd, pe_target_center_d_wrd, pe_target_bbox], dim=-1)
+    if add_conf == 'only_once':
+        return pe_target_wrd
+    else:
+        return pe_target_obj
 
 
 
@@ -885,3 +582,281 @@ def get_riemannian_distance(A, B):
     with redirect_stdout(open(os.devnull, 'w')):
         log_ATB = np.stack([logm(R_i) for R_i in ATB], axis=0)
         return torch.from_numpy((np.sqrt((log_ATB**2).sum(axis=(-1, -2))) / math.sqrt(2)).astype(np.float32)).clone()
+    
+
+
+def sample_pose(v, look_at, look_up_randm='normal'):
+    pos = v
+    look_at = look_at - v
+    look_at = look_at / np.linalg.norm(look_at)
+
+    if np.abs(np.dot(look_at, np.array([0, 1, 0]))) < 0.999:
+        up = np.array([0, 1, 0])
+    else:
+        import pdb; pdb.set_trace()
+        ang = np.radians(360*np.random.rand())
+        up = np.array([np.cos(ang), 0, np.sin(ang)])
+
+    right = np.cross(look_at, up)
+    up = np.cross(right, look_at)
+
+    right = right / np.linalg.norm(right)
+    up = up / np.linalg.norm(up)
+
+    rot = np.array([right, up, -look_at])
+
+    if look_up_randm != 'normal':
+        while True:
+            R_up_pi = look_up_randm * np.pi
+            R_up = np.array([[np.cos(R_up_pi), -np.sin(R_up_pi), 0.0],
+                                [np.sin(R_up_pi), np.cos(R_up_pi), 0.0],
+                                [0.0, 0.0, 0.0]])
+            up = rot.T@R_up@rot@up
+
+            right = np.cross(look_at, up)
+            up = np.cross(right, look_at)
+
+            right = right / np.linalg.norm(right)
+            up = up / np.linalg.norm(up)
+
+            if np.abs(np.dot(look_at, up)) > 0.999:
+                look_up_randm += 0.1 * np.random.rand() - 0.05 # 一様分布
+            else:
+                break
+
+        rot = np.array([right, up, -look_at])
+
+
+    if np.any(rot != rot):
+        print('rotation matrix includes nan!!!')
+        print('rot = ')
+        print(rot)
+        print('norm of look_at = ' + str(np.linalg.norm(look_at)))
+        print('norm of up      = ' + str(np.linalg.norm(up)))
+        print('norm of right   = ' + str(np.linalg.norm(right)))        
+        exit(1)
+
+    # print('dot(right, up)      = ' + str(np.dot(right, up)))
+    # print('dot(up, look_at)    = ' + str(np.dot(look_at, up)))
+    # print('dot(look_at, right) = ' + str(np.dot(right, look_at)))
+    # print('|cross(up, right) - look_at| = ' + str(np.linalg.norm(look_at - np.cross(up, right))))
+    # print('|cross(look_at, up) - right| = ' + str(np.linalg.norm(right - np.cross(look_at, up))))
+    # print('|cross(right, look_at) - up| = ' + str(np.linalg.norm(up - np.cross(right, look_at))))
+
+    # convert to quaternion
+    # http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+    qw = np.sqrt(np.amax([0, 1 + rot[0,0] + rot[1,1] + rot[2,2]])) / 2
+    qx = np.sqrt(np.amax([0, 1 + rot[0,0] - rot[1,1] - rot[2,2]])) / 2
+    qy = np.sqrt(np.amax([0, 1 - rot[0,0] + rot[1,1] - rot[2,2]])) / 2
+    qz = np.sqrt(np.amax([0, 1 - rot[0,0] - rot[1,1] + rot[2,2]])) / 2
+
+    if qw == np.amax(np.array([qw, qx, qy, qz])):
+        # print('|qw| = ' + str(qw))
+        qx = (rot[1, 2] - rot[2, 1]) / (4 * qw)
+        qy = (rot[2, 0] - rot[0, 2]) / (4 * qw)
+        qz = (rot[0, 1] - rot[1, 0]) / (4 * qw)
+    elif qx == np.amax(np.array([qx, qy, qz])):
+        # print('|qx| = ' + str(qx))
+        qw = (rot[1, 2] - rot[2, 1]) / (4 * qx)
+        qy = (rot[0, 1] + rot[1, 0]) / (4 * qx)
+        qz = (rot[2, 0] + rot[0, 2]) / (4 * qx)
+    elif qy == np.amax(np.array([qy, qz])):
+        # print('|qy| = ' + str(qy))
+        qw = (rot[2, 0] - rot[0, 2]) / (4 * qy)
+        qx = (rot[0, 1] + rot[1, 0]) / (4 * qy)
+        qz = (rot[1, 2] + rot[2, 1]) / (4 * qy) 
+    else:
+        # print('|qz| = ' + str(qz))
+        qw = (rot[0, 1] - rot[1, 0]) / (4 * qz)
+        qx = (rot[2, 0] + rot[0, 2]) / (4 * qz)
+        qy = (rot[1, 2] + rot[2, 1]) / (4 * qz)        
+    
+    if np.any(np.array([qw, qx, qy, qz]) != np.array([qw, qx, qy, qz])):
+        print('nan in quarternion!!!')
+        print('q = ')
+        print(np.array([qw, qx, qy, qz]))
+        print('rotation matrix = ')
+        print(rot)
+        print('norm of look_at = ' + str(np.linalg.norm(look_at)))
+        print('norm of up      = ' + str(np.linalg.norm(up)))
+        print('norm of right   = ' + str(np.linalg.norm(right)))        
+        exit(1)
+
+    return pos, np.array([qw, qx, qy, qz]), up, right, rot
+
+
+
+def invdist2pc(invdist, rays_d_cam, w2c, pos, est_pc_wrd_list, b_mask_thr=5, sample_interval=5, inp_is_inv=True):
+    rays_d_wrd = torch.sum(rays_d_cam[..., None, :]*w2c.permute(0, 2, 1)[:, None, None, :, :], dim=-1)
+    
+    if inp_is_inv:
+        distance = torch.ones_like(invdist) * 1.e11
+        distance[invdist > 0.01] = 1 / invdist[invdist > 0.01]
+    else:
+        distance = invdist
+    mask = distance < 1.25
+    
+    b_mask = mask.clone()
+    b_mask[b_mask_thr:, :] = torch.logical_and(b_mask[b_mask_thr:, :], mask[:-b_mask_thr, :])
+    b_mask[:-b_mask_thr, :] = torch.logical_and(b_mask[:-b_mask_thr, :], mask[b_mask_thr:, :])
+    b_mask[:, b_mask_thr:] = torch.logical_and(b_mask[:, b_mask_thr:], mask[:, :-b_mask_thr])
+    b_mask[:, :-b_mask_thr] = torch.logical_and(b_mask[:, :-b_mask_thr], mask[:, b_mask_thr:])
+    pc_wrd = distance[..., None] * rays_d_wrd + pos[:, None, None, :]
+
+    for c_btc_idx, (pt_wrd_i, mask_i) in enumerate(zip(pc_wrd, b_mask)):
+        est_pc_wrd_list[c_btc_idx].append(pt_wrd_i[mask_i])
+    return 0
+
+
+
+from scipy.spatial import ConvexHull
+from numpy import *
+
+def polygon_clip(subjectPolygon, clipPolygon):
+   """ Clip a polygon with another polygon.
+   Ref: https://rosettacode.org/wiki/Sutherland-Hodgman_polygon_clipping#Python
+   Args:
+     subjectPolygon: a list of (x,y) 2d points, any polygon.
+     clipPolygon: a list of (x,y) 2d points, has to be *convex*
+   Note:
+     **points have to be counter-clockwise ordered**
+   Return:
+     a list of (x,y) vertex point for the intersection polygon.
+   """
+   def inside(p):
+      return(cp2[0]-cp1[0])*(p[1]-cp1[1]) > (cp2[1]-cp1[1])*(p[0]-cp1[0])
+ 
+   def computeIntersection():
+      dc = [ cp1[0] - cp2[0], cp1[1] - cp2[1] ]
+      dp = [ s[0] - e[0], s[1] - e[1] ]
+      n1 = cp1[0] * cp2[1] - cp1[1] * cp2[0]
+      n2 = s[0] * e[1] - s[1] * e[0] 
+      n3 = 1.0 / (dc[0] * dp[1] - dc[1] * dp[0])
+      return [(n1*dp[0] - n2*dc[0]) * n3, (n1*dp[1] - n2*dc[1]) * n3]
+ 
+   outputList = subjectPolygon
+   cp1 = clipPolygon[-1]
+ 
+   for clipVertex in clipPolygon:
+      cp2 = clipVertex
+      inputList = outputList
+      outputList = []
+      s = inputList[-1]
+ 
+      for subjectVertex in inputList:
+         e = subjectVertex
+         if inside(e):
+            if not inside(s):
+               outputList.append(computeIntersection())
+            outputList.append(e)
+         elif inside(s):
+            outputList.append(computeIntersection())
+         s = e
+      cp1 = cp2
+      if len(outputList) == 0:
+          return None
+   return(outputList)
+
+def poly_area(x,y):
+    """ Ref: http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates """
+    return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
+
+def convex_hull_intersection(p1, p2):
+    """ Compute area of two convex hull's intersection area.
+        p1,p2 are a list of (x,y) tuples of hull vertices.
+        return a list of (x,y) for the intersection and its volume
+    """
+    inter_p = polygon_clip(p1,p2)
+    if inter_p is not None:
+        hull_inter = ConvexHull(inter_p)
+        return inter_p, hull_inter.volume
+    else:
+        return None, 0.0  
+
+def box3d_vol(corners):
+    ''' corners: (8,3) no assumption on axis direction '''
+    a = np.sqrt(np.sum((corners[0,:] - corners[1,:])**2))
+    b = np.sqrt(np.sum((corners[1,:] - corners[2,:])**2))
+    c = np.sqrt(np.sum((corners[0,:] - corners[4,:])**2))
+    return a*b*c
+
+def is_clockwise(p):
+    x = p[:,0]
+    y = p[:,1]
+    return np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)) > 0
+
+def box3d_iou(corners1, corners2):
+    ''' Compute 3D bounding box IoU.
+    Input:
+        corners1: numpy array (8,3), assume up direction is negative Y
+        corners2: numpy array (8,3), assume up direction is negative Y
+    Output:
+        iou: 3D bounding box IoU
+        iou_2d: bird's eye view 2D bounding box IoU
+    todo (kent): add more description on corner points' orders.
+    '''
+    # corner points are in counter clockwise order
+    rect1 = [(corners1[i,0], corners1[i,2]) for i in range(3,-1,-1)]
+    rect2 = [(corners2[i,0], corners2[i,2]) for i in range(3,-1,-1)] 
+    
+    area1 = poly_area(np.array(rect1)[:,0], np.array(rect1)[:,1])
+    area2 = poly_area(np.array(rect2)[:,0], np.array(rect2)[:,1])
+   
+    inter, inter_area = convex_hull_intersection(rect1, rect2)
+    iou_2d = inter_area/(area1+area2-inter_area)
+    ymax = min(corners1[0,1], corners2[0,1])
+    ymin = max(corners1[4,1], corners2[4,1])
+
+    inter_vol = inter_area * max(0.0, ymax-ymin)
+    
+    vol1 = box3d_vol(corners1)
+    vol2 = box3d_vol(corners2)
+    iou = inter_vol / (vol1 + vol2 - inter_vol)
+    return iou, iou_2d
+
+# ----------------------------------
+# Helper functions for evaluation
+# ----------------------------------
+
+def get_3d_box(box_size, heading_angle, center):
+    ''' Calculate 3D bounding box corners from its parameterization.
+    Input:
+        box_size: tuple of (length,wide,height)
+        heading_angle: rad scalar, clockwise from pos x axis
+        center: tuple of (x,y,z)
+    Output:
+        corners_3d: numpy array of shape (8,3) for 3D box cornders
+    '''
+    def roty(t):
+        c = np.cos(t)
+        s = np.sin(t)
+        return np.array([[c,  0,  s],
+                         [0,  1,  0],
+                         [-s, 0,  c]])
+
+    R = roty(heading_angle)
+    l,w,h = box_size
+    x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
+    y_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];
+    z_corners = [w/2,-w/2,-w/2,w/2,w/2,-w/2,-w/2,w/2];
+    corners_3d = np.dot(R, np.vstack([x_corners,y_corners,z_corners]))
+    corners_3d[0,:] = corners_3d[0,:] + center[0];
+    corners_3d[1,:] = corners_3d[1,:] + center[1];
+    corners_3d[2,:] = corners_3d[2,:] + center[2];
+    corners_3d = np.transpose(corners_3d)
+    return corners_3d
+
+
+
+import quaternion
+def calc_rotation_diff(q, q00):
+    rotation_dot = np.dot(quaternion.as_float_array(q00), quaternion.as_float_array(q))
+    rotation_dot_abs = np.abs(rotation_dot)
+    try:                                                                                                                                                                                                                                                                                                                      
+        error_rotation_rad = 2 * np.arccos(rotation_dot_abs)
+    except:
+        return 0.0
+    error_rotation_rad = 2 * np.arccos(rotation_dot_abs)
+    error_rotation = np.rad2deg(error_rotation_rad)
+    return error_rotation
+    

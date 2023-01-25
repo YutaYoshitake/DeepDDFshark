@@ -1,29 +1,29 @@
 import os
-import pdb
+# import pdb
 import sys
-from turtle import pd
+# from turtle import pd
 import numpy as np
 import random
-import pylab
-import glob
-import math
-import re
-from tqdm import tqdm, trange
+# import pylab
+# import glob
+# import math
+# import re
+# from tqdm import tqdm, trange
 import torch
-import pytorch_lightning as pl
-from pytorch_lightning.plugins import DDPPlugin
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.utils.data as data_utils
-from torch.utils.data import DataLoader
-from torch.autograd import grad
+# import pytorch_lightning as pl
+# from pytorch_lightning.plugins import DDPPlugin
+# import torch.nn as nn
+# import torch.nn.functional as F
+# import torch.utils.data as data_utils
+# from torch.utils.data import DataLoader
+# from torch.autograd import grad
 import torch.utils.data as data
-import torchvision
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from chamferdist import ChamferDistance
-from scipy.spatial.transform import Rotation as R
+# import torchvision
+# import matplotlib.pyplot as plt
+# from mpl_toolkits.mplot3d import Axes3D
+# from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+# from chamferdist import ChamferDistance
+# from scipy.spatial.transform import Rotation as R
 
 from parser import *
 from often_use import *
@@ -83,13 +83,16 @@ class DDF_dataset(data.Dataset):
         c2w = camera_info['rot'].astype(np.float32).T
 
         depth_info = pickle_load(path+'_mask.pickle')
-        inverced_depth = depth_info['inverced_depth'].astype(np.float32)
         blur_mask = depth_info['blur_mask']
+        # inverced_depth = depth_info['inverced_depth'].astype(np.float32)
+        inverced_depth = np.zeros((self.H, self.H)).astype(np.float32)
+        inverced_depth[blur_mask] = depth_info['masked_invdepth_map'].astype(np.float32)
         if self.use_normal:
-            if 'normal_map' not in depth_info.keys():
-                print(path)
-            normal_map = depth_info['normal_map'].astype(np.float32)
-            # normal_mask = depth_info['normal_mask']
+            # if 'normal_map' not in depth_info.keys():
+            #     print(path)
+            # normal_map = depth_info['normal_map'].astype(np.float32)
+            normal_map = np.zeros((self.H, self.H, 3)).astype(np.float32)
+            normal_map[blur_mask] = depth_info['masked_normal_map'].astype(np.float32)
             normal_mask = inverced_depth > 0
         else:
             normal_map = False
@@ -101,9 +104,11 @@ class DDF_dataset(data.Dataset):
             coord_inside_mask = self.coords[blur_mask]
             coord_outside_mask = self.coords[np.logical_not(blur_mask)]
 
-            inside_true_num = int(self.sample_ratio * self.inside_true_ratio * len(coord_inside_mask))
+            max_num = self.H * self.W / 3
+            inside_true_num = int(self.sample_ratio * self.inside_true_ratio * min(len(coord_inside_mask), max_num))
             inside_false_num = len(coord_inside_mask) - inside_true_num
-            outside_true_num = int(self.sample_ratio * self.outside_true_ratio * len(coord_outside_mask))
+            max_num = self.H * self.W
+            outside_true_num = int(self.sample_ratio * self.outside_true_ratio * min(len(coord_outside_mask), max_num))
 
             np.random.shuffle(coord_inside_mask)
             np.random.shuffle(coord_outside_mask)

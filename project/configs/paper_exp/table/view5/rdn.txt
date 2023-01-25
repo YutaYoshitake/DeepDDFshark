@@ -1,0 +1,36 @@
+expname = DeepTaR/table/
+fov = 50
+input_H = 128
+input_W = 128
+ddf_H_W_during_dfnet = 128
+train_instance_list_txt = /home/yyoshitake/works/make_depth_image/project/instance_list/paper/table/train.txt
+val_instance_list_txt   = /home/yyoshitake/works/make_depth_image/project/instance_list/paper/table/val.txt
+test_instance_list_txt  = /home/yyoshitake/works/make_depth_image/project/instance_list/paper/table/tes.txt
+train_data_dir = /disks/local/yyoshitake/moving_camera/volumetric/table/results
+val_data_dir   = /disks/local/yyoshitake/moving_camera/volumetric/table/results
+test_data_dir  = /home/yyoshitake/works/DeepSDF/disks/dfnet/volumetric/table/squashfs-root
+train_txtfile = /home/yyoshitake/works/DeepSDF/project/dataset/sampled_path/table/train/20230111125205_train_randn_1000_10_2_all
+val_data_list = /home/yyoshitake/works/DeepSDF/project/dataset/sampled_path/table/val/20230111153702_val_randn_8_10_2_all.pickle
+canonical_fov = 60
+canonical_data_path = /disks/local/yyoshitake/moving_camera/canonical/tmp_map/04379243
+pt_path = /home/yyoshitake/works/make_depth_image/project/point_clouds/04379243
+use_sampled_txtfile=yes
+sym_label_path = /home/yyoshitake/works/DeepSDF/project/instance_lists/paper_exp/table/sym_label_dict.pickle
+
+save_interval = 8
+total_obs_num = 5
+total_itr = 2
+itr_per_frame = 2
+view_position = randn
+view_selection = simultaneous
+scale_dim = 3
+
+ddf_model_path = /home/yyoshitake/works/DeepSDF/project/DDF/lightning_logs/table/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000003000.ckpt
+ddf_instance_list_txt = /home/yyoshitake/works/make_depth_image/project/instance_list/paper/table/total_havibg_ddf_data.txt
+latent_size = 256
+N_instances = 4817
+use_3d_code = True
+voxel_ch_num = 32
+voxel_sample_num = 32
+only_latent = False
+integrate_sampling_mode = 'CAT'
