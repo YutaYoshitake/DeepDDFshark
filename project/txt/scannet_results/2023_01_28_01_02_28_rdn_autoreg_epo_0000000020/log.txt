@@ -1,0 +1,14 @@
+ckpt_path : lightning_logs/ScanNet/chair_re/rdn_autoreg/checkpoints/0000000020.ckpt
+test_instance_list_txt : /home/yyoshitake/works/DeepSDF/project/instance_lists/paper_exp/tes_unknown.txt
+total_obs_num : 5
+total_itr : 7
+tes_data_list : Nothing
+view_position : randn
+view_selection : simultaneous
+gt_scale_range : 0.2
+rand_P_range : 0.3
+rand_S_range : 0.3
+rand_R_range : 1.5707963267948966
+random_axis_num : 1024
+
+

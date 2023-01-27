@@ -1416,3 +1416,73 @@ class df_resnet_encoder_with_gru(pl.LightningModule):
                 # list(self.df_net.parameters()),
             # lr=self.lr, betas=(0.9, 0.999),)
             # return optimizer
+
+
+
+
+    
+        # # BBoxの作成
+        # est_bbox_max_min_list = torch.stack(est_bbox_max_min_list, dim=1)
+        # bbox_max_x, bbox_max_y, bbox_max_z = est_bbox_max_min_list.max(dim=1).values.T
+        # bbox_min_x, bbox_min_y, bbox_min_z = est_bbox_max_min_list.min(dim=1).values.T
+        # est_model_3D_bbox_obj = torch.stack([torch.stack([bbox_min_x, bbox_min_y, bbox_min_z], dim=-1), 
+        #                                         torch.stack([bbox_max_x, bbox_min_y, bbox_min_z], dim=-1), 
+        #                                         torch.stack([bbox_max_x, bbox_max_y, bbox_min_z], dim=-1), 
+        #                                         torch.stack([bbox_min_x, bbox_max_y, bbox_min_z], dim=-1), 
+        #                                         torch.stack([bbox_min_x, bbox_min_y, bbox_max_z], dim=-1), 
+        #                                         torch.stack([bbox_max_x, bbox_min_y, bbox_max_z], dim=-1), 
+        #                                         torch.stack([bbox_max_x, bbox_max_y, bbox_max_z], dim=-1), 
+        #                                         torch.stack([bbox_min_x, bbox_max_y, bbox_max_z], dim=-1)], dim=1)
+        # pre_o2w = axis2rotation(pre_obj_axis_green_wrd, pre_obj_axis_red_wrd)
+        # est_model_3D_bbox_wrd = torch.sum((pre_obj_scale_wrd[:, None, :]*est_model_3D_bbox_obj)[:, :, None, :]*pre_o2w[:, None, :, :], dim=-1) + pre_obj_pos_wrd[:, None, :]
+        # gt_model_3D_bbox_wrd = torch.sum((frame_gt_obj_scale_wrd[:, 0][:, None, :]*gt_model_3D_bbox_obj)[:, :, None, :]*frame_gt_o2w[:, 0][:, None, :, :], dim=-1) + frame_gt_obj_pos_wrd[:, 0][:, None, :]
+
+        # # BBox_wrdのデバック
+        # # やること
+        # #     誤差の計算（l740~）のテストのインデックス上げる
+        # #     l324~l325lを書き換える
+        # #     l427lを書き換える
+        # #     l707lを書き換える
+        # #     modelの出力を0にする
+        # canonical_estpc = [torch.cat(est_pc_obj_list_i, dim=0) for est_pc_obj_list_i in est_pc_obj_list]
+        # if optim_idx >= 0:
+        #     for sample_id in range(batch_size):
+        #         # sample_id = 0
+        #         raw_1 = obs_OSMap_wrd.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H, 4)
+        #         raw_2 = est_OSMap_wrd.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H, 4)
+        #         map_1, mask_1 = raw_1[..., :-1], raw_1[..., -1]
+        #         map_2, mask_2 = raw_2[..., :-1], raw_2[..., -1]
+        #         fig = plt.figure()
+        #         ax = Axes3D(fig)
+        #         c_list_1 = c_list_2 = ['b', 'g', 'r', 'm', 'y']
+        #         for ind_1 in range(current_frame_num):
+        #             # ind_1 = 0
+        #             c_1, c_2 = c_list_1[ind_1], c_list_2[ind_1]
+        #             point_1 = map_1[sample_id, ind_1][mask_1[sample_id, ind_1] > 0]
+        #             point_1 = point_1.to('cpu').detach().numpy().copy()
+        #             ax.scatter(point_1[:, 0], point_1[:, 1], point_1[:, 2], marker="o", linestyle='None', c='c', s=0.1) #, c='g', s=0.1) #
+        #             point_2 = map_2[sample_id, ind_1][mask_2[sample_id, ind_1] > 0]
+        #             point_2 = point_2.to('cpu').detach().numpy().copy()
+        #             ax.scatter(point_2[::2, 0], point_2[::2, 1], point_2[::2, 2], marker="o", linestyle='None', c='m', s=0.1) # , c=c_2, s=0.05)
+                
+        #         Bbox
+        #         point3 = est_model_3D_bbox_wrd[sample_id].to('cpu').detach().numpy().copy()
+        #         ax.scatter(point3[:, 0], point3[:, 1], point3[:, 2], marker="o", linestyle='None', c='r', s=5)
+        #         point5 = torch.sum((pre_obj_scale_wrd[sample_id][None, :]*canonical_estpc[sample_id])[:, None, :]*pre_o2w[sample_id][None, :, :], dim=-1) + pre_obj_pos_wrd[sample_id][None, :]
+        #         point5 = point5.to('cpu').detach().numpy().copy()
+        #         ax.scatter(point5[:, 0], point5[:, 1], point5[:, 2], marker="o", linestyle='None', c='c', s=5)
+        #         point4 = gt_model_3D_bbox_wrd[sample_id].to('cpu').detach().numpy().copy()
+        #         ax.scatter(point4[:, 0], point4[:, 1], point4[:, 2], marker="o", linestyle='None', c='b', s=5)
+        #         point5 = torch.sum((frame_gt_obj_scale_wrd[sample_id, 0][None, :]*gt_pc_obj[sample_id])[:, None, :]*frame_gt_o2w[sample_id, 0][None, :, :], dim=-1) + frame_gt_obj_pos_wrd[sample_id, 0]
+        #         point5 = point5.to('cpu').detach().numpy().copy()
+        #         ax.scatter(point5[:, 0], point5[:, 1], point5[:, 2], marker="o", linestyle='None', c='m', s=5)
+
+        #         str_optim_idx = str(optim_idx).zfill(2)
+        #         ax.view_init(elev=0, azim=90)
+        #         fig.savefig(f"{sample_id}_{str_optim_idx}_90.png")
+        #         ax.view_init(elev=0, azim=0)
+        #         fig.savefig(f"{sample_id}_{str_optim_idx}_00.png")
+        #         ax.view_init(elev=45, azim=45)
+        #         fig.savefig(f"{sample_id}_{str_optim_idx}_45.png")
+        #         plt.close()
+        #     import pdb; pdb.set_trace()

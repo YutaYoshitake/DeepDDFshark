@@ -364,53 +364,53 @@ class original_optimizer(pl.LightningModule):
                     inp_pre_obj_scale_wrd, inp_pre_shape_code, pre_obj_pos_wrd, pre_obj_axis_green_wrd, pre_obj_axis_red_wrd, pre_o2w, pre_obj_scale_wrd, pre_shape_code, pe_target, print_debug) # , self.backbone_decoder)
 
         ##################################################
-        if optim_idx in {5}: # if optim_idx > 1:
-            for sample_id in range(batch_size):
-                raw_1 = obs_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
-                raw_2 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
-                # raw_1 = obs_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -sum(past_itr_log['itr_length'][-2:]):-current_frame_num]
-                # raw_2 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
-                # raw_3 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -sum(past_itr_log['itr_length'][-2:]):-current_frame_num]
-                map_1, mask_1 = raw_1[..., :-1], raw_1[..., -1]
-                map_2, mask_2 = raw_2[..., :-1], raw_2[..., -1]
-                # map_3, mask_3 = raw_3[..., :-1], raw_3[..., -1]
-                fig = plt.figure()
-                ax = Axes3D(fig)
-                c_list_1 = c_list_2 = ['b', 'g', 'r', 'm', 'y']
-                for ind_1 in range(current_frame_num):
-                    c_1, c_2 = c_list_1[ind_1], c_list_2[ind_1]
-                    # if past_itr_log['itr_length'][-2] > ind_1:
-                    point_1 = map_1[sample_id, ind_1][mask_1[sample_id, ind_1] > 0]
-                    point_1 = point_1.to('cpu').detach().numpy().copy()
-                    ax.scatter(point_1[:, 0], point_1[:, 1], point_1[:, 2], marker="o", linestyle='None', c=c_1, s=0.1) #, c='g', s=0.1) #
-                    # point_2 = map_2[sample_id, ind_1][mask_2[sample_id, ind_1] > 0]
-                    # point_2 = point_2.to('cpu').detach().numpy().copy()
-                    # ax.scatter(point_2[::2, 0], point_2[::2, 1], point_2[::2, 2], marker="o", linestyle='None', c='m', s=0.1) # , c=c_2, s=0.05)
-                    # if past_itr_log['itr_length'][-2] > ind_1:
-                    #     point_3 = map_3[sample_id, ind_1][mask_3[sample_id, ind_1] > 0]
-                    #     point_3 = point_3.to('cpu').detach().numpy().copy()
-                    #     ax.scatter(point_3[::2, 0], point_3[::2, 1], point_3[::2, 2], marker="o", linestyle='None', c='g', s=0.05)
-                str_optim_idx = str(optim_idx).zfill(2)
-                ax.view_init(elev=0, azim=90)
-                fig.savefig(f"{sample_id}_{str_optim_idx}_90.png")
-                ax.view_init(elev=0, azim=0)
-                fig.savefig(f"{sample_id}_{str_optim_idx}_00.png")
-                ax.view_init(elev=45, azim=45)
-                fig.savefig(f"{sample_id}_{str_optim_idx}_45.png")
-                plt.close()
-                # import pdb; pdb.set_trace()
+        # if optim_idx in {5}: # if optim_idx > 1:
+        #     for sample_id in range(batch_size):
+        #         raw_1 = obs_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
+        #         raw_2 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
+        #         # raw_1 = obs_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -sum(past_itr_log['itr_length'][-2:]):-current_frame_num]
+        #         # raw_2 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -current_frame_num:]
+        #         # raw_3 = est_OSMap_obj.reshape(batch_size, total_view_num, self.ddf_H, self.ddf_H, 4)[:, -sum(past_itr_log['itr_length'][-2:]):-current_frame_num]
+        #         map_1, mask_1 = raw_1[..., :-1], raw_1[..., -1]
+        #         map_2, mask_2 = raw_2[..., :-1], raw_2[..., -1]
+        #         # map_3, mask_3 = raw_3[..., :-1], raw_3[..., -1]
+        #         fig = plt.figure()
+        #         ax = Axes3D(fig)
+        #         c_list_1 = c_list_2 = ['b', 'g', 'r', 'm', 'y']
+        #         for ind_1 in range(current_frame_num):
+        #             c_1, c_2 = c_list_1[ind_1], c_list_2[ind_1]
+        #             # if past_itr_log['itr_length'][-2] > ind_1:
+        #             point_1 = map_1[sample_id, ind_1][mask_1[sample_id, ind_1] > 0]
+        #             point_1 = point_1.to('cpu').detach().numpy().copy()
+        #             ax.scatter(point_1[:, 0], point_1[:, 1], point_1[:, 2], marker="o", linestyle='None', c='g', s=0.1) #, c=c_1, s=0.1) #
+        #             point_2 = map_2[sample_id, ind_1][mask_2[sample_id, ind_1] > 0]
+        #             point_2 = point_2.to('cpu').detach().numpy().copy()
+        #             ax.scatter(point_2[:, 0], point_2[:, 1], point_2[:, 2], marker="o", linestyle='None', c='m', s=0.1) # , c=c_2, s=0.05)
+        #             # if past_itr_log['itr_length'][-2] > ind_1:
+        #             #     point_3 = map_3[sample_id, ind_1][mask_3[sample_id, ind_1] > 0]
+        #             #     point_3 = point_3.to('cpu').detach().numpy().copy()
+        #             #     ax.scatter(point_3[::2, 0], point_3[::2, 1], point_3[::2, 2], marker="o", linestyle='None', c='g', s=0.05)
+        #         str_optim_idx = str(optim_idx).zfill(2)
+        #         ax.view_init(elev=0, azim=90)
+        #         fig.savefig(f"{sample_id}_{str_optim_idx}_90.png")
+        #         ax.view_init(elev=0, azim=0)
+        #         fig.savefig(f"{sample_id}_{str_optim_idx}_00.png")
+        #         ax.view_init(elev=45, azim=45)
+        #         fig.savefig(f"{sample_id}_{str_optim_idx}_45.png")
+        #         plt.close()
+        #         # import pdb; pdb.set_trace()
         ##################################################
-        if optim_idx in {6}:
-            gt = clopped_distance_map
-            est = est_clopped_distance_map
-            gt_mask = clopped_mask
-            est_mask = est_clopped_mask
-            str_batch_idx = str(batch_idx).zfill(5)
-            str_optim_idx = str(optim_idx).zfill(2)
-            check_map = torch.cat([gt, gt_mask, est, est_mask, torch.abs(gt-est)], dim=-1) # [::5]
-            check_map = torch.cat([map_i for map_i in check_map], dim=0)
-            check_map_torch(check_map, f'tes_{str_batch_idx}_{str_optim_idx}.png')
-            # import pdb; pdb.set_trace()
+        # if optim_idx in {0, 6}:
+        # gt = clopped_distance_map
+        # est = est_clopped_distance_map
+        # gt_mask = clopped_mask
+        # est_mask = est_clopped_mask
+        # str_batch_idx = str(batch_idx).zfill(5)
+        # str_optim_idx = str(optim_idx).zfill(2)
+        # check_map = torch.cat([gt, gt_mask, est, est_mask, torch.abs(gt-est)], dim=-1) # [::5]
+        # check_map = torch.cat([map_i for map_i in check_map], dim=0)
+        # check_map_torch(check_map, f'tes_{str_batch_idx}_{str_optim_idx}.png')
+        # import pdb; pdb.set_trace()
         # ##################################################
         # batch_i = 0
         # gt = gt.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H)[batch_i]
@@ -504,14 +504,14 @@ class original_optimizer(pl.LightningModule):
                     print(f'---   nearpos   --- : {(torch.norm(frame_camera_pos_wrd[:, :-1]-frame_camera_pos_wrd[:, 1:], dim=-1)/frame_gt_obj_scale_wrd[:, :-1, 0]).max()<1.04}')
                 print(f'#-- current_itr --# : {optim_idx+1} / {self.total_itr}')
                 print(f'---  itr_frame  --- : {frame_idx_list}')
-            pre_obj_pos_wrd = frame_gt_obj_pos_wrd[:, 0].clone().detach()
-            pre_obj_pos_wrd = frame_gt_obj_pos_wrd[:, 0].clone().detach() + \
-                (1. - ((optim_idx+1) / self.total_itr)) * \
-                torch.sum((torch.tensor([0.3, 0, 0]).to(ini_obj_pos))[None, None, :].expand(batch_size, -1, -1)*frame_gt_o2w[:, 0], dim=-1)
-            pre_obj_scale_wrd = frame_gt_obj_scale_wrd[:, 0].clone().detach()
-            pre_obj_axis_red_wrd = frame_gt_obj_red_wrd[:, 0].clone().detach()
-            pre_obj_axis_green_wrd = frame_gt_obj_green_wrd[:, 0].clone().detach()
-            pre_shape_code = gt_shape_code.clone().detach()
+            # pre_obj_pos_wrd = frame_gt_obj_pos_wrd[:, 0].clone().detach()
+            # pre_obj_pos_wrd = frame_gt_obj_pos_wrd[:, 0].clone().detach() + \
+            #     (1. - ((optim_idx+1) / self.total_itr)) * \
+            #     torch.sum((torch.tensor([0.3, 0, 0]).to(ini_obj_pos))[None, None, :].expand(batch_size, -1, -1)*frame_gt_o2w[:, 0], dim=-1)
+            # pre_obj_scale_wrd = frame_gt_obj_scale_wrd[:, 0].clone().detach()
+            # pre_obj_axis_red_wrd = frame_gt_obj_red_wrd[:, 0].clone().detach()
+            # pre_obj_axis_green_wrd = frame_gt_obj_green_wrd[:, 0].clone().detach()
+            # pre_shape_code = gt_shape_code.clone().detach()
 
             ###################################
             #####      Perform dfnet.     #####
@@ -641,6 +641,14 @@ class original_optimizer(pl.LightningModule):
         frame_gt_obj_pos_wrd, frame_gt_obj_scale_wrd, gt_model_3D_bbox_obj, canonical_distance_map, canonical_camera_pos, \
         canonical_camera_rot, instance_id, path, ini_obj_pos, ini_obj_scale, ini_obj_axis_red_wrd, \
         ini_obj_axis_green_wrd,ini_shape_code, rand_seed, frame_gt_o2w, instance_id, scene_id, gt_pc_obj, sym_label, w2oriWrd, wrd_pos_oriWrd = self.preprocess(batch, step_mode)
+        # gt_shape_code = gt_shape_code * 0
+        # frame_gt_obj_green_wrd = frame_gt_obj_green_wrd * 0
+        # frame_gt_obj_red_wrd = frame_gt_obj_red_wrd * 0
+        # frame_gt_obj_pos_wrd = frame_gt_obj_pos_wrd * 0
+        # frame_gt_obj_scale_wrd = frame_gt_obj_scale_wrd * 0
+        # gt_model_3D_bbox_obj = gt_model_3D_bbox_obj * 0
+        # frame_gt_o2w = frame_gt_o2w * 0
+        # gt_pc_obj = gt_pc_obj * 0
 
         ###################################
         #####     Start inference.    #####
@@ -652,7 +660,7 @@ class original_optimizer(pl.LightningModule):
             current_frame_num = 1 # 2
         
         past_itr_log = {'itr_length': [], 'obs_d': [], 'est_d': [], 'obs_mask': [], 'est_mask': [], 'w2c': [], 'cam_pos_wrd': [], 'rays_d_cam': [], 'bbox_diagonal': []}
-        err_list = {'validnum': [], 'err_t': [], 'err_s': [], 'err_r': [], 'gt_s_fit':[], 'est_s_fit':[], 'IoU':[]}
+        err_list = {'validnum': [], 'err_t': [], 'err_s': [], 'err_r': [], 'gt_s_fit':[], 'est_s_fit':[], 'est_s_chamf':[], 'IoU':[]}
 
         frame_clopped_invdist = torch.zeros_like(frame_clopped_distance_map)
         frame_clopped_invdist[frame_clopped_mask] = 1 / frame_clopped_distance_map[frame_clopped_mask]
@@ -726,8 +734,7 @@ class original_optimizer(pl.LightningModule):
             # pre_obj_scale_wrd = frame_gt_obj_scale_wrd[:, 0].clone().detach() # * 0.5
             # pre_shape_code = gt_shape_code.clone().detach()
 
-            # Cal err at each iteration.
-            # →は削除
+            # Cal err at each iteration. →は削除
 
             # Update frame infos.
             if optim_idx >= 0:
@@ -736,10 +743,8 @@ class original_optimizer(pl.LightningModule):
                 if current_frame_num < self.total_obs_num:
                     current_frame_num += 1
                     frame_optim_idx = 0
+        
 
-        ##############################
-        # 誤差の計算
-        ##############################
         canonical_pos_list = np.array([[-0.1, 1.0, -0.001], 
                                         [np.cos(0*np.pi), 0.0, np.sin(0*np.pi)], 
                                         [np.cos(1/2*np.pi), 0.0, np.sin(1/2*np.pi)], 
@@ -747,10 +752,10 @@ class original_optimizer(pl.LightningModule):
                                         [np.cos(-1/2*np.pi), 0.0, np.sin(-1/2*np.pi)], 
                                         [0.1, -1.0, 0.001], ])
         canonical_pos_list = canonical_pos_list / np.linalg.norm(canonical_pos_list, axis=-1)[:, None]
-        est_pc_wrd_list = []
+        est_pc_obj_list = []
         est_bbox_max_min_list = []
         for i_ in range(batch_size):
-            est_pc_wrd_list.append([])
+            est_pc_obj_list.append([])
         for canonical_idx, canonical_cam_pos in enumerate(canonical_pos_list):
             look_at = np.array([0., 0., 0.])
             cam_pos_wrd, q, up, right, rot = sample_pose(canonical_cam_pos, look_at, 'normal')
@@ -765,10 +770,10 @@ class original_optimizer(pl.LightningModule):
             invdist_rendered = ddf(rays_o_wrd, rays_d_wrd, pre_shape_code)
             valid_mask = invdist_rendered > 1 / 1.3
             invdist_rendered[torch.logical_not(valid_mask)] = 0.0
+            # check_map_torch(invdist_rendered.reshape(-1, self.ddf_H), f'canonical_dist_{str(canonical_idx)}.png')
             
             # 点群の生成
-            check_map_torch(invdist_rendered.reshape(-1, self.ddf_H), f'canonical_dist_{str(canonical_idx)}.png')
-            invdist2pc(invdist_rendered, rays_d_cam, w2c, cam_pos_wrd, est_pc_wrd_list, b_mask_thr=1, sample_interval=1, inp_is_inv=True)
+            invdist2pc(invdist_rendered, rays_d_cam, w2c, cam_pos_wrd, est_pc_obj_list, b_mask_thr=1, sample_interval=1, inp_is_inv=True)
 
             # Bboxの生成
             invdist_rendered = invdist_rendered.reshape(batch_size, -1)
@@ -779,139 +784,45 @@ class original_optimizer(pl.LightningModule):
             nearest_pt = nearest_dist[:, None].to(nearest_rays_d_wrd.device) * nearest_rays_d_wrd + cam_pos_wrd
             est_bbox_max_min_list.append(nearest_pt)
 
+        # 結果の統合
+        canonical_estpc = [torch.cat(est_pc_obj_list_i, dim=0) for est_pc_obj_list_i in est_pc_obj_list]
         est_bbox_max_min_list = torch.stack(est_bbox_max_min_list, dim=1)
-        bbox_max_x, bbox_max_y, bbox_max_z = est_bbox_max_min_list.max(dim=1).values.T
-        bbox_min_x, bbox_min_y, bbox_min_z = est_bbox_max_min_list.min(dim=1).values.T
-        est_model_3D_bbox_obj = torch.stack([torch.stack([bbox_min_x, bbox_min_y, bbox_min_z], dim=-1), 
-                                                torch.stack([bbox_max_x, bbox_min_y, bbox_min_z], dim=-1), 
-                                                torch.stack([bbox_max_x, bbox_max_y, bbox_min_z], dim=-1), 
-                                                torch.stack([bbox_min_x, bbox_max_y, bbox_min_z], dim=-1), 
-                                                torch.stack([bbox_min_x, bbox_min_y, bbox_max_z], dim=-1), 
-                                                torch.stack([bbox_max_x, bbox_min_y, bbox_max_z], dim=-1), 
-                                                torch.stack([bbox_max_x, bbox_max_y, bbox_max_z], dim=-1), 
-                                                torch.stack([bbox_min_x, bbox_max_y, bbox_max_z], dim=-1)], dim=1)
-        pre_o2w = axis2rotation(pre_obj_axis_green_wrd, pre_obj_axis_red_wrd)
-        est_model_3D_bbox_wrd = torch.sum((pre_obj_scale_wrd[:, None, :]*est_model_3D_bbox_obj)[:, :, None, :]*pre_o2w[:, None, :, :], dim=-1) + pre_obj_pos_wrd[:, None, :]
-        gt_model_3D_bbox_wrd = torch.sum((frame_gt_obj_scale_wrd[:, 0][:, None, :]*gt_model_3D_bbox_obj)[:, :, None, :]*frame_gt_o2w[:, 0][:, None, :, :], dim=-1) + frame_gt_obj_pos_wrd[:, 0][:, None, :]
-        
-        # 姿勢の誤差の計算
-        valid_estimation_log = []
-        err_t = []
-        err_s = []
-        err_r = []
+
+        # Bboxを作成
+        est_model_3D_bbox_obj_from_pt = []
+        est_model_3D_bbox_obj_from_dep = []
         for sample_id in range(batch_size):
-            _, _, cat_id, scene_id, obj_id, _, view_id = path[0][sample_id].split('/')
-            cad_id, obj_idx = obj_id.split('_')
+            # 点群から作成
+            est_x_max, est_y_max, est_z_max = canonical_estpc[sample_id].max(dim=0).values
+            est_x_min, est_y_min, est_z_min = canonical_estpc[sample_id].min(dim=0).values
+            est_x_mid, est_y_mid, est_z_mid = est_x_max + est_x_min, est_y_max + est_y_min, est_z_max + est_z_min
+            est_bbox_obj_from_pt = torch.tensor([
+                            [est_x_mid, est_y_mid, est_z_mid],
+                            [est_x_min, est_y_min, est_z_min],
+                            [est_x_min, est_y_min, est_z_max],
+                            [est_x_min, est_y_max, est_z_min],
+                            [est_x_min, est_y_max, est_z_max],
+                            [est_x_max, est_y_min, est_z_min],
+                            [est_x_max, est_y_min, est_z_max],
+                            [est_x_max, est_y_max, est_z_min],
+                            [est_x_max, est_y_max, est_z_max],])
+            est_model_3D_bbox_obj_from_pt.append(est_bbox_obj_from_pt)
 
-            # スケール
-            s = pre_obj_scale_wrd[sample_id].to('cpu').detach().numpy().copy()
-            s_gt = frame_gt_obj_scale_wrd[sample_id, 0].to('cpu').detach().numpy().copy() # Scan2CAD のアノテーションと一致？
-            error_scale = 100.0*np.abs(np.mean(s/s_gt) - 1)
-
-            # 並進
-            loc = self.loc[f'{cat_id}_{cad_id}']
-            off_set = (w2oriWrd[sample_id] @ frame_gt_o2w[sample_id, 0]).to('cpu').detach().numpy().copy() @ (loc * s_gt)
-            t = (w2oriWrd[sample_id]@pre_obj_pos_wrd[sample_id] + wrd_pos_oriWrd[sample_id]).to('cpu').detach().numpy().copy() + off_set
-            t_gt = (w2oriWrd[sample_id]@frame_gt_obj_pos_wrd[sample_id, 0] + wrd_pos_oriWrd[sample_id]).to('cpu').detach().numpy().copy() + off_set # Scan2CAD のアノテーションと一致？
-            error_translation = np.linalg.norm(t - t_gt, ord=2)
-
-            # 回転
-            o2oriWrd = (w2oriWrd[sample_id] @ pre_o2w[sample_id]).to('cpu').detach().numpy().copy()
-            o2oriWrd_gt = (w2oriWrd[sample_id] @ frame_gt_o2w[sample_id, 0]).to('cpu').detach().numpy().copy()
-            q = quaternion.from_rotation_matrix(o2oriWrd)
-            q_gt = quaternion.from_rotation_matrix(o2oriWrd_gt) # Scan2CAD のアノテーションと一致？
-            sym = sym_label[sample_id]
-            if sym == "__SYM_ROTATE_UP_2":
-                m = 2
-                tmp = [calc_rotation_diff(q, q_gt*quaternion.from_rotation_vector([0, (i*2.0/m)*np.pi, 0])) for i in range(m)]
-                error_rotation = np.min(tmp)
-            elif sym == "__SYM_ROTATE_UP_4":
-                m = 4
-                tmp = [calc_rotation_diff(q, q_gt*quaternion.from_rotation_vector([0, (i*2.0/m)*np.pi, 0])) for i in range(m)]
-                error_rotation = np.min(tmp)
-            elif sym == "__SYM_ROTATE_UP_INF":
-                m = 36
-                tmp = [calc_rotation_diff(q, q_gt*quaternion.from_rotation_vector([0, (i*2.0/m)*np.pi, 0])) for i in range(m)]
-                error_rotation = np.min(tmp)
-            else:
-                error_rotation = calc_rotation_diff(q, q_gt)
-
-            # # デバッグ：クオータニオンで回転させたもの一致するか？
-            # o2oriWrd_gt_ = torch.from_numpy(quaternion.as_rotation_matrix(q_gt).astype(np.float32)).clone().to(gt_pc_obj)
-            # o2oriWrd_gt__ = torch.from_numpy(quaternion.as_rotation_matrix(q_gt*quaternion.from_rotation_vector([0, 0.5*np.pi, 0])).astype(np.float32)).clone().to(gt_pc_obj)
-            # fig = plt.figure()
-            # ax = Axes3D(fig)
-            # point1 = torch.sum((frame_gt_obj_scale_wrd[sample_id, 0][None, :]*gt_pc_obj[sample_id])[:, None, :]*o2oriWrd_gt_[None, :, :], dim=-1)
-            # point1 = point1.to('cpu').detach().numpy().copy()
-            # ax.scatter(point1[:, 0], point1[:, 1], point1[:, 2], marker="o", linestyle='None', c='m', s=5)
-            # point2 = torch.sum((frame_gt_obj_scale_wrd[sample_id, 0][None, :]*gt_pc_obj[sample_id])[:, None, :]*o2oriWrd_gt__[None, :, :], dim=-1)
-            # point2 = point2.to('cpu').detach().numpy().copy()
-            # ax.scatter(point2[:, 0], point2[:, 1], point2[:, 2], marker="o", linestyle='None', c='c', s=5)
-            # ax.view_init(elev=0, azim=90)
-            # fig.savefig(f"{sample_id}_90.png")
-            # ax.view_init(elev=0, azim=0)
-            # fig.savefig(f"{sample_id}_00.png")
-            # ax.view_init(elev=45, azim=45)
-            # fig.savefig(f"{sample_id}_45.png")
-            # plt.close()
-
-            # 閾値
-            threshold_translation = 0.2 # <-- in meter
-            threshold_rotation = 20 # <-- in deg
-            threshold_scale = 20 # <-- in %
-
-            # 範囲内か？
-            is_valid_transformation = error_translation <= threshold_translation and error_rotation <= threshold_rotation and error_scale <= threshold_scale
-
-            # ログ
-            valid_estimation_log.append(is_valid_transformation)
-            err_t.append(error_translation)
-            err_s.append(error_scale)
-            err_r.append(error_rotation)
-        
-        err_list['validnum'] = torch.tensor(valid_estimation_log)
-        err_list['err_t'] = torch.tensor(err_t)
-        err_list['err_s'] = torch.tensor(err_s)
-        err_list['err_r'] = torch.tensor(err_r)
-
-        # 3D IoUの計算
-        for est_bbox, gt_bbox in zip(est_model_3D_bbox_wrd, gt_model_3D_bbox_wrd):
-            # debug pt.
-            import matplotlib.pyplot as plt
-            from mpl_toolkits.mplot3d import Axes3D
-            fig = plt.figure()
-            ax = Axes3D(fig)
-            ax.set_xlabel("X")
-            ax.set_ylabel("Y")
-            ax.set_zlabel("Z")
-            # Bbox
-            point1 = est_bbox.to('cpu').detach().numpy().copy()
-            ax.scatter(point1[:, 0], point1[:, 2], point1[:, 1], marker="o", linestyle='None', c='m', s=5)
-            point3 = gt_bbox.to('cpu').detach().numpy().copy()
-            ax.scatter(point3[:, 0], point3[:, 2], point3[:, 1], marker="o", linestyle='None', c='c', s=5)
-            fig.savefig(f'canonical_pt_{batch_idx}.png')
-            ax.view_init(elev=0, azim=90)
-            fig.savefig(f'canonical_pt_{batch_idx}_00_90.png')
-            ax.view_init(elev=0, azim=0)
-            fig.savefig(f'canonical_pt_{batch_idx}_00_00.png')
-        import pdb; pdb.set_trace()
-
-        # 深度画像・点群の統合
-        gt_s_fit = []
-        est_s_fit = []
-        canonical_estpc = [torch.cat(est_pc_wrd_list_i, dim=0) for est_pc_wrd_list_i in est_pc_wrd_list]
-        for batch_idx, canonical_estpc_i in enumerate(canonical_estpc):
-            # GTでスケーリング
-            canonical_estpc_gts = canonical_estpc_i * frame_gt_obj_scale_wrd[sample_id, 0][None, :]
-            gt_pc_obj_gts = gt_pc_obj[batch_idx] * frame_gt_obj_scale_wrd[sample_id, 0][None, :]
-            d_e2g = torch.norm(gt_pc_obj_gts[None, :, :] - canonical_estpc_gts[:, None, :], dim=-1).min(dim=1).values
-            fit_ratio = torch.sum(d_e2g < 0.2) / d_e2g.shape[0]
-            gt_s_fit.append(fit_ratio.item())
-            # 推定値でスケーリングした場合
-            canonical_estpc_ests = canonical_estpc_i * pre_obj_scale_wrd[sample_id][None, :]
-            d_e2g = torch.norm(gt_pc_obj_gts[None, :, :] - canonical_estpc_ests[:, None, :], dim=-1).min(dim=1).values
-            fit_ratio = torch.sum(d_e2g < 0.2) / d_e2g.shape[0]
-            est_s_fit.append(fit_ratio.item())
+            # 深度画像から作成
+            est_x_max, est_y_max, est_z_max = est_bbox_max_min_list[sample_id].max(dim=0).values
+            est_x_min, est_y_min, est_z_min = est_bbox_max_min_list[sample_id].min(dim=0).values
+            est_x_mid, est_y_mid, est_z_mid = est_x_max + est_x_min, est_y_max + est_y_min, est_z_max + est_z_min
+            est_bbox_obj_from_dep = torch.tensor([
+                            [est_x_mid, est_y_mid, est_z_mid],
+                            [est_x_min, est_y_min, est_z_min],
+                            [est_x_min, est_y_min, est_z_max],
+                            [est_x_min, est_y_max, est_z_min],
+                            [est_x_min, est_y_max, est_z_max],
+                            [est_x_max, est_y_min, est_z_min],
+                            [est_x_max, est_y_min, est_z_max],
+                            [est_x_max, est_y_max, est_z_min],
+                            [est_x_max, est_y_max, est_z_max],])
+            est_model_3D_bbox_obj_from_dep.append(est_bbox_obj_from_dep)
 
             # # debug pt.
             # import matplotlib.pyplot as plt
@@ -921,16 +832,200 @@ class original_optimizer(pl.LightningModule):
             # ax.set_xlabel("X")
             # ax.set_ylabel("Y")
             # ax.set_zlabel("Z")
+            # # Bbox
+            # point1 = canonical_estpc[sample_id].to('cpu').detach().numpy().copy()
+            # ax.scatter(point1[:, 0], point1[:, 2], point1[:, 1], marker="o", linestyle='None', c='c', s=2)
+            # point2 = est_bbox_obj_from_pt.to('cpu').detach().numpy().copy()
+            # ax.scatter(point2[:, 0], point2[:, 2], point2[:, 1], marker="o", linestyle='None', c='r', s=5)
+            # point3 = est_bbox_obj_from_dep.to('cpu').detach().numpy().copy()
+            # ax.scatter(point3[:, 0], point3[:, 2], point3[:, 1], marker="o", linestyle='None', c='g', s=5)
+            # fig.savefig(f'canonical_pt_{sample_id}.png')
+            # ax.view_init(elev=0, azim=90)
+            # fig.savefig(f'canonical_pt_{sample_id}_00_90.png')
+            # ax.view_init(elev=0, azim=0)
+            # fig.savefig(f'canonical_pt_{sample_id}_00_00.png')
+        
+        # 結果の統合
+        est_model_3D_bbox_obj_from_pt = torch.stack(est_model_3D_bbox_obj_from_pt, dim=0).to(gt_model_3D_bbox_obj)
+        est_model_3D_bbox_obj_from_dep = torch.stack(est_model_3D_bbox_obj_from_dep, dim=0).to(gt_model_3D_bbox_obj)
+        
+        ##############################
+        # 結果の保存
+        ##############################
+        if step_mode == 'tes':
+            pre_o2w = axis2rotation(pre_obj_axis_green_wrd, pre_obj_axis_red_wrd)
+            for sample_id in range(batch_size):
+
+                # シーンIDを取得し、保存用のDirを取得
+                _, _, cat_id, scene_id, obj_id, _, _ = path[0][sample_id].split('/')
+                cad_id, _ = obj_id.split('_')
+                scene_log_dir = os.path.join(self.test_estimation_dir, scene_id)
+                if not os.path.exists(scene_log_dir):
+                    os.makedirs(scene_log_dir)
+                
+                # スケール
+                s = pre_obj_scale_wrd[sample_id].to('cpu').detach().numpy().copy()
+                # 回転行列
+                o2oriWrd = (w2oriWrd[sample_id] @ pre_o2w[sample_id]).to('cpu').detach().numpy().copy()
+                q = quaternion.from_rotation_matrix(o2oriWrd)
+                # # GTを作る時に使ったoffset
+                # loc = self.loc[f'{cat_id}_{cad_id}']
+                # s_gt = frame_gt_obj_scale_wrd[sample_id, 0].to('cpu').detach().numpy().copy() # Scan2CAD のアノテーションと一致？
+                # off_set = (w2oriWrd[sample_id] @ frame_gt_o2w[sample_id, 0]).to('cpu').detach().numpy().copy() @ (loc * s_gt)
+                # 並進
+                t = (w2oriWrd[sample_id]@pre_obj_pos_wrd[sample_id] + wrd_pos_oriWrd[sample_id]).to('cpu').detach().numpy().copy() # + off_set
+                # 形状
+                shape_code = pre_shape_code[sample_id].to('cpu').detach().numpy().copy()
+                # Bbox
+                bbox_wrd_pt = gt_model_3D_bbox_obj[sample_id].to('cpu').detach().numpy().copy()
+                bbox_wrd_pt = np.sum((s[None, :] * bbox_wrd_pt)[:, None, :] * o2oriWrd[None, :, :], axis=-1) + t
+                bbox_wrd_dep = gt_model_3D_bbox_obj[sample_id].to('cpu').detach().numpy().copy()
+                bbox_wrd_dep = np.sum((s[None, :] * bbox_wrd_dep)[:, None, :] * o2oriWrd[None, :, :], axis=-1) + t
+
+                # 保存する
+                estimation_result = {'t': t, 'q': q, 's': s, 'shape': shape_code, 'bbox_wrd_pt': bbox_wrd_pt, 'bbox_wrd_dep': bbox_wrd_dep}
+                pickle_dump(estimation_result, os.path.join(scene_log_dir, f'{cat_id}_{obj_id}.pickle'))
+
+                # # GTを保存する
+                # s_gt = frame_gt_obj_scale_wrd[sample_id, 0].to('cpu').detach().numpy().copy()
+                # t_gt = (w2oriWrd[sample_id]@frame_gt_obj_pos_wrd[sample_id, 0] + wrd_pos_oriWrd[sample_id]).to('cpu').detach().numpy().copy() # + off_set
+                # o2oriWrd_gt = (w2oriWrd[sample_id] @ frame_gt_o2w[sample_id, 0]).to('cpu').detach().numpy().copy()
+                # q_gt = quaternion.from_rotation_matrix(o2oriWrd_gt)
+                # gt_bbox_obj = gt_model_3D_bbox_obj[sample_id].to('cpu').detach().numpy().copy()
+                # bbox_gt = np.sum((s_gt[None, :] * gt_bbox_obj)[:, None, :] * o2oriWrd_gt[None, :, :], axis=-1) + t_gt
+                # estimation_result = {'t': t_gt, 'q': q_gt, 's': s_gt, 'shape': shape_code, 'bbox_wrd_pt': bbox_gt, 'bbox_wrd_dep': bbox_gt}
+                # pickle_dump(estimation_result, os.path.join(scene_log_dir, f'{cat_id}_{obj_id}.pickle'))
+            
+
+        ##############################
+        # 誤差の計算
+        ##############################
+        if step_mode == 'val':
+            valid_estimation_log = []
+            err_t = []
+            err_s = []
+            err_r = []
+            for sample_id in range(batch_size):
+                _, _, cat_id, scene_id, obj_id, _, view_id = path[0][sample_id].split('/')
+                cad_id, obj_idx = obj_id.split('_')
+
+                # スケール
+                s = pre_obj_scale_wrd[sample_id].to('cpu').detach().numpy().copy()
+                s_gt = frame_gt_obj_scale_wrd[sample_id, 0].to('cpu').detach().numpy().copy() # Scan2CAD のアノテーションと一致？
+                error_scale = 100.0*np.abs(np.mean(s/s_gt) - 1)
+
+                # 並進
+                loc = self.loc[f'{cat_id}_{cad_id}']
+                off_set = (w2oriWrd[sample_id] @ frame_gt_o2w[sample_id, 0]).to('cpu').detach().numpy().copy() @ (loc * s_gt)
+                t = (w2oriWrd[sample_id]@pre_obj_pos_wrd[sample_id] + wrd_pos_oriWrd[sample_id]).to('cpu').detach().numpy().copy() + off_set
+                t_gt = (w2oriWrd[sample_id]@frame_gt_obj_pos_wrd[sample_id, 0] + wrd_pos_oriWrd[sample_id]).to('cpu').detach().numpy().copy() + off_set # Scan2CAD のアノテーションと一致？
+                error_translation = np.linalg.norm(t - t_gt, ord=2)
+
+                # 回転
+                o2oriWrd = (w2oriWrd[sample_id] @ pre_o2w[sample_id]).to('cpu').detach().numpy().copy()
+                if np.isnan(o2oriWrd).any() or np.isinf(o2oriWrd).any():
+                    import pdb; pdb.set_trace()
+                o2oriWrd_gt = (w2oriWrd[sample_id] @ frame_gt_o2w[sample_id, 0]).to('cpu').detach().numpy().copy()
+                if np.isnan(o2oriWrd_gt).any() or np.isinf(o2oriWrd_gt).any():
+                    import pdb; pdb.set_trace()
+                q = quaternion.from_rotation_matrix(o2oriWrd)
+                q_gt = quaternion.from_rotation_matrix(o2oriWrd_gt) # Scan2CAD のアノテーションと一致？
+                sym = sym_label[sample_id]
+                if sym == "__SYM_ROTATE_UP_2":
+                    m = 2
+                    tmp = [calc_rotation_diff(q, q_gt*quaternion.from_rotation_vector([0, (i*2.0/m)*np.pi, 0])) for i in range(m)]
+                    error_rotation = np.min(tmp)
+                elif sym == "__SYM_ROTATE_UP_4":
+                    m = 4
+                    tmp = [calc_rotation_diff(q, q_gt*quaternion.from_rotation_vector([0, (i*2.0/m)*np.pi, 0])) for i in range(m)]
+                    error_rotation = np.min(tmp)
+                elif sym == "__SYM_ROTATE_UP_INF":
+                    m = 36
+                    tmp = [calc_rotation_diff(q, q_gt*quaternion.from_rotation_vector([0, (i*2.0/m)*np.pi, 0])) for i in range(m)]
+                    error_rotation = np.min(tmp)
+                else:
+                    error_rotation = calc_rotation_diff(q, q_gt)
+
+                # # デバッグ：クオータニオンで回転させたもの一致するか？
+                # o2oriWrd_gt_ = torch.from_numpy(quaternion.as_rotation_matrix(q_gt).astype(np.float32)).clone().to(gt_pc_obj)
+                # o2oriWrd_gt__ = torch.from_numpy(quaternion.as_rotation_matrix(q_gt*quaternion.from_rotation_vector([0, 0.5*np.pi, 0])).astype(np.float32)).clone().to(gt_pc_obj)
+                # fig = plt.figure()
+                # ax = Axes3D(fig)
+                # point1 = torch.sum((frame_gt_obj_scale_wrd[sample_id, 0][None, :]*gt_pc_obj[sample_id])[:, None, :]*o2oriWrd_gt_[None, :, :], dim=-1)
+                # point1 = point1.to('cpu').detach().numpy().copy()
+                # ax.scatter(point1[:, 0], point1[:, 1], point1[:, 2], marker="o", linestyle='None', c='m', s=5)
+                # point2 = torch.sum((frame_gt_obj_scale_wrd[sample_id, 0][None, :]*gt_pc_obj[sample_id])[:, None, :]*o2oriWrd_gt__[None, :, :], dim=-1)
+                # point2 = point2.to('cpu').detach().numpy().copy()
+                # ax.scatter(point2[:, 0], point2[:, 1], point2[:, 2], marker="o", linestyle='None', c='c', s=5)
+                # ax.view_init(elev=0, azim=90)
+                # fig.savefig(f"{sample_id}_90.png")
+                # ax.view_init(elev=0, azim=0)
+                # fig.savefig(f"{sample_id}_00.png")
+                # ax.view_init(elev=45, azim=45)
+                # fig.savefig(f"{sample_id}_45.png")
+                # plt.close()
+
+                # 閾値
+                threshold_translation = 0.2 # <-- in meter
+                threshold_rotation = 20 # <-- in deg
+                threshold_scale = 20 # <-- in %
+
+                # 範囲内か？
+                is_valid_transformation = error_translation <= threshold_translation and error_rotation <= threshold_rotation and error_scale <= threshold_scale
+
+                # ログ
+                valid_estimation_log.append(is_valid_transformation)
+                err_t.append(error_translation)
+                err_s.append(error_scale)
+                err_r.append(error_rotation)
+                
+                err_list['validnum'] = torch.tensor(valid_estimation_log)
+                err_list['err_t'] = torch.tensor(err_t)
+                err_list['err_s'] = torch.tensor(err_s)
+                err_list['err_r'] = torch.tensor(err_r)
+
+
+        # 深度画像・点群の統合
+        gt_s_fit = []
+        est_s_fit = []
+        est_s_chamf = []
+        for sample_id, canonical_estpc_i in enumerate(canonical_estpc):
+            # GTでスケーリング
+            gt_pc_obj_gts = gt_pc_obj[sample_id] * frame_gt_obj_scale_wrd[sample_id, 0][None, :]
+            canonical_estpc_gts = canonical_estpc_i * frame_gt_obj_scale_wrd[sample_id, 0][None, :]
+            d_e2g = torch.norm(gt_pc_obj_gts[None, :, :] - canonical_estpc_gts[:, None, :], dim=-1).min(dim=1).values
+            fit_ratio_by_gt_s = torch.sum(d_e2g < 0.2) / d_e2g.shape[0]
+            gt_s_fit.append(fit_ratio_by_gt_s.item())
+            
+            # 推定値でスケーリングした場合
+            canonical_estpc_ests = canonical_estpc_i * pre_obj_scale_wrd[sample_id][None, :]
+            d_e2g = torch.norm(gt_pc_obj_gts[None, :, :] - canonical_estpc_ests[:, None, :], dim=-1).min(dim=1).values
+            fit_ratio_by_est_s = torch.sum(d_e2g < 0.2) / d_e2g.shape[0]
+            est_s_fit.append(fit_ratio_by_est_s.item())
+            
+            # Chamfer Dist
+            canonical_estpc_ests_for_chamf = canonical_estpc_ests[::2, :].to('cpu').detach().numpy().copy()
+            gt_pc_obj_gts_for_chamf = gt_pc_obj_gts[::2, :].to('cpu').detach().numpy().copy()
+            est_s_chamf.append(compute_trimesh_chamfer(canonical_estpc_ests_for_chamf, gt_pc_obj_gts_for_chamf))
+
+            # # debug pt.
+            # import matplotlib.pyplot as plt
+            # from mpl_toolkits.mplot3d import Axes3D
+            # fig = plt.figure()
+            # ax = Axes3D(fig)
+            # ax.set_xlabel("X")
+            # ax.set_ylabel("Y")
+            # ax.set_zlabel("Z")            
             # # Pt
-            # point1 = canonical_estpc_gts.to('cpu').detach().numpy().copy()
-            # ax.scatter(point1[::3, 0], point1[::3, 2], point1[::3, 1], marker="o", linestyle='None', c='m', s=0.1)
+            # # point1 = canonical_estpc_gts.to('cpu').detach().numpy().copy()
+            # # ax.scatter(point1[::3, 0], point1[::3, 2], point1[::3, 1], marker="o", linestyle='None', c='m', s=0.1)
             # point3 = gt_pc_obj_gts.to('cpu').detach().numpy().copy()
             # ax.scatter(point3[::3, 0], point3[::3, 2], point3[::3, 1], marker="o", linestyle='None', c='c', s=0.1)
             # point5 = canonical_estpc_ests.to('cpu').detach().numpy().copy()
-            # ax.scatter(point5[::3, 0], point5[::3, 2], point5[::3, 1], marker="o", linestyle='None', c='g', s=0.1)
+            # ax.scatter(point5[::3, 0], point5[::3, 2], point5[::3, 1], marker="o", linestyle='None', c='g', s=0.1)            
             # # Bbox
-            # est_bbox_i = est_model_3D_bbox_obj[batch_idx] * pre_obj_scale_wrd[sample_id][None, :]
-            # gt_bbox_i = gt_model_3D_bbox_obj[batch_idx] * frame_gt_obj_scale_wrd[sample_id, 0][None, :]
+            # est_bbox_i = est_model_3D_bbox_obj_from_dep[sample_id] * pre_obj_scale_wrd[sample_id][None, :]
+            # gt_bbox_i = gt_model_3D_bbox_obj[sample_id] * frame_gt_obj_scale_wrd[sample_id, 0][None, :]
             # point2 = est_bbox_i.to('cpu').detach().numpy().copy()
             # ax.scatter(point2[:, 0], point2[:, 2], point2[:, 1], marker="o", linestyle='None', c='r', s=5)
             # point4 = gt_bbox_i.to('cpu').detach().numpy().copy()
@@ -938,64 +1033,27 @@ class original_optimizer(pl.LightningModule):
             # ax.set_xlim3d([-.5, .5])
             # ax.set_ylim3d([-.5, .5])
             # ax.set_zlim3d([-.5, .5])
-            # fig.savefig(f'canonical_pt_{batch_idx}.png')
+            # fig.savefig(f'canonical_pt_{sample_id}.png')
             # ax.view_init(elev=0, azim=90)
-            # fig.savefig(f'canonical_pt_{batch_idx}_00_90.png')
+            # fig.savefig(f'canonical_pt_{sample_id}_00_90.png')
             # ax.view_init(elev=0, azim=0)
-            # fig.savefig(f'canonical_pt_{batch_idx}_00_00.png')
+            # fig.savefig(f'canonical_pt_{sample_id}_00_00.png')
+
+            # エラーの記録
+            if step_mode == 'tes':
+                # Dir の作成
+                _, _, cat_id, scene_id, obj_id, _, _ = path[0][sample_id].split('/')
+                cad_id, _ = obj_id.split('_')
+                scene_log_dir = os.path.join(self.test_error_dir, scene_id)
+                if not os.path.exists(scene_log_dir):
+                    os.makedirs(scene_log_dir)
+                # 保存
+                err_result = {'gt_s_fit':fit_ratio_by_gt_s, 'est_s_fit':fit_ratio_by_est_s}
+                pickle_dump(err_result, os.path.join(scene_log_dir, f'{cat_id}_{obj_id}.pickle'))
 
         err_list['gt_s_fit'] = torch.tensor(gt_s_fit)
         err_list['est_s_fit'] = torch.tensor(est_s_fit)
-            
-        # # BBox_wrdのデバック
-        # # やること
-        # #     誤差の計算（l740~）のテストのインデックス上げる
-        # #     l324~l325lを書き換える
-        # #     l427lを書き換える
-        # #     l707lを書き換える
-        # #     modelの出力を0にする
-        # canonical_estpc = [torch.cat(est_pc_wrd_list_i, dim=0) for est_pc_wrd_list_i in est_pc_wrd_list]
-        # if optim_idx >= 0:
-        #     for sample_id in range(batch_size):
-        #         # sample_id = 0
-        #         raw_1 = obs_OSMap_wrd.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H, 4)
-        #         raw_2 = est_OSMap_wrd.reshape(batch_size, current_frame_num, self.ddf_H, self.ddf_H, 4)
-        #         map_1, mask_1 = raw_1[..., :-1], raw_1[..., -1]
-        #         map_2, mask_2 = raw_2[..., :-1], raw_2[..., -1]
-        #         fig = plt.figure()
-        #         ax = Axes3D(fig)
-        #         c_list_1 = c_list_2 = ['b', 'g', 'r', 'm', 'y']
-        #         for ind_1 in range(current_frame_num):
-        #             # ind_1 = 0
-        #             c_1, c_2 = c_list_1[ind_1], c_list_2[ind_1]
-        #             point_1 = map_1[sample_id, ind_1][mask_1[sample_id, ind_1] > 0]
-        #             point_1 = point_1.to('cpu').detach().numpy().copy()
-        #             ax.scatter(point_1[:, 0], point_1[:, 1], point_1[:, 2], marker="o", linestyle='None', c='c', s=0.1) #, c='g', s=0.1) #
-        #             point_2 = map_2[sample_id, ind_1][mask_2[sample_id, ind_1] > 0]
-        #             point_2 = point_2.to('cpu').detach().numpy().copy()
-        #             ax.scatter(point_2[::2, 0], point_2[::2, 1], point_2[::2, 2], marker="o", linestyle='None', c='m', s=0.1) # , c=c_2, s=0.05)
-                
-        #         Bbox
-        #         point3 = est_model_3D_bbox_wrd[sample_id].to('cpu').detach().numpy().copy()
-        #         ax.scatter(point3[:, 0], point3[:, 1], point3[:, 2], marker="o", linestyle='None', c='r', s=5)
-        #         point5 = torch.sum((pre_obj_scale_wrd[sample_id][None, :]*canonical_estpc[sample_id])[:, None, :]*pre_o2w[sample_id][None, :, :], dim=-1) + pre_obj_pos_wrd[sample_id][None, :]
-        #         point5 = point5.to('cpu').detach().numpy().copy()
-        #         ax.scatter(point5[:, 0], point5[:, 1], point5[:, 2], marker="o", linestyle='None', c='c', s=5)
-        #         point4 = gt_model_3D_bbox_wrd[sample_id].to('cpu').detach().numpy().copy()
-        #         ax.scatter(point4[:, 0], point4[:, 1], point4[:, 2], marker="o", linestyle='None', c='b', s=5)
-        #         point5 = torch.sum((frame_gt_obj_scale_wrd[sample_id, 0][None, :]*gt_pc_obj[sample_id])[:, None, :]*frame_gt_o2w[sample_id, 0][None, :, :], dim=-1) + frame_gt_obj_pos_wrd[sample_id, 0]
-        #         point5 = point5.to('cpu').detach().numpy().copy()
-        #         ax.scatter(point5[:, 0], point5[:, 1], point5[:, 2], marker="o", linestyle='None', c='m', s=5)
-
-        #         str_optim_idx = str(optim_idx).zfill(2)
-        #         ax.view_init(elev=0, azim=90)
-        #         fig.savefig(f"{sample_id}_{str_optim_idx}_90.png")
-        #         ax.view_init(elev=0, azim=0)
-        #         fig.savefig(f"{sample_id}_{str_optim_idx}_00.png")
-        #         ax.view_init(elev=45, azim=45)
-        #         fig.savefig(f"{sample_id}_{str_optim_idx}_45.png")
-        #         plt.close()
-        #     import pdb; pdb.set_trace()
+        err_list['est_s_chamf'] = torch.tensor(est_s_chamf)
 
         # ##################################################
         # batch_i = 0
@@ -1025,16 +1083,16 @@ class original_optimizer(pl.LightningModule):
         self.rs['val'] = np.random.RandomState(72)
         self.rays_d_cam = self.rays_d_cam.to(self.df_net.device)
         self.canonical_rays_d_cam = self.canonical_rays_d_cam.to(self.df_net.device)
-        if self.view_selection == 'simultaneous' and self.prg == 'yes':            # if self.view_selection == 'sequential': # 
-            self.total_itr = int(min(self.max_itr, self.current_epoch // 80 + 3))  # if self.current_epoch < 200: self.total_itr, self.itr_per_frame = 5, 1 # 
-            self.itr_per_frame = self.total_itr                                    # else: self.total_itr, self.itr_per_frame = 25, 5 #
-        if self.view_selection == 'sequential' and self.prg == 'yes':
-            if self.current_epoch < self.cnt_prg_step:
-                self.total_itr = 5
-                self.itr_per_frame = 1
-            else:
-                self.total_itr = 10
-                self.itr_per_frame = 2
+        # if self.view_selection == 'simultaneous' and self.prg == 'yes':            # if self.view_selection == 'sequential': # 
+        #     self.total_itr = int(min(self.max_itr, self.current_epoch // 80 + 3))  # if self.current_epoch < 200: self.total_itr, self.itr_per_frame = 5, 1 # 
+        #     self.itr_per_frame = self.total_itr                                    # else: self.total_itr, self.itr_per_frame = 25, 5 #
+        # if self.view_selection == 'sequential' and self.prg == 'yes':
+        #     if self.current_epoch < self.cnt_prg_step:
+        #         self.total_itr = 5
+        #         self.itr_per_frame = 1
+        #     else:
+        #         self.total_itr = 10
+        #         self.itr_per_frame = 2
 
 
 
@@ -1044,10 +1102,15 @@ class original_optimizer(pl.LightningModule):
 
 
     def validation_epoch_end(self, outputs):
-        for key_i in {'shape', 'IoU'}:
-            avg_err = torch.stack([x['err_list'][key_i] for x in outputs]).mean()
-            current_epoch = torch.tensor(self.current_epoch + 1., dtype=avg_err.dtype)
-            if key_i in {'shape', 'IoU'}:
+        
+        current_epoch = torch.tensor(self.current_epoch + 1., )
+        for key_i in {'validnum', 'err_t', 'err_s', 'err_r', 'gt_s_fit', 'est_s_fit', 'est_s_chamf'}:
+            if key_i in {'validnum'}:
+                valid_num = torch.cat([x['err_list'][key_i] for x in outputs])
+                valid_ratio = valid_num.sum() / len(valid_num)
+                self.log_dict({f'val/{key_i}': valid_ratio, "step": current_epoch})
+            else:
+                avg_err = torch.cat([x['err_list'][key_i] for x in outputs]).mean()
                 self.log_dict({f'val/{key_i}': avg_err, "step": current_epoch})
 
 
@@ -1057,8 +1120,6 @@ class original_optimizer(pl.LightningModule):
             list(self.df_net.parameters()) + list(self.backbone_encoder.parameters()), 
         lr=self.lr, betas=(0.9, 0.999),)
         return optimizer
-
-
 
 
 
@@ -1079,8 +1140,8 @@ if __name__=='__main__':
         ##########################################################################################################################################################################################################################################################
         ##########################################################################################################################################################################################################################################################
         ##########################################################################################################################################################################################################################################################
-        # CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TRAIN --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg           --N_batch=8 --pre_train_epoch=360 --val_model_epoch=0 --data_type=scan2cad --save_interval=1
-        # CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TRAIN --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version=seq_autoreg_FINETUNE_ --N_batch=8 --pre_train_epoch=360 --val_model_epoch=0 --data_type=scan2cad --save_interval=1
+        # CUDA_VISIBLE_DEVICES=6 python train_check_scannet.py --code_mode=TRAIN --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version= --exp_version=rdn_autoreg           --N_batch=16 --pre_train_epoch=504 --val_model_epoch=0 --data_type=scan2cad --save_interval=1
+        # CUDA_VISIBLE_DEVICES=8 python train_check_scannet.py --code_mode=TRAIN --config=configs/paper_exp/chair_re/view5/seq.txt --exp_version= --exp_version=seq_autoreg_FINETUNE_ --N_batch=16 --pre_train_epoch=368 --val_model_epoch=0 --data_type=scan2cad --save_interval=1
         # 書き換える
         args.cat_id = '03001627'
         args.scannet_train_list = txt2list('/home/yyoshitake/works/DeepSDF/project/scannet/results_chair_train/data_list.txt')
@@ -1148,7 +1209,7 @@ if __name__=='__main__':
         model.df_net = pretrained_model.df_net
         model.ddf = pretrained_model.ddf
         model.backbone_encoder = pretrained_model.backbone_encoder
-        trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=None, datamodule=None, ckpt_path=ckpt_path)
+        trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, datamodule=None, ckpt_path=ckpt_path)
 
     elif args.code_mode == 'TES':
         # Reload args.
@@ -1157,7 +1218,7 @@ if __name__=='__main__':
         ##########################################################################################################################################################################################################################################################
         ##########################################################################################################################################################################################################################################################
         ##########################################################################################################################################################################################################################################################
-        # CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=360 --data_type=scan2cad
+        # CUDA_VISIBLE_DEVICES=7 python train_check_scannet.py --code_mode=TES --config=configs/paper_exp/chair_re/view5/rdn.txt --exp_version=rdn_autoreg --N_batch=8 --val_model_epoch=20 --data_type=scan2cad
         # 書き換える
         args.cat_id = '03001627'
         args.scannet_tes_list = txt2list('/home/yyoshitake/works/DeepSDF/project/scannet/results_chair_tes/data_list.txt')
@@ -1193,30 +1254,33 @@ if __name__=='__main__':
             model.scale_dim = 3
         model.loc = pickle_load('/home/yyoshitake/works/DeepSDF/project/scannet/loc_dict.pickle') # loc
 
-        # # Save logs.
-        # import datetime
-        # dt_now = datetime.datetime.now()
-        # time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
-        # time_log += '_' + args.model_ckpt_path.split('/')[-3] + '_epo_' + args.model_ckpt_path.split('/')[-1].split('.')[0]
-        # os.mkdir('./txt/experiments/log/' + time_log)
-        # file_name = './txt/experiments/log/' + time_log + '/log.txt'
-        # model.test_log_path = file_name
-        # with open(file_name, 'a') as file:
-        #     # Base setting log.
-        #     file.write('ckpt_path : ' + args.model_ckpt_path + '\n')
-        #     file.write('test_instance_list_txt : ' + str(args.test_instance_list_txt) + '\n')
-        #     file.write('total_obs_num : ' + str(model.total_obs_num) + '\n')
-        #     file.write('total_itr : ' + str(model.total_itr) + '\n')
-        #     file.write('tes_data_list : ' + str(args.tes_data_list) + '\n')
-        #     file.write('view_position : ' + str(args.view_position) + '\n')
-        #     file.write('view_selection : ' + str(args.view_selection) + '\n')
-        #     file.write('gt_scale_range : ' + str(model.gt_scale_range) + '\n')
-        #     file.write('rand_P_range : ' + str(model.rand_P_range) + '\n')
-        #     file.write('rand_S_range : ' + str(model.rand_S_range) + '\n')
-        #     file.write('rand_R_range : ' + str(model.rand_R_range) + '\n')
-        #     file.write('random_axis_num : ' + str(model.random_axis_num) + '\n')
-        #     file.write('\n' + '\n')
-        # model.test_log_name = args.model_ckpt_path.split('/')[-3] + '_epo_' + args.model_ckpt_path.split('/')[-1].split('.')[0]
+        # Save logs.
+        import datetime
+        dt_now = datetime.datetime.now()
+        time_log = dt_now.strftime('%Y_%m_%d_%H_%M_%S')
+        time_log += '_' + args.model_ckpt_path.split('/')[-3] + '_epo_' + args.model_ckpt_path.split('/')[-1].split('.')[0]
+        os.mkdir(os.path.join('txt/scannet_results', time_log))
+        os.mkdir(os.path.join('txt/scannet_results', time_log, 'estimations'))
+        os.mkdir(os.path.join('txt/scannet_results/', time_log, 'error'))
+        file_name = os.path.join('txt/scannet_results', time_log, 'log.txt')
+        with open(file_name, 'a') as file:
+            # Base setting log.
+            file.write('ckpt_path : ' + args.model_ckpt_path + '\n')
+            file.write('test_instance_list_txt : ' + str(args.test_instance_list_txt) + '\n')
+            file.write('total_obs_num : ' + str(model.total_obs_num) + '\n')
+            file.write('total_itr : ' + str(model.total_itr) + '\n')
+            file.write('tes_data_list : ' + str(args.tes_data_list) + '\n')
+            file.write('view_position : ' + str(args.view_position) + '\n')
+            file.write('view_selection : ' + str(args.view_selection) + '\n')
+            file.write('gt_scale_range : ' + str(model.gt_scale_range) + '\n')
+            file.write('rand_P_range : ' + str(model.rand_P_range) + '\n')
+            file.write('rand_S_range : ' + str(model.rand_S_range) + '\n')
+            file.write('rand_R_range : ' + str(model.rand_R_range) + '\n')
+            file.write('random_axis_num : ' + str(model.random_axis_num) + '\n')
+            file.write('\n' + '\n')
+        model.test_log_name = args.model_ckpt_path.split('/')[-3] + '_epo_' + args.model_ckpt_path.split('/')[-1].split('.')[0]
+        model.test_estimation_dir = os.path.join('txt/scannet_results/', time_log, 'estimations')
+        model.test_error_dir = os.path.join('txt/scannet_results/', time_log, 'error')
 
         # Test model.
         trainer = pl.Trainer(

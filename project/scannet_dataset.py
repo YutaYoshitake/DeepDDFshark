@@ -97,27 +97,28 @@ class scannet_dataset(data.Dataset):
         self.canonical_path = f'/home/yyoshitake/works/make_depth_image/project/scannet_canonical/tmp_map/{args.cat_id}'
         self.point_cloud_path = f'/home/yyoshitake/works/make_depth_image/project/scannet_canonical/tmp_pt/{args.cat_id}'
         
-        if self.scannet_view_selection == 'use_top_mask':
-            self.data_list = raw_data_list # []
-        elif self.scannet_view_selection == 'rdn_sample_with_mask_latio':
-            self.data_list = []
-            invalid_data_list = []
-            self.mask_ratio_threshold = 0.02
-            print('check each frames!!!')
-            for data_i in tqdm.tqdm(raw_data_list):
-                mask_ratio = pickle_load(os.path.join(data_i, 'total_infos.pickle'))['frame']['mask_ratio_list'] / 10000
-                valid_frame_num = (mask_ratio > self.mask_ratio_threshold).sum()
-                if valid_frame_num > 5:
-                    self.data_list.append(data_i)
-                else:
-                    invalid_data_list.append(data_i)
-            invalid_data_num = len(invalid_data_list)
-            if invalid_data_num > 10:
-                print(f"{invalid_data_num} data was invalid !!!")
-            else:
-                for data_i in invalid_data_list:
-                    print(data_i)
-            self.invalid_data_num = invalid_data_num
+        self.data_list = raw_data_list
+        # if self.scannet_view_selection == 'use_top_mask':
+        #     self.data_list = raw_data_list # []
+        # elif self.scannet_view_selection == 'rdn_sample_with_mask_latio':
+        #     self.data_list = []
+        #     invalid_data_list = []
+        #     self.mask_ratio_threshold = 0.02
+        #     print('check each frames!!!')
+        #     for data_i in tqdm.tqdm(raw_data_list):
+        #         mask_ratio = pickle_load(os.path.join(data_i, 'total_infos.pickle'))['frame']['mask_ratio_list'] / 10000
+        #         valid_frame_num = (mask_ratio > self.mask_ratio_threshold).sum()
+        #         if valid_frame_num > 5:
+        #             self.data_list.append(data_i)
+        #         else:
+        #             invalid_data_list.append(data_i)
+        #     invalid_data_num = len(invalid_data_list)
+        #     if invalid_data_num > 10:
+        #         print(f"{invalid_data_num} data was invalid !!!")
+        #     else:
+        #         for data_i in invalid_data_list:
+        #             print(data_i)
+        #     self.invalid_data_num = invalid_data_num
         
         # self.data_dir = os.path.join(args.scannet_data_dir, args.cat_id)
         # self.data_list = []
@@ -125,7 +126,7 @@ class scannet_dataset(data.Dataset):
         #     scene_total_infos = pickle_load(os.path.join(self.data_dir, scene_id, 'scene_total_infos.pickle'))
         #     data_path_list = [os.path.join(self.data_dir, dir_name_list) for dir_name_list in scene_total_infos['dir_list']]
         #     self.data_list += data_path_list
-        # import random; random.shuffle(self.data_list) # [self.data_list[5]]
+        import random; random.shuffle(self.data_list) # [self.data_list[5]]
         
     def __getitem__(self, index):
         # 物体データのディレクトリパス取得
@@ -154,6 +155,10 @@ class scannet_dataset(data.Dataset):
         # 物体情報をReshapeしTorchに変換
         # loc = pickle_load('/home/yyoshitake/works/DeepSDF/project/scannet/loc_dict.pickle')
         # obj_pos_wrd = obj_pos_wrd + o2w @ loc['03001627_cc3d9160369d09845e61ef8e2af97499'] * obj_scale_wrd - o2w @ (loc['03001627_cc3d9160369d09845e61ef8e2af97499'] * obj_scale_wrd)
+        # loc_dict = pickle_load('/home/yyoshitake/works/DeepSDF/project/scannet/loc_dict.pickle')
+        # loc = loc_dict[f'03001627_{instance_id}']
+        # offset = o2w @ (loc * obj_scale_wrd)
+        # obj_pos_wrd = obj_pos_wrd + offset
         # import pdb; pdb.set_trace()
         obj_pos_wrd = torch.from_numpy(obj_pos_wrd.astype(np.float32)).clone()[None, :].expand(self.total_obs_num, -1)
         o2w = torch.from_numpy(o2w.astype(np.float32)).clone()[None, :, :].expand(self.total_obs_num, -1, -1)
@@ -163,26 +168,56 @@ class scannet_dataset(data.Dataset):
         if self.scannet_view_selection == 'use_top_mask':
             # マスク領域のTop使用
             sampled_frame_idxes = np.argsort(-mask_ratio_list)[:self.total_obs_num]
-        elif self.scannet_view_selection == 'rdn_sample_with_mask_latio':
-            # 一定閾値以上からランダムに選択
-            total_frame_num = mask_ratio_list.shape[0]
-            frame_idx_list = np.arange(total_frame_num)
-            valid_mask = mask_ratio_list > self.mask_ratio_threshold
-            valid_index_list = frame_idx_list[valid_mask]
-            sampled_frame_idxes = self.rs0.choice(valid_index_list, self.total_obs_num, replace=True).tolist() # 重複を許す
-            if self.view_selection == 'sequential':
-                sampled_frame_idxes = sorted(sampled_frame_idxes)
+        # elif self.scannet_view_selection == 'rdn_sample_with_mask_latio':
+        #     # 一定閾値以上からランダムに選択
+        #     import pdb; pdb.set_trace()
+        #     total_frame_num = mask_ratio_list.shape[0]
+        #     frame_idx_list = np.arange(total_frame_num)
+        #     valid_mask = mask_ratio_list > self.mask_ratio_threshold
+        #     valid_index_list = frame_idx_list[valid_mask]
+        #     sampled_frame_idxes = self.rs0.choice(valid_index_list, self.total_obs_num, replace=True).tolist() # 重複を許す
+        #     if self.view_selection == 'sequential':
+        #         sampled_frame_idxes = sorted(sampled_frame_idxes)
         else:
-            # マスクの領域が広いTopK個のインデックス取得
-            total_frame_num = mask_ratio_list.shape[0]
-            if total_frame_num < self.total_obs_num:
-                import pdb; pdb.set_trace()
-            total_obs_range = min(total_frame_num, self.total_obs_range)
-            topK_idx = np.argpartition(-mask_ratio_list, total_obs_range)[:total_obs_range]
+            max_frame_idx = np.argmax(mask_ratio_list)
+            total_frame_num = len(mask_ratio_list)
+            frame_idx_list = np.arange(total_frame_num)
+            if self.mode == 'train':
+                sampled_frame_idxes = self.rs0.choice(frame_idx_list, self.total_obs_num, replace=True).tolist()
+                if self.view_selection == 'sequential':
+                    sampled_frame_idxes = sorted(sampled_frame_idxes)
+            elif self.mode in {'tes', 'val'}:
+                Top_K = 15
+                # 一番良く見えているフレームは入れる
+                sampled_frame_idxes = max_frame_idx * np.ones(self.total_obs_num, dtype=frame_idx_list.dtype) # 一旦一番見えてるフレームで埋める
+                if total_frame_num > 5:
+                    if total_frame_num > Top_K:
+                        topK_idx = np.argpartition(-mask_ratio_list, Top_K)[:Top_K] # Top_K個持ってくる
+                    else:
+                        topK_idx = frame_idx_list # Top_K == total_frame_numでnp.argpartitionがエラー
+                    topK_idx = topK_idx[topK_idx != max_frame_idx] # 一番見えてるフレームは消す
+                    topK_idx.sort()
+                    # import pdb; pdb.set_trace()
+                    sample_step = len(topK_idx) // (self.total_obs_num - 1)
+                    buffer = len(topK_idx) - sample_step * (self.total_obs_num - 1)
+                    topK_idx = topK_idx[buffer::sample_step][:self.total_obs_num - 1]
+                    # import pdb; pdb.set_trace()
+                    sampled_frame_idxes[:len(topK_idx)] = topK_idx
+                else: # フレーム数が足りない時
+                    sampled_frame_idxes[:total_frame_num] = frame_idx_list
+                sampled_frame_idxes = sampled_frame_idxes.tolist()
+                sampled_frame_idxes = sorted(sampled_frame_idxes)
 
-            # TopK個のインデックスを取得し、
-            sample_step = total_obs_range // self.total_obs_num
-            sampled_frame_idxes = np.sort(topK_idx)[::sample_step]
+            # # マスクの領域が広いTopK個のインデックス取得
+            # total_frame_num = mask_ratio_list.shape[0]
+            # if total_frame_num < self.total_obs_num:
+            #     import pdb; pdb.set_trace()
+            # total_obs_range = min(total_frame_num, self.total_obs_range)
+            # topK_idx = np.argpartition(-mask_ratio_list, total_obs_range)[:total_obs_range]
+
+            # # TopK個のインデックスを取得し、
+            # sample_step = total_obs_range // self.total_obs_num
+            # sampled_frame_idxes = np.sort(topK_idx)[::sample_step]
 
         # 観測情報Dictの取得
         if self.check_tgt_sampled_image_names is None:
@@ -247,6 +282,19 @@ class scannet_dataset(data.Dataset):
 
         # BBoxの取得
         model_bbox_obj = torch.from_numpy(model_bbox_shapenet) # + loc
+        x_max, y_max, z_max = model_bbox_obj.max(axis=0).values
+        x_min, y_min, z_min = model_bbox_obj.min(axis=0).values
+        x_mid, y_mid, z_mid = x_max + x_min, y_max + y_min, z_max + z_min
+        model_bbox_obj = torch.tensor([
+                        [x_mid, y_mid, z_mid],
+                        [x_min, y_min, z_min],
+                        [x_min, y_min, z_max],
+                        [x_min, y_max, z_min],
+                        [x_min, y_max, z_max],
+                        [x_max, y_min, z_min],
+                        [x_max, y_min, z_max],
+                        [x_max, y_max, z_min],
+                        [x_max, y_max, z_max],])
 
         # Get randn seeds.
         if self.randn_from_log:
@@ -339,11 +387,11 @@ if __name__=='__main__':
     args.cat_id = '03001627'
     args.ddf_model_path = 'DDF/lightning_logs/chair/cat_depth_mae_normal_mae_seed0_normal001_lr00001/checkpoints/0000010000.ckpt'
     args.total_obs_num = 5
-    args.val_scene_list = ['scene0568_00']
+    args.val_scene_list = ['scene0314_00']
     args.scannet_data_dir = 'scannet/results_chair_tes'
     args.shape_code_dir = '/home/yyoshitake/works/DeepSDF/project/scannet/gt_latent_code/03001627'
-    tgt_obj_id = 'cc3d9160369d09845e61ef8e2af97499_001' # 'c585ee093bfd52af6512b7b24f3d84_002'
-    check_tgt_sampled_image_names = ['00001_00000_00028', '00005_00000_00032', '00009_00000_00036', '00023_00000_00050', '00028_00000_00055'] # ['00003_00002_00488', '00010_00002_00495', '00021_00002_00506', '00027_00002_00512', '00030_00002_00515']
+    tgt_obj_id = 'c585ee093bfd52af6512b7b24f3d84_001' # 'cc3d9160369d09845e61ef8e2af97499_001' # 
+    check_tgt_sampled_image_names = ['00005_00000_00023', '00010_00000_00028', '00015_00000_00033', '00020_00000_00038', '00025_00000_00043'] # ['00001_00000_00028', '00005_00000_00032', '00009_00000_00036', '00023_00000_00050', '00028_00000_00055'] # 
     check_tgt_obj_data_list = [os.path.join(args.scannet_data_dir, args.cat_id, args.val_scene_list[0], tgt_obj_id)]
 
     # scene0011_01, d6da5457b0682e24696b74614952b2d0_004, ['00098_00006_00238', '00068_00003_00086', '00055_00002_00072', '00038_00001_00054', '00043_00001_00059']
